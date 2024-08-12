@@ -12,8 +12,6 @@ declare module 'vue' {
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
     ElConfigProvider: typeof import('element-plus/es')['ElConfigProvider']
-    ElInput: typeof import('element-plus/es')['ElInput']
-    ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElWatermark: typeof import('element-plus/es')['ElWatermark']
     GeoJSONParser: typeof import('./components/parser/GeoJSONParser.vue')['default']
     GeoStrEditor: typeof import('./components/editor/GeoStrEditor.vue')['default']

@@ -59,7 +59,7 @@ class GisEventBus {
     emit(gisEvent:GisEvent):Promise<{status:('fulfilled'|'rejected'),reason?:number,value?:number}[]>{
         const event = gisEvent.event_type
         const params = gisEvent.params;
-        return  this.dispatch(event,params)
+        return  this.dispatch(event,...params|| [])
     }
     protected  dispatch(event:string,...args:any[]):Promise<any[]>{
         console.log(`------------dispatch:${event}---------`)

@@ -17,6 +17,7 @@ let map: GisMap;
 onBeforeMount(() => {
     eventBus.on(MapTypes.DRAWTOOL, async (data: any) =>map.drawTool(data))
     eventBus.on(MapTypes.CLEANDRAW, async () =>map.cleanDraw())
+    eventBus.on(MapTypes.ADD_FEATURES, async (features:GeoJSON.Feature[]) =>map.addFeatures(features))
 });
 onMounted(() => {
     map = new BaseTianDiTuMap(mapContainerId);

@@ -40,8 +40,8 @@ export class GisMapNotifyEvent extends GisEvent {
     }
 }
 export class GisMapAddFeaturesEvent extends GisEvent {
-    constructor(features: GeoJSON.Feature[],options:any) {
-        super(Types.ADD_FEATURES,{}, features);
+    constructor(features: GeoJSON.Feature[],options?:any) {
+        super(Types.ADD_FEATURES,options, features);
     }
 }
 

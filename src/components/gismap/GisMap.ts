@@ -25,6 +25,14 @@ import { GisMapDrawEndEvent, GisMapDrawEvent, GisMapNotifyEvent, Types as MapTyp
 import { resolve } from "path";
 const tiandituApiKey: string = '23c0fc2a183d6d35b0458286e79ff99f';
 
+export const DefaultLayerNames = {
+    SYS_DRAW: "sys-draw",
+    USER_DRAW: "user-draw",
+    SYS_TIANDITU: "sys-tianditu",
+    SYS_TIANDITU_VEC: "sys-tianditu-vec",
+    SYS_TIANDITU_IMG: "sys-tianditu-img",
+    SYS_TIANDITU_TER: "sys-tianditu-ter",
+}
 export interface GisMapOption {
     /**
      * 地图中心点
@@ -68,14 +76,33 @@ export class GisMap {
     init() {
         this.olMap = MapHelper.newOlMapInstance(this.mapTargetElement)
         this.olView = this.olMap?.getView();
-        MapHelper.addLayer(this.olMap, this.baseLayers)
+        this.addLayer(this.olMap, this.baseLayers)
     }
     getMap(): olMap | undefined {
         return this.olMap;
     }
+    getMapOptions(gisMap: GisMap): GisMapOption | undefined {
+        const map = gisMap.getMap();
+        if (map) {
+            return {
+                center: map.getView().getCenter(),
+                zoom: map.getView().getZoom(),
+                rotation: map.getView().getRotation(),
+            }
+        }
+    }
+    addLayer(map: olMap, baseLayers: GisMapLayer[]) {
+        console.log("---------------------addLayer-----------------------")
+        console.log(baseLayers)
+        const layers: BaseLayer[] = []
+        baseLayers.forEach(lay => {
+            const l = lay.init();
+            map?.addLayer(l);
+        });
 
+    }
     saveMapStatusToLocal() {
-        const conf = MapHelper.getMapOptions(this);
+        const conf = this.getMapOptions(this);
         if (conf) {
             Common.saveLocal(this.gisMapId, conf);
         }
@@ -92,10 +119,19 @@ export class GisMap {
 
         }
     }
-    getLayerByName(name: string): GisMapLayer | undefined {
-        return this.sysLayers?.find(x => x.name === name) ||
-            this.userLayers?.find(x => x.name === name) ||
-            this.baseLayers.find(x => x.name === name)
+    getLayerByName(name: string): GisMapLayer  {
+        if (this.olMap) {
+            let layer = this.sysLayers?.find(x => x.name === name) ||
+                this.userLayers?.find(x => x.name === name) ||
+                this.baseLayers.find(x => x.name === name)
+            if (!layer) {
+                layer = new SysGisMapLayer({ name: DefaultLayerNames.SYS_DRAW })
+                this.sysLayers.push(layer);
+                this.addLayer(this.olMap, [layer])
+            }
+            return layer;
+        }
+        throw new Error("olMap is not initialized");
     }
     drawTool(option: any) {
         if (!this.olMap) {
@@ -116,12 +152,8 @@ export class GisMap {
 
 
 
-        let drawLayer: SysGisMapLayer | undefined = this.getLayerByName("sys-draw") as SysGisMapLayer;
-        if (!drawLayer) {
-            drawLayer = new SysGisMapLayer({ name: "sys-draw" })
-            this.sysLayers.push(drawLayer);
-            MapHelper.addLayer(this.olMap, [drawLayer])
-        }
+        let drawLayer: SysGisMapLayer = this.getLayerByName(DefaultLayerNames.SYS_DRAW) as SysGisMapLayer;
+
 
         if (drawType !== 'None') {
             drawTool = new Draw({
@@ -142,7 +174,7 @@ export class GisMap {
                 eventBus.emit(new GisMapDrawEndEvent(json))
                 let _once = toValue(once);
                 if (_once) {
-                    this.cleanDraw().then(()=>{
+                    this.cleanDraw().then(() => {
                         this.olMap?.removeInteraction(drawTool);
                         this.interactionMap.delete('draw-tool');
                     })
@@ -166,9 +198,17 @@ export class GisMap {
             }, 0);
         })
     }
-    
-    getCenter():Array<number> | undefined{
+
+    getCenter(): Array<number> | undefined {
         return this?.olView?.getCenter() as Array<number>;
+    }
+    addFeatures(features: GeoJSON.Feature[], options?: any) {
+       const lay =  this.getLayerByName(DefaultLayerNames.USER_DRAW);
+       if(lay.source){
+        const formatter = new GeoJSON();
+        const feas = features.map(f=>formatter.readFeature(f));
+        lay.source.addFeatures(feas)
+       }
     }
 }
 export class BaseTianDiTuMap extends GisMap {

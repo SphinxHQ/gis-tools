@@ -99,5 +99,6 @@ export interface GisMapLayer {
     layer?: BaseLayer;
     url?: string;
     sercurityTokens: Map<string, string>;
+    source?:VectorSource;
     init():BaseLayer;
 }

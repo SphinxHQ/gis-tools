@@ -30,24 +30,4 @@ export default {
             })
         });
     },
-    getMapOptions(gisMap: GisMap): GisMapOption | undefined{
-        const map = gisMap.getMap();
-        if (map) {
-            return {
-                center: map.getView().getCenter(),
-                zoom: map.getView().getZoom(),
-                rotation: map.getView().getRotation(),
-            }
-        }
-    },
-    addLayer(map: olMap, baseLayers: GisMapLayer[]){
-        console.log("---------------------addLayer-----------------------")
-        console.log(baseLayers)
-        const layers: BaseLayer[] = []
-        baseLayers.forEach(lay => {
-            const l = lay.init();
-            map?.addLayer(l);
-        }); 
-       
-    }
 }
