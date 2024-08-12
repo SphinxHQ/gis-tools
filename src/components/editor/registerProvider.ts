@@ -12,7 +12,6 @@ export const registerProvider = () => {
         endColumn: word.endColumn
       };
       const suggestionMap = new Map<string, string>()
-      //crs
       suggestionMap.set('crs', `"crs":{"type":"name","properties":{"name":"EPSG:4326"}}`);
       const map = getMainMap()
       if (map) {
