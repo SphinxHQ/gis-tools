@@ -1,7 +1,8 @@
 <template>
     
-    <el-checkbox v-model="cleanBefore">每次绘制前清除</el-checkbox>
+    <el-checkbox v-model="cleanBefore">绘制前清除</el-checkbox>
     <el-checkbox v-model="once">单次绘制</el-checkbox>
+    <el-checkbox v-model="keep">保留绘制</el-checkbox>
     <div>
         <el-button type="primary" @click="handleDrawTool('Point')">绘制工具-点</el-button>
         <el-button type="primary" @click="handleDrawTool('LineString')">绘制工具-线</el-button>
@@ -29,8 +30,9 @@ import { getMainMap } from '~/composables/gisMap';
 const inputGeo = ref<string>('')
 const cleanBefore = ref<boolean>(true)
 const once = ref<boolean>(false)
+const keep = ref<boolean>(true)
 const handleDrawTool = (type: ('Polygon' | 'Point' | 'LineString' | 'None')) => {
-    eventBus.emit(new GisMapDrawEvent({ type, cleanBefore, once }))
+    eventBus.emit(new GisMapDrawEvent({ type, cleanBefore, once,keep }))
 }
 const handleCleanDraw = () => {
     eventBus.emit(new GisMapCleanDrawEvent())

@@ -62,7 +62,7 @@ class GisEventBus {
         return  this.dispatch(event,...params|| [])
     }
     protected  dispatch(event:string,...args:any[]):Promise<any[]>{
-        console.log(`------------dispatch:${event}---------`)
+        // console.log(`------------dispatch:${event}---------`)
         const ls = this.getListeners(event);
         const eps =  new EventPromise(); 
         const ps = ls.map(cb=>new Promise((resolve,reject)=>{

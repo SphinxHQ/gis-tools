@@ -9,7 +9,6 @@ import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import Feature from "ol/Feature";
 import { LineString, Point } from 'ol/geom';
-import { Circle, Icon, Style, Stroke, Fill } from "ol/style";
 import Common from "~/common/Common";
 import MapBrowserEventType from 'ol/MapBrowserEventType';
 import { EventTypes } from "ol/Observable";
@@ -23,10 +22,14 @@ import { Draw, Interaction } from "ol/interaction";
 import { eventBus, EventPromise } from "~/composables/eventBus";
 import { GisMapDrawEndEvent, GisMapDrawEvent, GisMapNotifyEvent, Types as MapTypes } from "./events/GisMapEvents";
 import { resolve } from "path";
+import GeomUtils from "~/common/GeomUtils";
+import GisStyle from "./styles/GisStyle";
+import { Style } from "ol/style";
 const tiandituApiKey: string = '23c0fc2a183d6d35b0458286e79ff99f';
 
 export const DefaultLayerNames = {
-    SYS_DRAW: "sys-draw",
+    SYS_DRAW_TOOL_ACTION: "sys-draw-tool-action",
+    SYS_DRAW_TOOL_DISPLAY: "sys-draw-tool-display",
     USER_DRAW: "user-draw",
     SYS_TIANDITU: "sys-tianditu",
     SYS_TIANDITU_VEC: "sys-tianditu-vec",
@@ -119,13 +122,13 @@ export class GisMap {
 
         }
     }
-    getLayerByName(name: string): GisMapLayer  {
+    getLayerByName(name: string): GisMapLayer {
         if (this.olMap) {
             let layer = this.sysLayers?.find(x => x.name === name) ||
                 this.userLayers?.find(x => x.name === name) ||
                 this.baseLayers.find(x => x.name === name)
             if (!layer) {
-                layer = new SysGisMapLayer({ name: DefaultLayerNames.SYS_DRAW })
+                layer = new SysGisMapLayer({ name })
                 this.sysLayers.push(layer);
                 this.addLayer(this.olMap, [layer])
             }
@@ -133,14 +136,28 @@ export class GisMap {
         }
         throw new Error("olMap is not initialized");
     }
-    drawTool(option: any) {
+    drawTool(option: {
+        type: ('Polygon' | 'Point' | 'LineString' | 'None'),
+        cleanBefore: Ref<boolean> | boolean,
+        once: Ref<boolean> | boolean,
+        keep: Ref<boolean> | boolean,
+        allowHole: Ref<boolean> | boolean,
+    }) {
         if (!this.olMap) {
             return Promise.reject('olMap is not initialized');
         }
 
-        const once: Ref<boolean> | boolean = option.once === undefined ? true : option.once;
-        const cleanBefore: Ref<boolean> | boolean = option.cleanBefore === undefined ? true : option.cleanBefore;
+        const allowHole = toValue(option.allowHole === undefined ? true : option.allowHole);
+        let once: boolean = toValue((option.once === undefined ? true : option.once));
+        const cleanBefore: boolean = toValue(option.cleanBefore === undefined ? true : option.cleanBefore);
+        const keep: boolean = toValue(option.keep === undefined ? true : option.keep);
         const drawType = option.type;
+        if (drawType === 'Polygon' && allowHole) {
+            once = false;
+            if (isRef(option.once)) {
+                option.once.value = false;
+            }
+        }
 
 
         let drawTool = this.interactionMap.get('draw-tool') as Draw;
@@ -152,32 +169,80 @@ export class GisMap {
 
 
 
-        let drawLayer: SysGisMapLayer = this.getLayerByName(DefaultLayerNames.SYS_DRAW) as SysGisMapLayer;
+
+        let drawLayerAction: SysGisMapLayer = this.getLayerByName(DefaultLayerNames.SYS_DRAW_TOOL_ACTION) as SysGisMapLayer;
+        let drawLayerDisplay: SysGisMapLayer = this.getLayerByName(DefaultLayerNames.SYS_DRAW_TOOL_DISPLAY) as SysGisMapLayer;
 
 
         if (drawType !== 'None') {
             drawTool = new Draw({
-                source: drawLayer.source,
-                type: option.type,
+                source: drawLayerAction.source,
+                type: drawType,
+                style: GisStyle.getDrawHandleStyleFunction(),
             });
 
             drawTool.addEventListener('drawstart', (e) => {
-                let _needClean = toValue(cleanBefore);
-                if (_needClean) {
-                    drawLayer?.source?.clear();
+                if (drawType === 'Polygon' && allowHole) {
+                    if (isRef(option.once)) {
+                        option.once.value = false;
+                    }
                 }
+
+                const startPosition = e?.feature?.getGeometry()?.getFirstCoordinate();
+                if (startPosition) {
+                    const point = { type: 'Point', coordinates: startPosition };
+                    const source = drawLayerDisplay?.source;
+                    if (source) {
+                        for (let index = 0; index < drawLayerDisplay.features.length; index++) {
+                            const fea = drawLayerDisplay.features[index];
+                            if (GeomUtils.intersects(fea.geometry, point)) {
+                                drawTool.set('intersectId', fea.id); 
+                                break;
+                            }
+                        }
+                    }
+                }
+                // if (cleanBefore) {
+                //     source?.clear();
+                // }
 
             })
 
-            drawTool.addEventListener('drawend', (e) => {
-                const json = new GeoJSON().writeFeature(e.feature);
+            drawTool.addEventListener('drawend', (e:any) => {
+                let drawFeature = e.feature;
+                const intersectId = drawTool.get("intersectId");
+                const displayLayer = this.getLayerByName(DefaultLayerNames.SYS_DRAW_TOOL_DISPLAY);
+                this.cleanSource(DefaultLayerNames.SYS_DRAW_TOOL_ACTION).then(() => {
+                    if (drawType === 'Polygon') {
+                        if (keep) {
+                            if (displayLayer) {
+                                if (intersectId && allowHole) {
+                                    const overlayFeature = displayLayer.getJSONFeatureById(intersectId);
+                                    const jsonFeature = GeomUtils.olFeatureToGeoJSON(drawFeature);
+                                    const newGeo = GeomUtils.difference(overlayFeature, jsonFeature);
+                                    displayLayer.removeFeatureById(intersectId);
+                                    drawTool.set("intersectId",undefined)
+
+                                    drawFeature = displayLayer.addFeature(newGeo);
+                                } else {
+                                    drawFeature = displayLayer.addFeature(drawFeature);
+                                }
+
+
+                            } else {
+                                console.error('displayLayer is not defined.');
+                            }
+                        }
+                    }else{
+                        drawFeature = displayLayer.addFeature(drawFeature);
+                    }
+                })
+
+                const json = new GeoJSON().writeFeature(drawFeature);
                 eventBus.emit(new GisMapDrawEndEvent(json))
-                let _once = toValue(once);
-                if (_once) {
-                    this.cleanDraw().then(() => {
-                        this.olMap?.removeInteraction(drawTool);
-                        this.interactionMap.delete('draw-tool');
-                    })
+                if (once) {
+                    this.olMap?.removeInteraction(drawTool);
+                    this.interactionMap.delete('draw-tool');
                 }
             })
             this.interactionMap.set('draw-tool', drawTool);
@@ -186,14 +251,14 @@ export class GisMap {
 
         eventBus.emit(new GisMapNotifyEvent('GisMap::drawTool', option));
     }
-    cleanDraw(): Promise<any> {
+    cleanSource(layerName: string): Promise<any> {
         return new Promise(resolve => {
             setTimeout(() => {
-                let drawLayer: SysGisMapLayer | undefined = this.getLayerByName("sys-draw") as SysGisMapLayer;
-                if (drawLayer) {
-                    drawLayer.source?.clear();
+                let curLayer: GisMapLayer | undefined = this.getLayerByName(layerName) as GisMapLayer;
+                if (curLayer) {
+                    curLayer.source?.clear();
                 }
-                eventBus.emit(new GisMapNotifyEvent('GisMap::cleanDraw'));
+                eventBus.emit(new GisMapNotifyEvent('GisMap::cleanSource::' + layerName));
                 resolve(undefined);
             }, 0);
         })
@@ -202,13 +267,17 @@ export class GisMap {
     getCenter(): Array<number> | undefined {
         return this?.olView?.getCenter() as Array<number>;
     }
+
+    addFeaturesToLayer(features: GeoJSON.Feature[], layerName: string, options?: any) {
+        const lay = this.getLayerByName(layerName);
+        if (lay.source) {
+            const formatter = new GeoJSON();
+            const feas = features.map(f => formatter.readFeature(f));
+            lay.source.addFeatures(feas)
+        }
+    }
     addFeatures(features: GeoJSON.Feature[], options?: any) {
-       const lay =  this.getLayerByName(DefaultLayerNames.USER_DRAW);
-       if(lay.source){
-        const formatter = new GeoJSON();
-        const feas = features.map(f=>formatter.readFeature(f));
-        lay.source.addFeatures(feas)
-       }
+        this.addFeaturesToLayer(features, DefaultLayerNames.USER_DRAW);
     }
 }
 export class BaseTianDiTuMap extends GisMap {
