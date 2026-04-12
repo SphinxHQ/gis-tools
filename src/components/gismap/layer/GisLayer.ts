@@ -1,31 +1,27 @@
 import "ol/ol.css";
-import { ref, onMounted } from "vue";
-import { Map as olMap, View as olView } from "ol";
+import Feature from "ol/Feature";
+import GeoJSON from 'ol/format/GeoJSON';
+import BaseLayer from "ol/layer/Base";
 import TileLayer from "ol/layer/Tile";
-import XYZ from "ol/source/XYZ";
-import * as Proj from "ol/proj";
-import { fromLonLat, toLonLat } from "ol/proj";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
-import Feature from "ol/Feature";
-import { LineString, Point } from 'ol/geom';
-import * as Interaction from 'ol/interaction';
-import { Circle, Icon, Style, Stroke, Fill } from "ol/style";
-import Common from "~/common/Common";
-import MapBrowserEventType from 'ol/MapBrowserEventType';
-import { EventTypes } from "ol/Observable"; 
-import { ToolBarAction, ToolBarItem, toolBarItemProcess } from "../toolbar/MapToolBar";
-import BaseLayer from "ol/layer/Base";
-import GeoJSON from 'ol/format/GeoJSON';
-import GisStyle, { getLayerStyles } from "../styles/GisStyle";
+import XYZ from "ol/source/XYZ";
+import { Style } from "ol/style";
+import type { StyleLike } from "ol/style/Style";
 
-export interface GisLayerOption{
+import Common from "~/common/Common";
+import {logger} from "~/common/logger";
+
+import { getLayerStyles } from "../styles/GisStyle";
+
+export interface GisLayerOption {
     id?: string;
     name?: string;
     visible?: boolean;
     opacity?: number;
     zIndex?: number;
     url?: string;
+    style?: StyleLike | string | Record<string, unknown>;
 }
 
 export class SysGisMapLayer implements GisMapLayer {
@@ -37,59 +33,111 @@ export class SysGisMapLayer implements GisMapLayer {
     layer?: VectorLayer;
     url?: string;
     source?:VectorSource;
-    style: Style | undefined;
-    features: any[] = [];
+    style: StyleLike | undefined;
+    features: GeoJSON.Feature[] = [];
     sercurityTokens: Map<string, string> = new Map();
     constructor(options:GisLayerOption) {
         this.id = options.id || Common.uuid();
         this.name = options.name || '系统图层';
         this.visible = options.visible || true;
         this.opacity = options.opacity || 1;
-        this.zIndex = options.zIndex || 0;  
-        this.style = getLayerStyles(this.name);  
+        this.zIndex = options.zIndex || 0;
+        if(options.style){
+            if (typeof options.style === 'string') {
+                this.style =  getLayerStyles(options.style);
+            }else if (options.style instanceof Style){
+                this.style = options.style;
+            }else if (typeof options.style === 'object') {
+                this.style = new Style(options.style);
+            }else if (typeof options.style === 'function') {
+                this.style = options.style;
+            }else {
+                throw new Error("style must be string or Style or object or function");
+            }
+        }else {
+            this.style = getLayerStyles(this.name);
+        }
     }
+    on(...args: unknown[]): unknown {
+        if (this.layer) {
+            return (this.layer.on as (...a: unknown[]) => unknown).apply(this.layer, args);
+        }
+        return undefined;
+    }
+    off(...args: unknown[]): unknown {
+        if (this.layer) {
+            return (this.layer.un as (...a: unknown[]) => unknown).apply(this.layer, args);
+        }
+        return undefined;
+    }
+
     init() {
         const source = new VectorSource({wrapX: false});
         this.source = source;
         const vector = new VectorLayer({
           source: source,
+            background: '#FFFFFF00',
           style: this.style,
-        }); 
+        });
         this.layer = vector;
         return this.layer;
     }
-    
-    addFeature(feature:any):any {
+    addFeatures(features: Feature[]): Feature[] {
+        const result: Feature[] = []
+        features.forEach((feature, idx) => {
+            const label = feature.get('label');
+            if(!label){
+                feature.set('label',idx);
+            }
+            const added = this.addFeature(feature);
+            if (added) result.push(added);
+        })
+        return result;
+    }
+    addFeature(feature: Feature | Record<string, unknown>): Feature | undefined {
         if(feature instanceof Feature){
             feature.setId(Common.uuid());
             this.source?.addFeature(feature);
             const jsonStr=  new GeoJSON().writeFeature(feature);
             const fea = JSON.parse(jsonStr);
-            fea.id =  feature.getId()
+            fea.id =  feature.getId() as string
             this.features.push(fea);
             return feature;
         }
         if(feature?.type === 'Feature'){
-            feature.id=Common.uuid();
-            const fea = new GeoJSON().readFeature(feature);
-            this.source?.addFeature(fea);
+            (feature as Record<string, unknown>).id = Common.uuid();
+            const olFeature = new GeoJSON().readFeature(feature) as Feature;
+            this.source?.addFeature(olFeature);
             this.features.push(feature);
-
-            return this.getFeatureById(feature.id);
+            const result = this.source?.getFeatureById(feature.id as string);
+            return result ?? undefined;
         }
+        return undefined;
     }
-    getJSONFeatureById(id:string){
-       return this.features.find(f=>f.id===id);
+    getJSONFeatureById(id: string): Record<string, unknown> | undefined {
+       return this.features.find(f=>f.id===id) as Record<string, unknown> | undefined;
     }
-    getFeatureById(id:string){
-       return this.source?.getFeatureById(id);
+    getFeatureById(id: string): Feature | undefined {
+       return this.source?.getFeatureById(id) ?? undefined;
     }
-    removeFeatureById(id:string){
+    removeFeatureById(id: string): boolean {
        const fea =  this.source?.getFeatureById(id)
        if(fea){
         this.source?.removeFeature(fea);
        }
        this.features = this.features.filter(f=>f.id!==id);
+       return !!fea;
+    }
+    getExtent(): unknown {
+        return this.source?.getExtent();
+    }
+    clear(): void {
+        this.source?.clear();
+        this.features.splice(0);
+    }
+    setStyle(style: StyleLike): void {
+        this.style = style;
+        this.layer?.setStyle(style);
     }
 }
 
@@ -100,11 +148,14 @@ export class TianDiTuGisMapLayer implements GisMapLayer {
     visible?: boolean;
     opacity?: number;
     zIndex?: number;
+    style?: StyleLike;
     layer?: BaseLayer;
     url: string;
+    source?: VectorSource;
+    features?: unknown[];
     sercurityTokens: Map<string, string> = new Map();
     constructor(options:GisLayerOption) {
-        
+
         const tiandituApiKey = Common.getTiandituApiKey();
         this.sercurityTokens.set('tdt', tiandituApiKey);
         let url = options.url || ''; // 提供一个默认URL
@@ -118,6 +169,18 @@ export class TianDiTuGisMapLayer implements GisMapLayer {
         }
         this.url = url;
     }
+    on(...args: unknown[]): unknown {
+        if (this.layer) {
+            return (this.layer.on as (...a: unknown[]) => unknown).apply(this.layer, args);
+        }
+        return undefined;
+    }
+    off(...args: unknown[]): unknown {
+        if (this.layer) {
+            return (this.layer.un as (...a: unknown[]) => unknown).apply(this.layer, args);
+        }
+        return undefined;
+    }
     init() {
         const tiandituApiKey = this.sercurityTokens.get('tdt');
         this.layer = new TileLayer({
@@ -127,6 +190,12 @@ export class TianDiTuGisMapLayer implements GisMapLayer {
         });
         return this.layer;
     }
+    clear(): void {
+        logger.warn("TianDiTuGisMapLayer.clear not implemented")
+    }
+    setStyle(_style?: StyleLike): void {
+        logger.warn("TianDiTuGisMapLayer.setStyle not implemented")
+    }
 }
 
 export interface GisMapLayer {
@@ -135,14 +204,21 @@ export interface GisMapLayer {
     visible?: boolean;
     opacity?: number;
     zIndex?: number;
-    style?:Style;
+    style?: StyleLike;
     layer?: BaseLayer;
     url?: string;
     sercurityTokens: Map<string, string>;
-    source?:VectorSource;
-    features?:any[];
-    init():BaseLayer;
-    addFeature?(features:any| undefined):any;
-    getFeatureById?(id:string):any;
-    removeFeatureById?(id:string):any;
+    source?: VectorSource;
+    features?: unknown[];
+    init(): BaseLayer;
+    on(...args: unknown[]): unknown;
+    off(...args: unknown[]): unknown;
+    addFeature?(features: Feature | Record<string, unknown> | undefined): Feature | undefined;
+    addFeatures?(features: Feature[]): Feature[];
+    getFeatureById?(id: string): Feature | undefined;
+    getJSONFeatureById?(id: string): Record<string, unknown> | undefined;
+    removeFeatureById?(id: string): boolean;
+    getExtent?(): unknown;
+    clear(): void;
+    setStyle(style: StyleLike): unknown;
 }

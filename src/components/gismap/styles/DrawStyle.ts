@@ -1,14 +1,9 @@
 import {Circle, Fill, Stroke, Style} from 'ol/style.js';
-import * as Geom from 'ol/geom';
-import {State, toContext} from 'ol/render.js';
-import CanvasImmediateRenderer from 'ol/render/canvas/Immediate';
-import { Feature } from 'ol';
-import { Coordinate } from 'ol/coordinate';
 export  function createSysDrawStyle():Record<string,Style[]> {
     const styles:Record<string,Style[]> =  {};
     const white = [255, 255, 255, 1];
-    const blue = [0, 153, 255, 1];
     const red = [255, 33, 0, 1];
+    const blue = [0, 153, 255, 1];
     const width = 2;
     styles['Polygon'] = [
         new Style({
@@ -76,7 +71,6 @@ export  function createSysDrawStyle():Record<string,Style[]> {
 export  function createSysDrawHandleStyle():Record<string,Style[]> {
     const styles:Record<string,Style[]> =  {};
     const white = [255, 255, 255, 1];
-    const blue = [0, 153, 255, 1];
     const red = [255, 33, 0, 1];
     const width = 2;
     styles['Polygon'] = [
@@ -111,12 +105,12 @@ export  function createSysDrawHandleStyle():Record<string,Style[]> {
                 width: width,
             }),
         }),
-        new Style({
-            renderer: function (coordinates:Coordinate | Coordinate[] | Coordinate[][] | Coordinate[][][], state:State) {
-               const render:CanvasImmediateRenderer =  toContext(state.context, {pixelRatio:state.pixelRatio}); 
-               console.log(state)
-            }
-        }),
+        // new Style({
+        //     renderer: function (coordinates:Coordinate | Coordinate[] | Coordinate[][] | Coordinate[][][], state:State) {
+        //        // const render:CanvasImmediateRenderer =  toContext(state.context, {pixelRatio:state.pixelRatio});
+        //        // console.log(state)
+        //     }
+        // }),
     ];
     styles['MultiLineString'] = styles['LineString'];
 

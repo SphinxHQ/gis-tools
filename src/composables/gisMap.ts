@@ -1,6 +1,7 @@
-import { ref } from "vue";
-import { GisMap } from "~/components/gismap/GisMap";
 import proj4 from 'proj4';
+import { ref } from "vue";
+
+import { GisMap } from "~/components/gismap/GisMap";
 
 const  _mainMap = ref<GisMap>();
 export const setMainMap = (map:GisMap)=>{
@@ -11,9 +12,8 @@ export const getMainMap = ()=>{
 }
 export interface proj4DefItem {
     name:string,
-    proj4:any
+    proj4: unknown
 }
 export const getAllProj4Defs = ()=>{
-   const names =  Object.getOwnPropertyNames(proj4.defs);
     return Object.getOwnPropertyNames(proj4.defs);
 }

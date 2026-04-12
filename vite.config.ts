@@ -1,13 +1,7 @@
 import path from 'path'
-import { defineConfig } from 'vite'
+import { fileURLToPath } from 'url'
 
 import vue from '@vitejs/plugin-vue'
-import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-
-import monacoEditorPlugin from 'vite-plugin-monaco-editor';
-
-import Unocss from 'unocss/vite'
 import {
   presetAttributify,
   presetIcons,
@@ -15,14 +9,21 @@ import {
   transformerDirectives,
   transformerVariantGroup,
 } from 'unocss'
+import Unocss from 'unocss/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import Components from 'unplugin-vue-components/vite'
+import { defineConfig } from 'vite'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 const pathSrc = path.resolve(__dirname, 'src')
 
-// https://vitejs.dev/config/
 export default defineConfig({
   resolve: {
     alias: {
       '~/': `${pathSrc}/`,
+      'vue': 'vue/dist/vue.esm-bundler.js'
     },
   },
   css: {
@@ -32,13 +33,24 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    sourcemap: false,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-vue': ['vue', 'vue-router'],
+          'vendor-element': ['element-plus', '@element-plus/icons-vue'],
+          'vendor-geo': ['ol', '@turf/turf', 'proj4', 'shpjs', 'wkx']
+        }
+      }
+    }
+  },
   plugins: [
     vue(),
-    monacoEditorPlugin({}),
+    nodePolyfills(),
     Components({
-      // allow auto load markdown components under `./src/components/`
       extensions: ['vue', 'md'],
-      // allow auto import and register components used in markdown
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
       resolvers: [
         ElementPlusResolver({
@@ -48,8 +60,6 @@ export default defineConfig({
       dts: 'src/components.d.ts',
     }),
 
-    // https://github.com/antfu/unocss
-    // see unocss.config.ts for config
     Unocss({
       presets: [
         presetUno(),
@@ -65,4 +75,16 @@ export default defineConfig({
       ]
     }),
   ],
+  test: {
+    globals: true,
+    environment: 'happy-dom',
+    setupFiles: './src/test/setup.ts',
+    include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
+    server: {
+      deps: {
+        inline: ['element-plus']
+      }
+    }
+  },
 })

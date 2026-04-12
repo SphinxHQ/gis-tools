@@ -1,5 +1,3 @@
-
-import { Map as olMap, View as olView } from "ol";
 export interface ToolBarItem {
     id: string;
     name: string;
@@ -11,7 +9,7 @@ export enum ToolBarAction {
     DRAW,
 }
 
-export function toolBarItemProcess(item: ToolBarItem,map:olMap){
+export function toolBarItemProcess(item: ToolBarItem){
     switch (item.action) {
         case ToolBarAction.DRAW:
             break;

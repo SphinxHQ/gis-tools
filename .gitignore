@@ -12,3 +12,23 @@ package-lock.json
 pnpm-lock.yaml
 
 *.log
+
+# Claude
+.claude/
+CLAUDE.md
+
+# Other AI
+LINGMA.md
+.trae/
+qodana.yaml
+
+# Temp
+.vite/
+*-output.txt
+
+# Docs
+docs/
+
+# Env
+.env.development
+.env.production

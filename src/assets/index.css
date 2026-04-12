@@ -1,0 +1,11 @@
+.el-tabs__header.is-top > .el-tabs__new-tab {
+    width: inherit;
+    border: none;
+    white-space: nowrap;
+}
+.el-tab-pane .el-tabs__header.is-top{
+    margin-bottom: 10px;
+}
+.el-switch__label{
+    color: #CCC;
+}

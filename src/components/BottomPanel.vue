@@ -1,17 +1,17 @@
 <template>
     <div class="bottom-container">
-<div class="log-item" v-for="log in logs">
+<div v-for="log in logs" :key="log" class="log-item">
     {{ log }}
 </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { tr } from 'element-plus/es/locale';
 import { ref } from 'vue';
+
 import { eventBus } from '~/composables/eventBus';
 const logs = ref<string[]>([]);
- eventBus.on('console-log', (...args: any[]) => {
+ eventBus.on('main','console-log', (...args: any[]) => {
     if(args?.length>0){
         args.forEach((item:any)=>{
             try{

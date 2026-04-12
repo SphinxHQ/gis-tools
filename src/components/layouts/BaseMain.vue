@@ -2,26 +2,24 @@
     <div class="base-main-container">
         <div class="main">
             <div class="left">
-                <left-panel></left-panel>
+                <left-panel />
             </div>
-            <div class="h-slider" @mousedown="sliderHandles.hStart">
-            </div>
+            <div class="h-slider" @mousedown="sliderHandles.hStart" />
             <div class="map">
-                <main-map></main-map>
+                <main-map />
             </div>
         </div>
 
-        <div class="v-slider" @mousedown="sliderHandles.vStart"></div>
+        <div class="v-slider" @mousedown="sliderHandles.vStart" />
         <div class="bottom">
-            <bottom-panel></bottom-panel>
+            <bottom-panel />
         </div>
     </div>
 </template>
 <script setup lang="ts">
-import { sl, tr } from 'element-plus/es/locale';
 import { computed, ref } from 'vue';
+
 import Common from '~/common/Common';
-import { toggleDark } from '~/composables';
 
 
 //slider
@@ -70,8 +68,7 @@ const loadSlider = () => {
     try {
         const sliderInfo = Common.loadLocal(saveKey_slider) as SliderInfo;
         setSlider(sliderInfo);
-        console.log('---------SliderInfo Loaded--------')
-    } catch (e) { }
+    } catch (_e) { }
 }
 let sliderOrigin = {
     x: 0,
@@ -119,11 +116,9 @@ const sliderHandles = {
         }
 
     },
-    stop: (e: MouseEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
+    stop: () => {
     },
-    stopAll: (e: MouseEvent) => {
+    stopAll: () => {
 
         window.removeEventListener('mousemove', sliderHandles.move)
         sliderOrigin = {

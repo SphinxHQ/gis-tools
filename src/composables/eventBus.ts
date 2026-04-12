@@ -1,20 +1,13 @@
-import { ca, tr } from "element-plus/es/locale";
-import { getMaxListeners } from "events";
-import { resolve } from "path";
-import { off } from "process";
-import { TinyEmitter } from "tiny-emitter";
 import Common from "~/common/Common";
-
-const emiiter = new TinyEmitter();
-
+import {logger} from "~/common/logger";
 
 export class GisEvent {
     event_id: string;
     event_type: string;
     hasCallBack: boolean = true;
-    options: any;
-    params?: any[];
-    constructor( eventType: string, options:any,...params:any[] ) {
+    options: unknown;
+    params?: unknown[];
+    constructor( eventType: string, options: unknown, ...params: unknown[] ) {
         this.event_id = Common.uuid();
         this.event_type = eventType;
         this.options = options;
@@ -22,9 +15,9 @@ export class GisEvent {
     }
 }
 export class EventPromise{
-    promise:Promise<any>;
-    handlerResolve:Function = _=>{};
-    handlerReject:Function= _=>{};
+    promise: Promise<PromiseSettledResult<unknown>[]>;
+    handlerResolve: (value: PromiseSettledResult<unknown>[]) => void = () => {};
+    handlerReject: (reason?: unknown) => void = () => {};
     constructor(){
         this.promise = new Promise((resolve,reject)=>{
             this.handlerResolve = resolve;
@@ -32,70 +25,62 @@ export class EventPromise{
         })
     }
 }
-class GisEventBus {
-    emiiter: TinyEmitter;
+export class GisEventBus {
     schema: string;
-    listeners: Map<string, Function[]>= new Map();
+    listeners: Map<string, Map<string, Function[]>> = new Map();
     constructor(schema: string) {
-        this.emiiter = new TinyEmitter();
-        this.schema = schema; 
+        this.schema = schema;
     }
-    getListeners(event:string):Function[]{
-        let listeners = this.listeners.get(event);
-        if(!listeners){
-            listeners = []
-            this.listeners.set(event,listeners)
+    getListeners(group:string, event:string):Function[]{
+        if(!this.listeners.has(group)){
+            this.listeners.set(group,new Map<string, Function[]>());
         }
-        return listeners;
+        if(!this.listeners.get(group)!.has(event)){
+            this.listeners.get(group)!.set(event,[]);
+        }
+        return this.listeners.get(group)!.get(event)!;
     }
-    on(event: string, callback: Function, ctx?: any):void{
-        this.log(arguments);
-        const ls = this.getListeners(event);
+    on(group: string, event: string, callback: Function):void{
+        const ls = this.getListeners(group,event);
         if(ls.includes(callback)){
             throw new Error('重复注册事件');
         }
         ls.push(callback);
     }
-    emit(gisEvent:GisEvent):Promise<{status:('fulfilled'|'rejected'),reason?:number,value?:number}[]>{
+    emit(group:string,gisEvent:GisEvent):Promise<PromiseSettledResult<unknown>[]>{
         const event = gisEvent.event_type
         const params = gisEvent.params;
-        return  this.dispatch(event,...params|| [])
+        const options = gisEvent?.options;
+        return  this.dispatch(group,event,options,...params|| [])
     }
-    protected  dispatch(event:string,...args:any[]):Promise<any[]>{
-        // console.log(`------------dispatch:${event}---------`)
-        const ls = this.getListeners(event);
-        const eps =  new EventPromise(); 
-        const ps = ls.map(cb=>new Promise((resolve,reject)=>{
-            setTimeout(async ()=>{
-                try{
-                    const res = await Reflect.apply(cb,this,args);
-                    resolve(res);
-                }catch(err){
-                    console.error(err)
-                    reject(err);
+    protected dispatch(group:string, event:string, options?:unknown,...args:unknown[]):Promise<PromiseSettledResult<unknown>[]>{
+        const ls = this.getListeners(group,event);
+        const ps = ls.map(cb => new Promise<PromiseSettledResult<unknown>>((resolve) => {
+            setTimeout(async () => {
+                try {
+                    const res = await Reflect.apply(cb, this, [options, ...args]);
+                    resolve({ status: 'fulfilled', value: res });
+                } catch(err) {
+                    logger.error('EventBus dispatch error:', err);
+                    resolve({ status: 'rejected', reason: err });
                 }
-            },0)
-        }))
-        Promise.allSettled(ps).then(res=>{
-            eps.handlerResolve(res);
-        }).catch(err=>{
-            console.error(err);
-            eps.handlerReject(err);
-        })
-        return  eps.promise;
+            }, 0);
+        }));
+        return Promise.all(ps);
     }
-    off(event:string,callback?:Function){
-        emiiter.off(event,callback)
-    }
-    log(...args:any[]){
-        if(process.env.NODE_ENV === 'development'){
-            Reflect.apply(console.log,console,args)
+    off(group:string, event:string,callback?:Function){
+        const ls = this.getListeners(group,event);
+        if(callback && ls.includes(callback)){
+            ls.splice(ls.indexOf(callback),1);
         }
-        this.dispatch('console-log',args)
+        if(callback===undefined){
+            ls.splice(0);
+        }
+    }
+    log(group:string,...args:unknown[]){
+        this.dispatch(group,'console-log',args)
     }
 }
 const gisEventBus = new GisEventBus('sys');
- 
-
 
 export const eventBus = gisEventBus;
