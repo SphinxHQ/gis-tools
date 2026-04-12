@@ -17,7 +17,7 @@ export const constantRoutes = [
 ]
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHistory('/gis-tools/'),
     routes: [...constantRoutes]
 })
 const title = 'Gis Tools';
