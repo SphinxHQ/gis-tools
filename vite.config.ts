@@ -20,6 +20,7 @@ const __dirname = path.dirname(__filename)
 const pathSrc = path.resolve(__dirname, 'src')
 
 export default defineConfig({
+  base: '/gis-tools/',
   resolve: {
     alias: {
       '~/': `${pathSrc}/`,

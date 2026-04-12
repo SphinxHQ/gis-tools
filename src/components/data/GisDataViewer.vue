@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {ElMessage} from "element-plus";
 import {computed, Ref, ref, watch} from "vue";
+import {ShapefileParser, GeoJSONFeatureCollection} from "@sphinx_hq/shapefile-parser";
 
 import {ExchangeDataFormat} from "~/components/data/ExchangeDataFormat";
 import GisDataInfo from "~/components/data/GisDataInfo";
@@ -112,6 +113,33 @@ const handleDownloadJson = () => {
   URL.revokeObjectURL(url);
 }
 
+const shpLoading = ref(false);
+const handleDownloadShp = async () => {
+  if (!props.data?.features?.length) {
+    ElMessage.warning("没有数据可导出");
+    return;
+  }
+  shpLoading.value = true;
+  try {
+    const parser = new ShapefileParser();
+    const geojson: GeoJSONFeatureCollection = {
+      type: "FeatureCollection",
+      features: props.data.features as GeoJSONFeatureCollection['features']
+    };
+    const fileName = "shapefile_" + new Date().getTime();
+    await parser.write(geojson, {
+      filename: fileName,
+      download: true,
+      fieldNameStrategy: 'auto'
+    });
+    ElMessage.success("Shapefile 导出成功");
+  } catch (e: any) {
+    ElMessage.error(e.message || "导出失败");
+  } finally {
+    shpLoading.value = false;
+  }
+}
+
 
 const handleDownloadExchange = () => {
   let downloadData = dataStr_exchange;
@@ -149,7 +177,10 @@ const hasFeatures = computed(() => {
             <el-radio-button value="FeatureListArray">FeatureList Array</el-radio-button>
             <el-radio-button value="FeatureSplit">Feature Split</el-radio-button>
           </el-radio-group>
-          <el-button type="primary" @click="handleDownloadJson">Download Json File</el-button>
+          <div style="display: flex; gap: 8px;">
+            <el-button type="primary" @click="handleDownloadJson">Download Json File</el-button>
+            <el-button type="success" :loading="shpLoading" @click="handleDownloadShp">Download Shapefile</el-button>
+          </div>
         </div>
         <div class="h-[calc(100%-40px)] overflow-auto">
           <div v-if="geoJsonType === 'FeatureSplit'"
