@@ -42,7 +42,7 @@ export default defineConfig({
         manualChunks: {
           'vendor-vue': ['vue', 'vue-router'],
           'vendor-element': ['element-plus', '@element-plus/icons-vue'],
-          'vendor-geo': ['ol', '@turf/turf', 'proj4', 'shpjs', 'wkx']
+          'vendor-geo': ['ol', '@turf/turf', 'proj4', '@sphinx_hq/shapefile-parser', 'wkx']
         }
       }
     }

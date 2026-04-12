@@ -1,43 +1,44 @@
+import {ShapefileParser} from '@sphinx_hq/shapefile-parser';
 import * as GeoJSON from 'geojson';
-import shp from 'shpjs';
 
 import Common from "~/common/Common";
-import {logger} from "~/common/logger";
 import {DataFormat} from "~/components/data/DataFormat";
 import GisCrs from "~/components/data/GisCrs";
 import GisDataInfo from "~/components/data/GisDataInfo";
 
 export class ShapeZipDataFormat implements DataFormat {
-    read(content: ArrayBuffer | string): Promise<GisDataInfo> {
-        return new Promise<GisDataInfo>((resolve, reject) => {
-            try {
-                if (typeof content === 'string') {
-                    content = Common.base64ToArrayBuffer(content);
-                }
-                shp(content).then((result: GeoJSON.GeoJsonObject | GeoJSON.GeoJsonObject[]) => {
-                    GisCrs.tryGetCrs(result).then((crs: GisCrs) => {
-                        const gisDataInfo = new GisDataInfo("ShapeZip" + new Date().getTime(), crs);
-                        if (Array.isArray(result)) {
-                            result.forEach(geojson => {
-                                if ('features' in geojson && Array.isArray(geojson.features)) {
-                                    gisDataInfo.features.push(...geojson.features);
-                                }
-                            });
-                        } else if ('features' in result && Array.isArray(result.features)) {
-                            gisDataInfo.features.push(...result.features);
-                        }
-                        resolve(gisDataInfo);
-                    }).catch((e: unknown) => {
-                        logger.error('ShapeZip tryGetCrs failed:', e);
-                        reject(e);
-                    });
-                }).catch(e => {
-                    reject(e);
-                });
-            } catch (e) {
-                reject(e)
-            }
-        })
+    private parser = new ShapefileParser();
+
+    async read(content: ArrayBuffer | string): Promise<GisDataInfo> {
+        if (typeof content === 'string') {
+            content = Common.base64ToArrayBuffer(content);
+        }
+
+        const result = await this.parser.read(content as ArrayBuffer);
+        const keys = Object.keys(result);
+
+        // 获取第一个图层的 CRS
+        const firstKey = keys[0];
+        const firstGeojson = result[firstKey];
+
+        let crs: GisCrs;
+        if (firstGeojson.crs) {
+            const epsgCode = typeof firstGeojson.crs === 'string'
+                ? parseInt(firstGeojson.crs.replace('EPSG:', ''))
+                : firstGeojson.crs.code || 0;
+            crs = epsgCode ? new GisCrs(epsgCode) : await GisCrs.tryGetCrs(firstGeojson);
+        } else {
+            crs = await GisCrs.tryGetCrs(firstGeojson);
+        }
+
+        const gisDataInfo = new GisDataInfo("ShapeZip_" + keys.join('_'), crs);
+
+        // 合并所有图层的 features
+        for (const key of keys) {
+            gisDataInfo.features.push(...result[key].features as GeoJSON.Feature[]);
+        }
+
+        return gisDataInfo;
     }
 
     write(): Promise<string> {

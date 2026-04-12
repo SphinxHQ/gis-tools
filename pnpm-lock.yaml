@@ -26,9 +26,6 @@ importers:
       proj4:
         specifier: 2.12.0
         version: 2.12.0
-      shpjs:
-        specifier: 6.1.0
-        version: 6.1.0
       vue:
         specifier: 3.4.38
         version: 3.4.38(typescript@5.5.4)
@@ -48,9 +45,6 @@ importers:
       '@types/node':
         specifier: ^20.14.14
         version: 20.16.1
-      '@types/shpjs':
-        specifier: ^3.4.7
-        version: 3.4.7
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.18.0
         version: 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.5.4))(eslint@8.57.1)(typescript@5.5.4)
@@ -1010,9 +1004,6 @@ packages:
   '@types/rbush@3.0.4':
     resolution: {integrity: sha512-knSt9cCW8jj1ZSFcFeBZaX++OucmfPxxHiRwTahZfJlnQsek7O0bazTJHWD2RVj9LEoejUYF2de3/stf+QXcXw==}
 
-  '@types/shpjs@3.4.7':
-    resolution: {integrity: sha512-/6PjggpFsq9NFxar6ZpXsnYZ+nQJR8Cv03Gne1enIJuMZ/eFVOpu0orHxL9D7RT3ciJElzF2H6l+49US23ydUw==}
-
   '@types/web-bluetooth@0.0.16':
     resolution: {integrity: sha512-oh8q2Zc32S6gd/j50GowEjKLoOVOwHP/bWVjKJInBwQqdOYMdPrf1oVlelTlyfFK3CKxL1uahMDAr+vy8T7yMQ==}
 
@@ -1454,9 +1445,6 @@ packages:
 
   builtin-status-codes@3.0.0:
     resolution: {integrity: sha512-HpGFw18DgFWlncDfjTa2rcQ4W88O1mC8e8yZ2AvQY5KDaktSTwo+KRf6nHK6FRI5FyRyb/5T6+TSxfP7QyGsmQ==}
-
-  but-unzip@0.1.4:
-    resolution: {integrity: sha512-Q5/55MTk0PHjxtYyZBbhIVMJP0+FNc/AOKBrrnqaxnbJR4I7w+R4CMRNYMxUQrKmCLrih7D1p4/nwZHMn7IToA==}
 
   cac@6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
@@ -2723,9 +2711,6 @@ packages:
   parse5@7.1.2:
     resolution: {integrity: sha512-Czj1WaSVpaoj0wbhMzLmWD69anp2WH7FXMB9n1Sy8/ZFF9jolSQVMu1Ij5WIyGmcBmhk7EOndpO4mIpihVqAXw==}
 
-  parsedbf@2.0.0:
-    resolution: {integrity: sha512-WNjKn/cwgGBkXqQLif+2VMEahcRHkBRU0/RfBWZ7Vj7snRNNW63yW1mVuuHRDyXTRxuGCzAHHBcr/Fn+U/bXjQ==}
-
   pascal-case@3.1.2:
     resolution: {integrity: sha512-uWlGT3YSnK9x3BQJaOdcZwrnV6hPpd8jFH1/ucpiLRPh/2zCVJKS19E4GvYHvaCcACn3foXZ0cLB9Wrx1KGe5g==}
 
@@ -3047,9 +3032,6 @@ packages:
   shebang-regex@3.0.0:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
-
-  shpjs@6.1.0:
-    resolution: {integrity: sha512-uaUpod7uIWetJK80yiiedZ3x4z9ZAPgDVT89N27+8F97Z8ZOqmu88P96I6CBC8N+YyERqdneZNT/wNFUEnzNpw==}
 
   side-channel-list@1.0.1:
     resolution: {integrity: sha512-mjn/0bi/oUURjc5Xl7IaWi/OJJJumuoJFQJfDDyO46+hBWsfaVM65TBHq2eoZBhzl9EchxOijpkbRC8SVBQU0w==}
@@ -5258,11 +5240,6 @@ snapshots:
 
   '@types/rbush@3.0.4': {}
 
-  '@types/shpjs@3.4.7':
-    dependencies:
-      '@types/geojson': 7946.0.14
-      '@types/node': 20.16.1
-
   '@types/web-bluetooth@0.0.16': {}
 
   '@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.5.4))(eslint@8.57.1)(typescript@5.5.4)':
@@ -5902,8 +5879,6 @@ snapshots:
       ieee754: 1.2.1
 
   builtin-status-codes@3.0.0: {}
-
-  but-unzip@0.1.4: {}
 
   cac@6.7.14: {}
 
@@ -7435,8 +7410,6 @@ snapshots:
     dependencies:
       entities: 4.5.0
 
-  parsedbf@2.0.0: {}
-
   pascal-case@3.1.2:
     dependencies:
       no-case: 3.0.4
@@ -7787,12 +7760,6 @@ snapshots:
       shebang-regex: 3.0.0
 
   shebang-regex@3.0.0: {}
-
-  shpjs@6.1.0:
-    dependencies:
-      but-unzip: 0.1.4
-      parsedbf: 2.0.0
-      proj4: 2.12.0
 
   side-channel-list@1.0.1:
     dependencies:
