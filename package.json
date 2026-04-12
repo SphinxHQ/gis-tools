@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "2.3.1",
-    "@sphinx_hq/shapefile-parser": "^0.0.2",
+    "@sphinx_hq/shapefile-parser": "^0.0.3",
     "@turf/turf": "7.1.0",
     "element-plus": "2.8.1",
     "ol": "10.1.0",

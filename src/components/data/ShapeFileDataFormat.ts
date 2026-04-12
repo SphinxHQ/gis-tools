@@ -30,7 +30,9 @@ export class ShapeFileDataFormat implements DataFormat {
         }
 
         const gisDataInfo = new GisDataInfo("ShapeFile_" + firstKey, crs);
-        gisDataInfo.features.push(...geojson.features as GeoJSON.Feature[]);
+        // 过滤掉 geometry 为 null 的要素
+        const validFeatures = geojson.features.filter(f => f.geometry !== null);
+        gisDataInfo.features.push(...validFeatures as GeoJSON.Feature[]);
 
         return gisDataInfo;
     }

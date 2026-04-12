@@ -33,9 +33,10 @@ export class ShapeZipDataFormat implements DataFormat {
 
         const gisDataInfo = new GisDataInfo("ShapeZip_" + keys.join('_'), crs);
 
-        // 合并所有图层的 features
+        // 合并所有图层的 features，过滤掉 geometry 为 null 的要素
         for (const key of keys) {
-            gisDataInfo.features.push(...result[key].features as GeoJSON.Feature[]);
+            const validFeatures = result[key].features.filter(f => f.geometry !== null);
+            gisDataInfo.features.push(...validFeatures as GeoJSON.Feature[]);
         }
 
         return gisDataInfo;

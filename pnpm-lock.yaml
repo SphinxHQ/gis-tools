@@ -12,8 +12,8 @@ importers:
         specifier: 2.3.1
         version: 2.3.1(vue@3.4.38(typescript@5.5.4))
       '@sphinx_hq/shapefile-parser':
-        specifier: ^0.0.2
-        version: 0.0.2
+        specifier: ^0.0.3
+        version: 0.0.3
       '@turf/turf':
         specifier: 7.1.0
         version: 7.1.0
@@ -631,8 +631,8 @@ packages:
   '@sinclair/typebox@0.27.10':
     resolution: {integrity: sha512-MTBk/3jGLNB2tVxv6uLlFh1iu64iYOQ2PbdOSK3NW8JZsmlaOh2q6sdtKowBhfw8QFLmYNzTW4/oK4uATIi6ZA==}
 
-  '@sphinx_hq/shapefile-parser@0.0.2':
-    resolution: {integrity: sha512-usmZkdLtFeo+T1ofiBrePqIPSyRqO9kGskJ3YGtz1FNfVQQJq7ksl6/dRJfOvaOjRowrJQ13ExpxPI5zgUjVEg==}
+  '@sphinx_hq/shapefile-parser@0.0.3':
+    resolution: {integrity: sha512-uLCbBT6uTj2nQ/rZKuNwS+irBrUtdyCgKycT2kkd4wOfvVA38wTjg9v4s38mx/iXbkAZIgqCg2/caCQjm70WtA==}
     engines: {node: '>=16.0.0'}
 
   '@sxzz/popperjs-es@2.11.7':
@@ -4114,7 +4114,7 @@ snapshots:
 
   '@sinclair/typebox@0.27.10': {}
 
-  '@sphinx_hq/shapefile-parser@0.0.2':
+  '@sphinx_hq/shapefile-parser@0.0.3':
     dependencies:
       fflate: 0.8.2
 
