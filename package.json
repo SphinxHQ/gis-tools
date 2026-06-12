@@ -19,9 +19,12 @@
     "@element-plus/icons-vue": "2.3.1",
     "@sphinx_hq/shapefile-parser": "^0.0.6",
     "@turf/turf": "7.1.0",
+    "@vueuse/core": "^14.3.0",
     "element-plus": "2.8.1",
+    "monaco-editor": "^0.55.1",
     "ol": "10.1.0",
     "proj4": "2.12.0",
+    "splitpanes": "^4.1.2",
     "vue": "3.4.38",
     "vue-router": "4.4.3",
     "wkx": "0.5.0"

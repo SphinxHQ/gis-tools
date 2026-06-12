@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import {ElMessageBox} from "element-plus";
-import type {TabPaneName} from 'element-plus'
-import proj4 from "proj4";
-import {computed, nextTick, ref, watch} from 'vue'
+import { ElMessageBox } from 'element-plus'
+import proj4 from 'proj4'
+import { computed, ref, watch } from 'vue'
 
-import {GisError, GisErrorCode, createUserMessage} from "~/common/GisError";
-import {logger} from "~/common/logger";
-import GisCrs from "~/components/data/GisCrs";
-import GisCrsSelector from "~/components/data/GisCrsSelector.vue";
-import GisDataInfo from "~/components/data/GisDataInfo";
-import {CrsInfo} from "~/components/data/GisProjectedBounds";
+import { GisError, GisErrorCode, createUserMessage } from '~/common/GisError'
+import { logger } from '~/common/logger'
+import GisCrs from '~/components/data/GisCrs'
+import GisDataInfo from '~/components/data/GisDataInfo'
+import { CrsInfo } from '~/components/data/GisProjectedBounds'
 
 const props = defineProps({
   data: {
@@ -20,63 +18,131 @@ const props = defineProps({
 
 const originData = ref<GisDataInfo>(new GisDataInfo())
 
+// === 坐标转换核心 ===
 const transformGeometry = (geoObj: unknown, fromCrs: CrsInfo, toCrs: CrsInfo) => {
-  if (!fromCrs || !toCrs) {
-    return;
-  }
-  const arr = geoObj as unknown[];
+  if (!fromCrs || !toCrs) return
+  const arr = geoObj as unknown[]
   if (Array.isArray(arr)) {
     if ((arr.length === 2 || arr.length === 3) && arr.every(p => typeof p === 'number')) {
-      const newPt = proj4(proj4.defs(`EPSG:${fromCrs.epsgCode}`), proj4.defs(`EPSG:${toCrs.epsgCode}`), arr as number[]);
+      const newPt = proj4(
+        proj4.defs(`EPSG:${fromCrs.epsgCode}`),
+        proj4.defs(`EPSG:${toCrs.epsgCode}`),
+        arr as number[]
+      )
       if (newPt[0] === Infinity || newPt[1] === Infinity) {
-         throw new GisError(GisErrorCode.COORDINATE_TRANSFORM_FAILED);
+        throw new GisError(GisErrorCode.COORDINATE_TRANSFORM_FAILED)
       }
-      arr[0] = newPt[0];
-      arr[1] = newPt[1];
+      arr[0] = newPt[0]
+      arr[1] = newPt[1]
     } else {
-      arr.forEach(g => transformGeometry(g, fromCrs, toCrs));
+      arr.forEach(g => transformGeometry(g, fromCrs, toCrs))
     }
   } else {
-    const obj = geoObj as { coordinates?: unknown };
+    const obj = geoObj as { coordinates?: unknown }
     if (obj?.coordinates) {
-      transformGeometry(obj.coordinates, fromCrs, toCrs);
-    }
-  }
-}
-const transformData = (data: GisDataInfo, toCrs: CrsInfo | undefined) => {
-  if (toCrs) {
-    try {
-      const fromCrs = data.crs?.crsInfo;
-      if (fromCrs && toCrs && fromCrs.epsgCode !== toCrs.epsgCode) {
-        data.features.forEach((feature: { geometry: unknown }) => {
-          transformGeometry(feature.geometry, fromCrs, toCrs)
-        })
-        data.crs = new GisCrs(toCrs.epsgCode);
-      }
-    }catch (e){
-      const msg = createUserMessage(e);
-      logger.error('坐标转换失败:', e);
-      ElMessageBox.alert(msg, "错误", {
-        confirmButtonText: '确定',
-        type: 'error',
-        callback: () => {
-          _handleTabsEdit(toCrs.name, 'remove')
-        }
-      })
+      transformGeometry(obj.coordinates, fromCrs, toCrs)
     }
   }
 }
 
-const originDataCrsTitle = computed(()=>originData.value?.crs?.crsInfo?.name ? `EPSG:${originData.value?.crs?.crsInfo?.epsgCode}` :'（无）',)
-const editableTabsValue = ref<string>('origin')
-const editableTabs = ref<Array<{title: unknown; name: string; data: GisDataInfo; crs?: CrsInfo}>>([
-  {
-    title: originDataCrsTitle,
-    name: 'origin',
-    data: originData.value,
-    crs: undefined,
-  },
-])
+const transformData = (data: GisDataInfo, toCrs: CrsInfo | undefined) => {
+  if (!toCrs) return
+  try {
+    const fromCrs = data.crs?.crsInfo
+    if (fromCrs && fromCrs.epsgCode !== toCrs.epsgCode) {
+      data.features.forEach((feature: { geometry: unknown }) => {
+        transformGeometry(feature.geometry, fromCrs, toCrs)
+      })
+      data.crs = new GisCrs(toCrs.epsgCode)
+      // 同步更新 descriptions 中的坐标系相关字段
+      if (data.descriptions) {
+        const simpleName = toCrs.name?.split('/')[0].trim() || '';
+        let crsLabel = '';
+        if (simpleName.includes('2000')) crsLabel = '2000国家大地坐标系';
+        else if (simpleName.includes('54')) crsLabel = '54北京坐标系';
+        else if (simpleName.includes('80')) crsLabel = '西安80坐标系';
+        data.descriptions['坐标系'] = crsLabel
+        data.descriptions['几度分带'] = (toCrs.zoneDegree ?? 0) > 0 ? toCrs.zoneDegree : ''
+        data.descriptions['投影类型'] = toCrs.projected ? '高斯克吕格' : ''
+        data.descriptions['计量单位'] = toCrs.projected ? '米' : '度'
+        data.descriptions['带号'] = (toCrs.zoneNumber ?? 0) > 0 ? String(toCrs.zoneNumber) : ''
+      }
+    }
+  } catch (e) {
+    let msg = createUserMessage(e)
+    if (e instanceof GisError) {
+      const codeLabel: Record<string, string> = {
+        [GisErrorCode.COORDINATE_TRANSFORM_FAILED]: '坐标转换失败',
+        [GisErrorCode.CRS_NOT_FOUND]: '坐标系未找到',
+      }
+      const label = codeLabel[e.code] || e.code
+      msg = `[${label}]\n\n${msg}\n\n目标坐标系: EPSG:${toCrs.epsgCode}`
+    }
+    logger.error('坐标转换失败:', e)
+    ElMessageBox.alert(msg, '坐标转换失败', {
+      confirmButtonText: '确定',
+      type: 'error',
+      dangerouslyUseHTMLString: false,
+      callback: () => {
+        const failTab = editableTabs.value.find(t => t.crs?.epsgCode === toCrs.epsgCode && t.name !== 'origin')
+        if (failTab) removeTab(failTab.name)
+      }
+    })
+  }
+}
+
+// === Tab 管理 ===
+interface TabEntry {
+  name: string
+  label: string
+  data: GisDataInfo
+  crs?: CrsInfo
+  sourceEpsg?: number
+  transformChain: number[] // 转换链：[originEpsg, step1Epsg, ..., currentEpsg]
+}
+
+const editableTabsValue = ref('origin')
+const editableTabs = ref<TabEntry[]>([])
+
+const originDataCrsTitle = computed(() => {
+  const crs = originData.value?.crs
+  if (!crs || crs.epsgCode <= 0) return `${originData.value?.name || '数据'}（无）`
+  const family = GisCrs.familyName(crs.crsInfo)
+  return `${family} EPSG:${crs.epsgCode}`
+})
+
+// 获取当前活跃Tab
+const activeTab = computed(() =>
+  editableTabs.value.find(t => t.name === editableTabsValue.value)
+)
+
+// 当前Tab的CRS信息（用于弹窗源CRS）
+const activeTabCrsInfo = computed(() => {
+  return activeTab.value?.data?.crs?.crsInfo ?? null
+})
+
+const hasValidCrs = computed(() => {
+  const crs = activeTab.value?.data?.crs
+  return crs && crs.epsgCode > 0 && crs.isValid
+})
+
+// 当前Tab的转换链
+const activeTransformChain = computed(() => activeTab.value?.transformChain ?? [])
+
+// 已存在的 EPSG 代码（用于转换选择器禁用已选）
+const existingEpsgCodes = computed(() =>
+  editableTabs.value.map(t => t.data?.crs?.epsgCode).filter((c): c is number => !!c)
+)
+
+// 根据 EPSG 代码查找对应 Tab
+const findTabByEpsg = (epsgCode: number): TabEntry | undefined =>
+  editableTabs.value.find(t => t.data?.crs?.epsgCode === epsgCode)
+
+// 跳转到转换链中某一步对应的Tab
+const navigateToChainStep = (epsgCode: number) => {
+  const tab = findTabByEpsg(epsgCode)
+  if (tab) editableTabsValue.value = tab.name
+}
 
 const reloadTabsData = () => {
   editableTabs.value.forEach((item, idx) => {
@@ -87,87 +153,145 @@ const reloadTabsData = () => {
   })
 }
 
-// 监听 props.data 变化，更新数据
+// 监听 props.data 变化
 watch(() => props.data, (newData) => {
-  const data = newData as GisDataInfo;
-  originData.value = data;
-  // 更新第一个标签页的数据引用（关键修复）
+  const data = newData as GisDataInfo
+  originData.value = data
+  const originEpsg = data?.crs?.epsgCode
+  editableTabs.value = [{
+    name: 'origin',
+    label: originDataCrsTitle.value,
+    data: data,
+    crs: undefined,
+    sourceEpsg: undefined,
+    transformChain: originEpsg ? [originEpsg] : [],
+  }]
+  editableTabsValue.value = 'origin'
+}, { deep: true, immediate: true })
+
+// 更新原始 Tab 标签
+watch(originDataCrsTitle, (title) => {
   if (editableTabs.value.length > 0) {
-    editableTabs.value[0].data = data;
+    editableTabs.value[0].label = title
   }
-  nextTick(reloadTabsData)
-}, {deep: true, immediate: true})
-const _handleTabsEdit = (
-    targetName: string | undefined,
-    _action: 'remove' | 'add', crs?: CrsInfo
-) => {
-  if (_action === 'add') {
-    const newTabName = targetName || ''
-    editableTabs.value.push({
-      title: newTabName,
-      name: newTabName,
-      data: new GisDataInfo(),
-      crs: crs
-    })
-    editableTabsValue.value = newTabName
-    reloadTabsData();
-  } else if (_action === 'remove') {
-    const tabs = editableTabs.value
-    let activeName = editableTabsValue.value
-    if (activeName === targetName) {
-      tabs.forEach((tab, index) => {
-        if (tab.name === targetName) {
-          const nextTab = tabs[index + 1] || tabs[index - 1]
-          if (nextTab) {
-            activeName = nextTab.name
-          }
-        }
-      })
+})
+
+const addTransformTab = (targetCrs: CrsInfo, sourceTab: TabEntry) => {
+  const family = GisCrs.familyName(targetCrs)
+  const label = `${family} EPSG:${targetCrs.epsgCode}`
+
+  const tabName = `crs_${targetCrs.epsgCode}_${Date.now()}`
+  const newChain = [...sourceTab.transformChain, targetCrs.epsgCode]
+
+  editableTabs.value.push({
+    name: tabName,
+    label,
+    data: new GisDataInfo(),
+    crs: targetCrs,
+    sourceEpsg: sourceTab.data?.crs?.epsgCode,
+    transformChain: newChain,
+  })
+  editableTabsValue.value = tabName
+  reloadTabsData()
+}
+
+const removeTab = (tabName: string) => {
+  const tabs = editableTabs.value
+  let activeName = editableTabsValue.value
+  if (activeName === tabName) {
+    const idx = tabs.findIndex(t => t.name === tabName)
+    const next = tabs[idx + 1] || tabs[idx - 1]
+    if (next) activeName = next.name
+  }
+  editableTabsValue.value = activeName
+  editableTabs.value = tabs.filter(t => t.name !== tabName)
+}
+
+const handleTabRemove = (name: string | number) => {
+  if (name === 'origin') return
+  removeTab(String(name))
+}
+
+// === 弹窗状态 ===
+const transformDialogVisible = ref(false)
+const resetCrsDialogVisible = ref(false)
+
+const handleTransformSelect = (crs: CrsInfo) => {
+  transformDialogVisible.value = false
+  if (activeTab.value) {
+    addTransformTab(crs, activeTab.value)
+  }
+}
+
+const handleResetCrs = (crs: CrsInfo) => {
+  resetCrsDialogVisible.value = false
+  // 重设的是当前Tab的CRS
+  if (activeTab.value) {
+    activeTab.value.data.crs = new GisCrs(crs.epsgCode)
+    // 同步更新 descriptions 中的坐标系相关字段
+    if (activeTab.value.data.descriptions) {
+      const simpleName = crs.name?.split('/')[0].trim() || '';
+      let crsLabel = '';
+      if (simpleName.includes('2000')) crsLabel = '2000国家大地坐标系';
+      else if (simpleName.includes('54')) crsLabel = '54北京坐标系';
+      else if (simpleName.includes('80')) crsLabel = '西安80坐标系';
+      activeTab.value.data.descriptions['坐标系'] = crsLabel
+      activeTab.value.data.descriptions['几度分带'] = (crs.zoneDegree ?? 0) > 0 ? crs.zoneDegree : ''
+      activeTab.value.data.descriptions['投影类型'] = crs.projected ? '高斯克吕格' : ''
+      activeTab.value.data.descriptions['计量单位'] = crs.projected ? '米' : '度'
+      activeTab.value.data.descriptions['带号'] = (crs.zoneNumber ?? 0) > 0 ? String(crs.zoneNumber) : ''
     }
-
-    editableTabsValue.value = activeName
-    editableTabs.value = tabs.filter((tab) => tab.name !== targetName)
+    // 如果是原始Tab，同步到 originData 并清除所有转换Tab
+    if (activeTab.value.name === 'origin') {
+      originData.value.crs = new GisCrs(crs.epsgCode)
+      editableTabs.value = [editableTabs.value[0]]
+      editableTabsValue.value = 'origin'
+    }
   }
 }
-
-const handleTabsEdit = (targetName: TabPaneName | undefined, action: 'remove' | 'add') => {
-  if (action === 'add') {
-  }
-  if (action === 'remove') {
-    _handleTabsEdit(targetName as string | undefined, action, undefined);
-  }
-}
-const handleCrsChange = (value: CrsInfo) => {
-  dialogTableVisible.value = false;
-  _handleTabsEdit(value.name, 'add', value);
-}
-const dialogTableVisible = ref(false)
 </script>
 
 <template>
   <div class="gis-data-transformer-container">
-    <el-dialog v-model="dialogTableVisible" title="选择坐标系" width="800">
-      <gis-crs-selector v-if="dialogTableVisible" :disable-values="editableTabs.map(x => x.data?.crs?.epsgCode)"
-                        @change="handleCrsChange"
-/>
+    <!-- 坐标转换弹窗 -->
+    <el-dialog v-model="transformDialogVisible" title="坐标转换" width="700">
+      <gis-crs-transform-selector
+        v-if="transformDialogVisible"
+        :source-crs="activeTabCrsInfo"
+        :existing-epsg-codes="existingEpsgCodes"
+        @select="handleTransformSelect"
+        @cancel="transformDialogVisible = false"
+      />
     </el-dialog>
+
+    <!-- 重设坐标系弹窗 -->
+    <el-dialog v-model="resetCrsDialogVisible" title="重设坐标系" width="800">
+      <gis-crs-selector
+        v-if="resetCrsDialogVisible"
+        @change="handleResetCrs"
+      />
+    </el-dialog>
+
     <el-tabs
-        v-model="editableTabsValue"
-        type="card"
-        editable
-        class="gis-data-transformer-tabs"
-        @edit="handleTabsEdit"
+      v-model="editableTabsValue"
+      type="card"
+      class="transformer-tabs"
+      @tab-remove="handleTabRemove"
     >
-      <template #add-icon>
-        <div style="margin-right: 10px; color: var(--el-color-primary)" />
-      </template>
       <el-tab-pane
-          v-for="item in editableTabs"
-          :key="item.name"
-          :label="item.title && typeof item.title === 'object' ? (item.title as any).value : item.title"
-          :name="item.name"
+        v-for="item in editableTabs"
+        :key="item.name"
+        :label="item.label"
+        :name="item.name"
+        :closable="item.name !== 'origin'"
       >
-        <gis-data-viewer :data="item.data" />
+        <gis-data-viewer
+          :data="item.data"
+          :transform-chain="item.transformChain"
+          @transform-crs="transformDialogVisible = true"
+          @reset-crs="resetCrsDialogVisible = true"
+          @navigate-chain="navigateToChainStep"
+        />
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -176,47 +300,32 @@ const dialogTableVisible = ref(false)
 <style scoped>
 .gis-data-transformer-container {
   width: 100%;
-  height: 670px;
-  background: #FFF;
+  height: 100%;
+  background: var(--el-bg-color);
   box-sizing: border-box;
 }
 
-.gis-data-transformer-tabs {
-height: calc(100%);
+.transformer-tabs {
+  height: 100%;
 }
 
-
-.gis-data-transformer-container :deep(div > div.el-tabs__content) {
+.transformer-tabs :deep(.el-tabs__content) {
   padding: 5px;
   box-sizing: border-box;
 }
 </style>
-<style>
 
-.gis-crs-selector-box .el-message-box__container,
-.gis-crs-selector-box .el-message-box__message {
-  width: 100%;
-}
-.gis-data-transformer-tabs,
-.gis-data-transformer-tabs .el-tabs__content,
-.gis-data-transformer-tabs .el-tabs--border-card {
+<style>
+.gis-data-transformer-container .transformer-tabs,
+.gis-data-transformer-container .transformer-tabs .el-tabs__content,
+.gis-data-transformer-container .transformer-tabs .el-tabs--border-card {
   border: none;
 }
 
-.gis-data-transformer-tabs .el-tabs__content .el-tab-pane {
+.gis-data-transformer-container .transformer-tabs .el-tabs__content .el-tab-pane {
   height: 100%;
   width: 100%;
   overflow: auto;
   padding: 0;
 }
-
-.gis-data-transformer-tabs > .el-tabs__header > .el-tabs__nav-wrap .el-tabs__item:first-child .el-icon.is-icon-close {
-  display: none;
-}
-
-.gis-data-transformer-tabs.el-tabs--card > .el-tabs__header .el-tabs__item.is-closable:hover {
-  padding-left: 20px;
-  padding-right: 20px;
-}
-
 </style>

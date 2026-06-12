@@ -152,6 +152,7 @@ loadSlider()
     overflow: hidden;
     height: 100%;
     width: 100%;
+    background: var(--gis-panel-bg-secondary);
 }
 
 .main {
@@ -181,6 +182,7 @@ loadSlider()
 .v-slider,
 .h-slider {
     background-color: var(--el-color-primary);
+    transition: background-color 0.3s ease;
 }
 
 

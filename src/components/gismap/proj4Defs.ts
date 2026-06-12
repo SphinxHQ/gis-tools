@@ -12,6 +12,16 @@ declare const self: Window & typeof globalThis;
 const addProj = function (name: string, str: string) {
     proj4.defs(name, str);
 }
+/**
+ * 动态注册 proj4 定义（用于运行时添加 CrsBounds 中没有的 CRS）
+ */
+export const registerProj4Def = (epsgCode: number, defString: string) => {
+    const key = `EPSG:${epsgCode}`;
+    if (!proj4.defs(key)) {
+        proj4.defs(key, defString);
+    }
+}
+
 export const proj4Init = () => {
     //西安80坐标系 3度分带 带号25~45
     let srid = 2349
@@ -87,10 +97,12 @@ export const proj4Init = () => {
     addProj("EPSG:4214","+title=Beijing 1954 +proj=longlat +ellps=krass +towgs84=15.8,-154.4,-82.3,0,0,0,0 +no_defs +type=crs");
 
     register(proj4)
-    Object.defineProperty(self, 'proj4', {
-        value: proj4,
-        writable: false,
-        configurable: false,
-        enumerable: false,
-    })
+    if (!(self as any).proj4) {
+        Object.defineProperty(self, 'proj4', {
+            value: proj4,
+            writable: false,
+            configurable: false,
+            enumerable: false,
+        })
+    }
 }

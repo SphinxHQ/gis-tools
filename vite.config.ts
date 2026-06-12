@@ -36,13 +36,14 @@ export default defineConfig({
   },
   build: {
     sourcemap: false,
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
         manualChunks: {
           'vendor-vue': ['vue', 'vue-router'],
           'vendor-element': ['element-plus', '@element-plus/icons-vue'],
-          'vendor-geo': ['ol', '@turf/turf', 'proj4', '@sphinx_hq/shapefile-parser', 'wkx']
+          'vendor-geo': ['ol', '@turf/turf', 'proj4', '@sphinx_hq/shapefile-parser', 'wkx'],
+          'vendor-monaco': ['monaco-editor']
         }
       }
     }

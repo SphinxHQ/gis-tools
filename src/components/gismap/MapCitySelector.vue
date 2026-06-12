@@ -1,15 +1,19 @@
 <script setup lang="ts">
+import Feature from 'ol/Feature';
+import GeoJSON from 'ol/format/GeoJSON';
+import type Geometry from 'ol/geom/Geometry';
 import {markRaw, onMounted, Ref, ref} from "vue";
 
-import { GisMapFlyToEvent} from "~/components/gismap/events/GisMapEvents";
+import {GisMapAddFeaturesEvent, GisMapFlyToEvent} from "~/components/gismap/events/GisMapEvents";
 import {eventBus} from "~/composables/eventBus";
+
 const props = defineProps({
   mapName:{
     type: String,
     default: 'main'
   }
 })
-type CityPorperties = {
+type CityProperties = {
   adcode: number;
   name: string;
   center: number[];
@@ -22,7 +26,7 @@ type CityPorperties = {
 }
 
 type CityFeature = {
-  properties: CityPorperties;
+  properties: CityProperties;
   geometry: {
     type: string;
     coordinates: number[][][];
@@ -32,7 +36,7 @@ type CityFeature = {
 
 
 const options:Ref<any[]> = ref([]);
-const dataMap:Map<number,any> = new Map<number,any>();
+const dataMap:Map<number,CityFeature> = new Map<number,CityFeature>();
 onMounted(() => {
   Promise.all([
     import('../../assets/json/city.json'),
@@ -65,10 +69,28 @@ const localCity:any = ref();
 
 const handleChange = (values: any[]) => {
   const adcode = values[values.length - 1]
-  const center = dataMap.get(adcode)?.properties?.center;
+  const feature = dataMap.get(adcode)
+  if (!feature) return;
+
+  const center = feature.properties?.center;
   if (center) {
-    void eventBus.emit(props.mapName, new GisMapFlyToEvent(center));
+    void eventBus.emit(props.mapName, new GisMapFlyToEvent(center, 12));
   }
+
+  // 加载选中城市的边界到地图
+  const geojsonFeature = {
+    type: 'Feature' as const,
+    geometry: feature.geometry,
+    properties: { name: feature.properties.name, adcode: feature.properties.adcode }
+  };
+  void eventBus.emit(props.mapName, new GisMapAddFeaturesEvent([geojsonFeature], {
+    layerName: 'city-boundary',
+    clear: true,
+    style: {
+      fill: { color: 'rgba(64, 158, 255, 0.1)' },
+      stroke: { color: 'rgba(64, 158, 255, 0.8)', width: 2 },
+    }
+  }));
 }
 </script>
 

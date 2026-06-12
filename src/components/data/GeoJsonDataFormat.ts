@@ -15,16 +15,15 @@ export class GeoJsonDataFormat implements DataFormat {
 
     async toFeatureCollection(obj: unknown): Promise<GeoJSON.FeatureCollection> {
         if (Array.isArray(obj)) {
-            return {
-                type: "FeatureCollection",
-                features: obj.map((data) => {
-                    if (data.type === "Feature") {
-                        return data;
-                    } else {
-                        return this.toFeatureCollection(data)
-                    }
-                }).flat()
-            } as GeoJSON.FeatureCollection
+            const features = (await Promise.all(obj.map(async (data) => {
+                if (data.type === "Feature") {
+                    return [data];
+                } else {
+                    const fc = await this.toFeatureCollection(data);
+                    return fc.features;
+                }
+            }))).flat();
+            return { type: "FeatureCollection", features } as GeoJSON.FeatureCollection
         }
         const record = obj as Record<string, unknown>;
         if (GeoJsonDataFormat.TYPES.includes(record?.type as string)) {
@@ -77,7 +76,17 @@ export class GeoJsonDataFormat implements DataFormat {
                     reject(new GisError(GisErrorCode.DATA_PARSE_FAILED, "GeoJsonDataFormat.read: no features found"));
                     return;
                 }
-                GisCrs.tryGetCrs(features).then((crs: GisCrs) => {
+                // 优先使用 GeoJSON 中的 crs 属性（如绘制提交时携带的坐标系信息）
+                const crsObj = jsonObj?.crs as { type: string; properties: { name: string } } | undefined;
+                const crsName = crsObj?.properties?.name;
+                let crsPromise: Promise<GisCrs>;
+                if (crsName && crsName.startsWith('EPSG:')) {
+                    const epsgCode = parseInt(crsName.replace('EPSG:', ''));
+                    crsPromise = Promise.resolve(new GisCrs(epsgCode));
+                } else {
+                    crsPromise = GisCrs.tryGetCrs(features);
+                }
+                crsPromise.then((crs: GisCrs) => {
                     const gisDataInfo = new GisDataInfo("GeoJson" + new Date().getTime(), crs);
                     gisDataInfo.features = markRaw(features)
                     gisDataInfo.descriptions = descriptions;
@@ -96,10 +105,13 @@ export class GeoJsonDataFormat implements DataFormat {
     write(dataInfo: GisDataInfo): Promise<string> {
         return new Promise((resolve, reject) => {
             try {
-                const {features} = dataInfo;
-                const geoJson = {
+                const {features, crs} = dataInfo;
+                const geoJson: Record<string, unknown> = {
                     type: "FeatureCollection",
                     features: features
+                }
+                if (crs && crs.isValid) {
+                    geoJson.crs = { type: "name", properties: { name: `EPSG:${crs.epsgCode}` } };
                 }
                 resolve(JSON.stringify(geoJson))
             } catch (e) {

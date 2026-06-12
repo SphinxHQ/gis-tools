@@ -211,6 +211,13 @@ export class ExchangeDataFormat implements DataFormat {
                     const zoneNum = descriptions[DES_NAME_DH];
                     epsgCode = getEpsgCode(`${crsName}`, `${degree}`, `${zoneNum}`);
                 }
+                // 地理坐标系：计量单位为"度"且坐标系名称已知时，直接指定地理 EPSG
+                if (!epsgCode && descriptions[DES_NAME_DW] === '度' && descriptions[DES_NAME_ZBX]) {
+                    const crsName = descriptions[DES_NAME_ZBX];
+                    if (crsName.includes('2000')) epsgCode = 4490;
+                    else if (crsName.includes('80')) epsgCode = 4610;
+                    else if (crsName.includes('54')) epsgCode = 4214;
+                }
                 if (epsgCode !== null && epsgCode !== undefined) {
                     const crs = new GisCrs(epsgCode);
                     const exDatainfo: ExchangeDataInfo = new ExchangeDataInfo("ExchangeData" + new Date().getTime(), crs);
@@ -268,23 +275,26 @@ export class ExchangeDataFormat implements DataFormat {
 
         return new Promise((resolve, reject) => {
             if (!exchangeDataInfo) {
-                return Promise.reject(new Error('Data is Empty'));
+                reject(new Error('Data is Empty'));
+                return;
             }
             try {
                 const lines: string[] = [];
                 let descriptions: Record<string, unknown> = exchangeDataInfo?.descriptions as Record<string, unknown>;
                 if (descriptions === undefined) {
                     descriptions = {}
-                    const crs: GisCrs | undefined = exchangeDataInfo.crs
-                    if (crs) {
-                        const info = crs.crsInfo;
-                        descriptions[DES_NAME_SJRQ] = new Date().toLocaleString();
-                        descriptions[DES_NAME_ZBX] = getExCrsName(info);
-                        descriptions[DES_NAME_FD] = (info.zoneDegree ?? 0) > 0 ? info.zoneDegree : ""
-                        descriptions[DES_NAME_TY] = info.projected ? "高斯克吕格" : ""
-                        descriptions[DES_NAME_DW] = info.projected ? "米" : "度"
-                        descriptions[DES_NAME_DH] = (info.zoneNumber ?? 0) > 0 ? info.zoneNumber : ""
-                    }
+                }
+                // 始终根据当前 crs 更新坐标系相关描述，确保坐标转换后头部信息同步
+                const crs: GisCrs | undefined = exchangeDataInfo.crs
+                if (crs) {
+                    const info = crs.crsInfo;
+                    descriptions[DES_NAME_ZBX] = getExCrsName(info);
+                    descriptions[DES_NAME_FD] = (info.zoneDegree ?? 0) > 0 ? info.zoneDegree : ""
+                    descriptions[DES_NAME_TY] = info.projected ? "高斯克吕格" : ""
+                    descriptions[DES_NAME_DW] = info.projected ? "米" : "度"
+                    descriptions[DES_NAME_DH] = (info.zoneNumber ?? 0) > 0 ? info.zoneNumber : ""
+                    // 数据产生日期始终更新为当前时间
+                    descriptions[DES_NAME_SJRQ] = new Date().toLocaleString();
                 }
                 const features = exchangeDataInfo.features;
                 lines.push(LINE_TAG1)
@@ -342,7 +352,10 @@ export class ExchangeDataFormat implements DataFormat {
                             let firstPointIdx = point_idx
                             for (let i = 0; i < ring.length; i++) {
                                 const isLast = i === ring.length - 1;
-                                const point = ring[i] as number[];
+                                const point = (ring[i] as number[]).slice();
+                                if (FLIP_XY) {
+                                    point.reverse()
+                                }
                                 if (isLast) {
                                     lines.push(`J${firstPointIdx},${ring_idx + 1},${point.join(",")}`)
                                 } else {

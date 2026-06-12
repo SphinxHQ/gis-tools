@@ -3,7 +3,7 @@ import Feature from "ol/Feature";
 import type Geometry from "ol/geom/Geometry";
 import {Map as olMap, View as olView} from "ol";
 import {Draw, Interaction} from "ol/interaction";
-import {toLonLat} from "ol/proj";
+import {fromLonLat, toLonLat} from "ol/proj";
 import {Circle, Fill, Stroke, Style} from "ol/style";
 import GeoJSON from 'ol/format/GeoJSON';
 import {isRef, Ref, toValue} from "vue";
@@ -15,10 +15,14 @@ import createDefaultStyle from "~/components/gismap/styles/DefaultStyle";
 import {eventBus} from "~/composables/eventBus";
 import EventBase from "~/event/EventBase";
 
+
 import MapHelper from "./MapHelper";
 import {GisMapDrawEndEvent, GisMapNotifyEvent} from "./events/GisMapEvents";
 import {TianDiTuGisMapLayer, GisMapLayer, SysGisMapLayer, GisLayerOption} from "./layer/GisLayer";
 import GisStyle from "./styles/GisStyle";
+import ImageLayer from "ol/layer/Image";
+import ImageStatic from "ol/source/ImageStatic";
+import {getChinaBoundaryImage} from "./data/chinaBoundaryCache";
 
 export const DefaultLayerNames = {
     SYS_DRAW_TOOL_ACTION: "sys-draw-tool-action",
@@ -40,6 +44,19 @@ export interface GisMapOption {
 }
 
 export class GisMap extends EventBase {
+
+    private readFeaturesFromGeoJSON(features: GeoJSON.Feature[]): Feature<Geometry>[] {
+        const formatter = new GeoJSON();
+        const viewProj = this.olView?.getProjection().getCode();
+        // GeoJSON 标准规定坐标为 EPSG:4326，但本系统保留原始投影坐标
+        // 当视图为地理坐标系时，数据来自标准 GeoJSON，使用 featureProjection 重投影
+        // 当视图为投影坐标系时，数据坐标已在投影坐标系中，dataProjection=featureProjection 表示无需转换
+        const isGeoView = viewProj === 'EPSG:4326' || viewProj === 'EPSG:4490';
+        const readOptions = isGeoView
+            ? { featureProjection: viewProj }
+            : { dataProjection: viewProj, featureProjection: viewProj };
+        return features.map(f => formatter.readFeature(f, readOptions)) as Feature<Geometry>[];
+    }
     gisMapId: string;
     mapName: string;
     mapTargetElement: HTMLElement;
@@ -58,7 +75,7 @@ export class GisMap extends EventBase {
         if (typeof mapTarget === 'string') {
             const el = document.getElementById(mapTarget)
             if (el) {
-                this.mapTargetElement = document.getElementById(mapTarget) as HTMLElement;
+                this.mapTargetElement = el;
             } else {
                 throw new Error(`mapTargetElement is not found by id:${mapTarget}`);
             }
@@ -171,7 +188,9 @@ export class GisMap extends EventBase {
                 this.userLayers?.find(x => x.name === name) ||
                 this.baseLayers.find(x => x.name === name)
             if (!layer) {
+                const projection = this.olView?.getProjection().getCode();
                 const newLayer = new SysGisMapLayer({...options, name: name})
+                newLayer.projection = projection;
                 this.sysLayers.push(newLayer);
                 this.addLayer(this.olMap, [newLayer])
                 return newLayer;
@@ -270,7 +289,11 @@ export class GisMap extends EventBase {
                         drawFeature = displayLayer.addFeature?.(drawFeature as unknown as Feature);
                     }
                     eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::drawTool::drawend', displayLayer, drawFeature));
-                    const json = new GeoJSON().writeFeature(drawFeature as Feature);
+                    // 将绘制结果转为 EPSG:4326 的 GeoJSON（GeoJSON 标准要求 WGS84 坐标）
+                    const json = new GeoJSON().writeFeature(drawFeature as Feature, {
+                        featureProjection: this.olView?.getProjection().getCode(),
+                        rightHanded: true,
+                    });
                     eventBus.emit(this.mapName, new GisMapDrawEndEvent(json))
                 })
                 if (once) {
@@ -312,8 +335,7 @@ export class GisMap extends EventBase {
             lay.clear();
         }
         if (lay.source) {
-            const formatter = new GeoJSON();
-            const feas = features.map(f => formatter.readFeature(f)) as Feature<Geometry>[];
+            const feas = this.readFeaturesFromGeoJSON(features);
             lay.addFeatures?.(feas)
             eventBus.emit(this.mapName, new GisMapNotifyEvent('GisMap::addFeaturesToLayer', undefined, feas, lay));
             const extent = lay.getExtent?.() as import("ol/extent").Extent | undefined;
@@ -383,8 +405,7 @@ export class GisMap extends EventBase {
         lay.on('postrender', handle);
 
         if (lay.source) {
-            const formatter = new GeoJSON();
-            const feas = features.map(f => formatter.readFeature(f)) as Feature<Geometry>[];
+            const feas = this.readFeaturesFromGeoJSON(features);
             lay.addFeatures?.(feas)
             eventBus.emit(this.mapName, new GisMapNotifyEvent('GisMap::addFeaturesToLayer', undefined, feas, lay));
             const extent2 = lay.getExtent?.() as import("ol/extent").Extent | undefined;
@@ -400,11 +421,15 @@ export class GisMap extends EventBase {
         this.cleanLayer(DefaultLayerNames.SYS_DRAW_TOOL_DISPLAY);
     }
 
-    flyTo(center: number[], zoom?: number): Promise<boolean> {
+    flyTo(geoCenter: number[], zoom?: number): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
             try {
+                const viewProj = this.olView?.getProjection().getCode();
+                const center = viewProj && viewProj !== 'EPSG:4326' && viewProj !== 'EPSG:4490'
+                    ? fromLonLat(geoCenter, viewProj)
+                    : geoCenter;
                 this.olMap?.getView().animate({
-                    center: center,
+                    center,
                     zoom: zoom,
                     duration: 2000
                 }, (isEnd => {
@@ -416,7 +441,11 @@ export class GisMap extends EventBase {
         })
     }
 
-    zoomTo(center: number[], zoom?: number) {
+    zoomTo(geoCenter: number[], zoom?: number) {
+        const viewProj = this.olView?.getProjection().getCode();
+        const center = viewProj && viewProj !== 'EPSG:4326' && viewProj !== 'EPSG:4490'
+            ? fromLonLat(geoCenter, viewProj)
+            : geoCenter;
         this.olMap?.getView().setCenter(center);
         if (zoom !== undefined) {
             this.olMap?.getView().setZoom(zoom);
@@ -444,7 +473,7 @@ export class GisMap extends EventBase {
         this.sysLayers = [];
 
         // 清理事件监听器
-        this.removeAllListeners();
+        this.clear();
 
         // 清理地图实例
         if (this.olMap) {
@@ -459,8 +488,8 @@ export class BaseTianDiTuMap extends GisMap {
     constructor(mapName: string, mapTarget: string | HTMLElement) {
         super(mapName, mapTarget);
         this.baseLayers = [
-            new TianDiTuGisMapLayer({url: "http://t0.tianditu.com/DataServer?T=vec_w"}),
-            new TianDiTuGisMapLayer({url: "http://t0.tianditu.com/DataServer?T=cva_w"})
+            new TianDiTuGisMapLayer({url: "https://t0.tianditu.com/DataServer?T=vec_w"}),
+            new TianDiTuGisMapLayer({url: "https://t0.tianditu.com/DataServer?T=cva_w"})
         ]
         this.init();
     }
@@ -471,11 +500,37 @@ export class BlankMap extends GisMap {
         super(mapName, mapTarget);
         const projection = options?.projection === undefined ? 4490 : options?.projection;
         const _projection = (typeof projection === 'string') ? projection : `EPSG:${projection}`;
+
+        // 先用地理中心初始化，投影坐标系稍后 fit 中国范围
+        const geoCenter = [104.195, 35.8];
+        const isGeo = _projection === 'EPSG:4326' || _projection === 'EPSG:4490';
+        const center = isGeo ? geoCenter : fromLonLat(geoCenter, _projection);
         this.init({
-            center: [0, 0],
-            zoom: 5,
+            center,
+            zoom: isGeo ? 4 : 1,
             projection: _projection
         });
+
+        // 中国轮廓底图：渲染到 canvas 后缓存为 ImageStatic，零交互开销
+        // Canvas 在 EPSG:4326 下绘制，OL 自动重投影到视图坐标系
+        const { url, extent: geoExtent } = getChinaBoundaryImage(_projection);
+        const chinaImageLayer = new ImageLayer({
+            source: new ImageStatic({
+                url,
+                imageExtent: geoExtent,
+                projection: 'EPSG:4326',
+            }),
+            zIndex: -1,
+        });
+        this.olMap?.addLayer(chinaImageLayer);
+
+        // 投影坐标系：fit 中国范围确保完整显示
+        if (!isGeo && this.olView) {
+            const bl = fromLonLat([73.5, 18], _projection);
+            const tr = fromLonLat([136, 54], _projection);
+            const projExtent: [number, number, number, number] = [bl[0], bl[1], tr[0], tr[1]];
+            this.olView.fit(projExtent, { padding: [20, 20, 20, 20] });
+        }
         this.initMapPointermove();
         logger.info('BlankMap initialized:', mapName, _projection);
     }

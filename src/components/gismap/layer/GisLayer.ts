@@ -35,12 +35,13 @@ export class SysGisMapLayer implements GisMapLayer {
     source?:VectorSource;
     style: StyleLike | undefined;
     features: GeoJSON.Feature[] = [];
+    projection?: string;
     sercurityTokens: Map<string, string> = new Map();
     constructor(options:GisLayerOption) {
         this.id = options.id || Common.uuid();
         this.name = options.name || '系统图层';
-        this.visible = options.visible || true;
-        this.opacity = options.opacity || 1;
+        this.visible = options.visible ?? true;
+        this.opacity = options.opacity ?? 1;
         this.zIndex = options.zIndex || 0;
         if(options.style){
             if (typeof options.style === 'string') {
@@ -98,7 +99,8 @@ export class SysGisMapLayer implements GisMapLayer {
         if(feature instanceof Feature){
             feature.setId(Common.uuid());
             this.source?.addFeature(feature);
-            const jsonStr=  new GeoJSON().writeFeature(feature);
+            // 保持视图投影坐标，不转为4326；crs 由上层声明
+            const jsonStr = new GeoJSON().writeFeature(feature);
             const fea = JSON.parse(jsonStr);
             fea.id =  feature.getId() as string
             this.features.push(fea);
