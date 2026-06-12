@@ -1,16 +1,54 @@
-// import dark theme
+// Element Plus dark CSS vars — 自动响应 html.dark
 @use "element-plus/theme-chalk/src/dark/css-vars.scss" as *;
+@use "./element/dark.scss" as *;
 
-// :root {
-//   --ep-color-primary: red;
-// }
+// ===== 业务设计令牌 (Design Tokens) =====
+:root {
+  // 面板与容器
+  --gis-panel-bg: #ffffff;
+  --gis-panel-bg-secondary: #f5f7fa;
+  --gis-panel-border: #e4e7ed;
+  // 文本
+  --gis-text-primary: #303133;
+  --gis-text-secondary: #909399;
+  --gis-text-placeholder: #c0c4cc;
+  // 地图容器
+  --gis-map-filter: none;
+  --gis-map-props-bg: rgba(255, 255, 255, 0.6);
+  --gis-map-props-text: #999999;
+  --gis-map-props-border: #dddddd;
+  // 过渡
+  --gis-theme-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
 
+html.dark {
+  // 同步 --ep-* 暗色变量到 --el-* 命名空间（Element Plus 运行时读取 --el- 前缀）
+  @include sync-ep-to-el-dark;
+  // 面板与容器
+  --gis-panel-bg: #1d1e1f;
+  --gis-panel-bg-secondary: #141414;
+  --gis-panel-border: #4c4d4f;
+  // 文本
+  --gis-text-primary: #e5eaf3;
+  --gis-text-secondary: #a3a6ad;
+  --gis-text-placeholder: #6c6e72;
+  // 地图容器 — CSS 滤镜反相法（低成本暗色底图）
+  --gis-map-filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.95);
+  --gis-map-props-bg: rgba(30, 30, 30, 0.8);
+  --gis-map-props-text: #a3a6ad;
+  --gis-map-props-border: #4c4d4f;
+}
+
+// ===== 全局样式 =====
 body {
   font-family: Inter, system-ui, Avenir, "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
     "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
+  background-color: var(--el-bg-color);
+  color: var(--el-text-color-primary);
+  transition: var(--gis-theme-transition);
 }
 
 a {

@@ -6,6 +6,7 @@
           <span class="value">&nbsp;{{ `${value}` }}</span>
       </div>
     </div>
+    <div class="mouse-coord" v-if="mouseCoord">{{ mouseCoord }}</div>
     <div ref="mapContainerRef" class="main-map" />
   </div>
 </template>
@@ -15,14 +16,16 @@ import { nextTick, onBeforeUnmount, onMounted, ref} from 'vue';
 
 import {logger} from '~/common/logger';
 import {eventBus, GisEvent} from '~/composables/eventBus';
-import {setMainMap} from '~/composables/gisMap';
+import {setMainMap, getMainMap} from '~/composables/gisMap';
 
 import {BaseTianDiTuMap, BlankMap, GisMap, GisMapOption} from './GisMap';
 import {Types as MapTypes} from './events/GisMapEvents';
+import {toLonLat} from 'ol/proj';
 
 
 const mapContainerRef = ref<HTMLElement | null>(null);
 let map: GisMap;
+const mouseCoord = ref<string>('');
 const mapTypes = {
   blank: BlankMap,
   tianditu: BaseTianDiTuMap
@@ -68,6 +71,25 @@ onMounted(async () => {
       featureProps.value = undefined
     }
   })
+
+  // 鼠标位置坐标显示
+  const olMap = map.getMap();
+  if (olMap) {
+    olMap.on('pointermove', (evt: any) => {
+      const viewProj = olMap.getView().getProjection().getCode();
+      const coord = evt.coordinate as number[];
+      if (viewProj === 'EPSG:4326' || viewProj === 'EPSG:4490') {
+        mouseCoord.value = `${coord[0].toFixed(6)}, ${coord[1].toFixed(6)}`;
+      } else {
+        // 投影坐标：同时显示经纬度
+        const lonLat = toLonLat(coord, viewProj);
+        mouseCoord.value = `${lonLat[0].toFixed(6)}, ${lonLat[1].toFixed(6)} | ${coord[0].toFixed(2)}, ${coord[1].toFixed(2)}`;
+      }
+    });
+    olMap.on('pointermoveout', () => {
+      mouseCoord.value = '';
+    });
+  }
   setMainMap(map);
   logger.info('GisMapBase initialized:', props.mapName);
 
@@ -90,7 +112,10 @@ onBeforeUnmount(() => {
   eventBus.off(mapName, MapTypes.CLEANDRAW, handles[MapTypes.CLEANDRAW])
   eventBus.off(mapName, MapTypes.ADD_FEATURES, handles[MapTypes.ADD_FEATURES])
   eventBus.off(mapName, MapTypes.FLY_TO, handles[MapTypes.FLY_TO])
+  eventBus.off(mapName, MapTypes.ZOOM_TO, handles[MapTypes.ZOOM_TO])
   eventBus.off(mapName, MapTypes.FLASH, handles[MapTypes.FLASH])
+  map.dispose();
+  setMainMap(null as any);
 })
 </script>
 
@@ -109,8 +134,8 @@ onBeforeUnmount(() => {
   bottom: 0;
   right: 0;
   z-index: 2;
-  background: #FFFFFF99;
-  color:#999;
+  background: var(--gis-map-props-bg);
+  color: var(--gis-map-props-text);
 }
 .fea-props .row {
   display: flex;
@@ -129,7 +154,7 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
   vertical-align: middle;
   color: var(--el-color-primary-dark-2);
-  border: 1px solid #DDD;
+  border: 1px solid var(--gis-map-props-border);
   border-width: 1px 0 0 1px;
 }
 .fea-props .row .value {
@@ -139,8 +164,22 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
-  border: 1px solid #DDD;
+  border: 1px solid var(--gis-map-props-border);
   border-width: 1px 0 0 1px;
+}
+
+.mouse-coord {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  z-index: 3;
+  font-size: 11px;
+  font-family: monospace;
+  padding: 2px 6px;
+  background: var(--gis-map-props-bg);
+  color: var(--gis-map-props-text);
+  border-radius: 3px;
+  pointer-events: none;
 }
 
 .main-map {
@@ -149,5 +188,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   z-index: 1;
+  filter: var(--gis-map-filter);
+  transition: filter 0.3s ease;
 }
 </style>

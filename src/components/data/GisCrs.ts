@@ -31,12 +31,31 @@ export default class GisCrs {
             this.name = "EPSG:EMPTY";
         } else {
             this.epsgCode = epsgCode;
-            this.crsInfo = GisProjectedBounds.getCrsInfo(epsgCode);
             this.proj4Def = proj4.defs(`EPSG:${epsgCode}`)
-            this.name = this.crsInfo.name
             if (!this.proj4Def) {
                 throw new GisError(GisErrorCode.CRS_NOT_FOUND, `epsgCode:${epsgCode} not found in proj4 defs`);
             }
+            try {
+                this.crsInfo = GisProjectedBounds.getCrsInfo(epsgCode);
+            } catch {
+                // EPSG 代码不在 CrsBounds 中（如自定义 proj4 注册），提供默认 CrsInfo
+                const defStr = typeof this.proj4Def === 'object' ? JSON.stringify(this.proj4Def) : String(this.proj4Def);
+                const isProjected = !defStr.includes('+proj=longlat');
+                this.crsInfo = {
+                    projected: isProjected,
+                    envelope: { top: 90, left: -180, bottom: -90, right: 180 },
+                    minLon: -180,
+                    maxLon: 180,
+                    withZone: false,
+                    crs: { type: 'name', properties: { name: `EPSG:${epsgCode}` } },
+                    epsgCode,
+                    name: `EPSG:${epsgCode}`,
+                    centralMeridian: 0,
+                    zoneDegree: -1,
+                    zoneNumber: -1,
+                };
+            }
+            this.name = this.crsInfo.name
         }
     }
 
@@ -46,11 +65,9 @@ export default class GisCrs {
             crs = crs.crsInfo
         }
         if (!crs.projected) {
-            if (LonLatInChina(p)) {
-                return Promise.resolve(this);
-            } else {
-                return Promise.reject(new GisError(GisErrorCode.CRS_RECOGNITION_FAILED, `${p} is not in china`));
-            }
+            // 地理坐标：不做 "not in china" 限制，直接通过
+            // 经纬度坐标除非有坐标系文件/用户指定/其他有效坐标系信息，否则全部视为 4490
+            return Promise.resolve(this);
         }
         const epsgCode: number = crs.epsgCode;
         const projectionDefinition = proj4.defs(`EPSG:${epsgCode}`);
@@ -65,13 +82,26 @@ export default class GisCrs {
             toGeoEpsgCode = 4214;
         } else if (epsgCode === 3857) {
             toGeoEpsgCode = 4326;
-        } else if (epsgCode > 4000) {
+        } else if (epsgCode >= 4490 && epsgCode <= 4554) {
+            // 仅 CGCS2000 投影系列自动识别
             toGeoEpsgCode = 4490;
+        }
+        if (toGeoEpsgCode === 0) {
+            // 无法确定地理坐标系的投影，不自动识别
+            return Promise.reject(new GisError(GisErrorCode.CRS_RECOGNITION_FAILED,
+                `无法自动识别 EPSG:${epsgCode} 的地理坐标系。\n` +
+                `EPSG:${epsgCode} 不在已知的西安80(2300~2400)、北京54(2400~2500)、CGCS2000投影(4490~4554)范围内。\n` +
+                `建议：手动指定坐标系`));
         }
         try {
             const point = proj4(proj4.defs(`EPSG:${epsgCode}`), proj4.defs(`EPSG:${toGeoEpsgCode}`), p);
             if (!LonLatInChina(point)) {
-                return Promise.reject(new GisError(GisErrorCode.CRS_RECOGNITION_FAILED, `${p} is not in china`));
+                return Promise.reject(new GisError(GisErrorCode.CRS_RECOGNITION_FAILED,
+                    `坐标(${p[0]}, ${p[1]}) 按 EPSG:${epsgCode} 投影坐标解释后，转换到地理坐标为(${point[0]}, ${point[1]})，不在中国大陆范围内(${CHINA_EXTENT.left}~${CHINA_EXTENT.right}, ${CHINA_EXTENT.bottom}~${CHINA_EXTENT.top})。\n` +
+                    `可能原因：\n` +
+                    `1. 坐标实际为地理坐标(经纬度)，被误判为投影坐标(米)\n` +
+                    `2. 坐标系选择不正确\n` +
+                    `3. 坐标数据本身有误`));
             } else {
                 return Promise.resolve(this);
             }
@@ -89,6 +119,11 @@ export default class GisCrs {
         }
         if (Array.isArray(x) && x.length > 1 && x.every((n: unknown) => typeof n === 'number')) {
             const point: [number, number] = [x[0], x[1]];
+            // 经纬度坐标（< 180）：默认 4490，不做 "not in china" 限制
+            if (point[0] < 180 && point[0] > -180 && point[1] < 90 && point[1] > -90) {
+                return Promise.resolve({ point, crs: new GisCrs(4490) });
+            }
+            // 投影坐标：尝试自动识别 CGCS2000 投影系列
             let crsInfos: CrsInfo[] = GisProjectedBounds.findByLon(point[0]);
             if (crsInfos.length > 0) {
                 if (crsInfos.length == 1) {
@@ -103,23 +138,16 @@ export default class GisCrs {
                 }
             } else {
                 try {
-                    if (point[0] < 180) {
+                    const crsInfosFull: CrsInfo[] = GisProjectedBounds.findByPoint(point);
+                    if (crsInfosFull.length === 1) {
                         return Promise.resolve({
                             point,
-                            crs: new GisCrs(4490)
+                            crs: new GisCrs(crsInfosFull[0].epsgCode)
                         });
-                    } else {
-                        const crsInfosFull: CrsInfo[] = GisProjectedBounds.findByPoint(point);
-                        if (crsInfosFull.length === 1) {
-                            return Promise.resolve({
-                                point,
-                                crs: new GisCrs(crsInfosFull[0].epsgCode)
-                            });
-                        } else if (crsInfosFull.length > 1) {
-                            return UIHelper.selectConfirm(`无法识别[${point[0]},${point[1]}]所在坐标系，请选择`, null, crsInfosFull).then(data => {
-                                return {point, crs: new GisCrs(data.epsgCode)}
-                            });
-                        }
+                    } else if (crsInfosFull.length > 1) {
+                        return UIHelper.selectConfirm(`无法识别[${point[0]},${point[1]}]所在坐标系，请选择`, null, crsInfosFull).then(data => {
+                            return {point, crs: new GisCrs(data.epsgCode)}
+                        });
                     }
                 } catch (e) {
                     logger.warn('GisCrs::_tryGetCrs coordinate recognition failed:', e);
@@ -139,12 +167,15 @@ export default class GisCrs {
         } else if (typeof x === "object") {
             const obj = x as Record<string, unknown>;
             if (Array.isArray(obj)) {
-                for (let i = 0; i < obj.length; i++) {
-                    const find = GisCrs._tryGetCrs(obj[i]);
-                    if (find) {
-                        return find
+                // 顺序尝试数组中的元素，await 每个 Promise
+                // 修复：之前 Promise 被当作 truthy 值，导致只检查第一个元素
+                const tryNext = (index: number): Promise<{ point: number[], crs: GisCrs }> => {
+                    if (index >= obj.length) {
+                        return Promise.reject(new GisError(GisErrorCode.CRS_RECOGNITION_FAILED, `数组中无法识别坐标系`));
                     }
-                }
+                    return GisCrs._tryGetCrs(obj[index]).catch(() => tryNext(index + 1));
+                };
+                return tryNext(0);
             }
             if (obj?.type === 'Feature') {
                 const geom = (obj as unknown as GeoJSON.Feature).geometry;
@@ -199,5 +230,54 @@ export default class GisCrs {
      */
     getName(): string {
         return this.name || `EPSG:${this.epsgCode}`;
+    }
+
+    /**
+     * 当前 CRS 是否有效（epsgCode > 0 且有 proj4 定义）
+     */
+    get isValid(): boolean {
+        return this.epsgCode > 0 && !!this.proj4Def && Object.keys(this.proj4Def).length > 0;
+    }
+
+    /**
+     * 从 CrsInfo.name 提取族名（第一个 `/` 前的部分）
+     * 例如 "CGCS2000 / 3-degree Gauss-Kruger zone 25" → "CGCS2000"
+     */
+    static familyName(crsInfo: CrsInfo): string {
+        return crsInfo.name.split('/')[0].trim();
+    }
+
+    /**
+     * 投影坐标系 → 对应的地理坐标系 EPSG 代码
+     */
+    static getGeographicEpsg(epsgCode: number): number {
+        if (epsgCode > 2300 && epsgCode < 2400) return 4610; // 西安80
+        if (epsgCode > 2400 && epsgCode < 2500) return 4214; // 北京54
+        if (epsgCode === 3857) return 4326;                    // Web Mercator
+        if (epsgCode >= 4490 && epsgCode <= 4554) return 4490; // CGCS2000 投影系列
+        return 0;
+    }
+
+    /**
+     * 根据源 CRS 返回合法转换目标列表
+     * 规则：
+     * - 地理坐标 → 任何坐标系的投影坐标系
+     * - 投影坐标 → 同系投影坐标 + 对应的地理坐标
+     */
+    static getCompatibleTargetCrsList(sourceCrs: CrsInfo): CrsInfo[] {
+        const allCrs = Object.values(CrsBounds);
+        if (!sourceCrs.projected) {
+            // 地理坐标 → 任何投影坐标系
+            return allCrs.filter(c => c.projected);
+        } else {
+            // 投影坐标 → 同系投影 + 对应地理
+            const sourceFamily = GisCrs.familyName(sourceCrs);
+            const geoEpsg = GisCrs.getGeographicEpsg(sourceCrs.epsgCode);
+            return allCrs.filter(c => {
+                if (c.epsgCode === sourceCrs.epsgCode) return false;
+                const targetFamily = GisCrs.familyName(c);
+                return targetFamily === sourceFamily || c.epsgCode === geoEpsg;
+            });
+        }
     }
 }

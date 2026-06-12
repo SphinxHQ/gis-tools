@@ -284,8 +284,8 @@ onMounted(() => {
 }
 
 .split-panel-divider {
-  background-color: #3967FF;
-  color: #FFF;
+  background-color: var(--el-color-primary);
+  color: var(--el-color-white);
 }
 
 .split-panel-divider.horizontal {

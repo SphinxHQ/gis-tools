@@ -1,10 +1,10 @@
 <script setup lang="ts">
 
-import { ElMessageBox} from "element-plus";
 import * as GeoJSON from 'geojson';
 import {getCurrentInstance, onMounted, ref,ComponentInternalInstance} from "vue";
 
 import Common from "~/common/Common";
+import {GisError, GisErrorCode, createUserMessage} from "~/common/GisError";
 import {logger as appLogger} from "~/common/logger";
 import {SimpleDataFormat} from "~/components/data/DataFormat";
 import GisDataInfo from "~/components/data/GisDataInfo";
@@ -14,6 +14,8 @@ import {TipLog, TipLogger} from "~/components/data/TipLogger";
 import {localDb} from "~/composables/localDb";
 
 const emitHandler = defineEmits(['read','error'])
+
+const activeReaderTab = ref('upload')
 defineProps({
   dataType: {
     type: String,
@@ -23,6 +25,30 @@ defineProps({
 const txt = ref('')
 const tipText = ref('')
 const loading = ref(false)
+
+// 错误详情弹窗
+const errorDialogVisible = ref(false)
+const errorTitle = ref('')
+const errorDetail = ref('')
+
+const showError = (e: unknown, context: string) => {
+  errorTitle.value = `${context}失败`
+  let msg = createUserMessage(e)
+  // 对 GisError 追加错误码信息
+  if (e instanceof GisError) {
+    const codeLabel: Record<string, string> = {
+      [GisErrorCode.CRS_RECOGNITION_FAILED]: '坐标系识别失败',
+      [GisErrorCode.COORDINATE_TRANSFORM_FAILED]: '坐标转换失败',
+      [GisErrorCode.DATA_PARSE_FAILED]: '数据解析失败',
+      [GisErrorCode.DATA_FORMAT_UNSUPPORTED]: '不支持的数据格式',
+    }
+    const label = codeLabel[e.code] || e.code
+    msg = `[${label}]\n\n${msg}`
+  }
+  errorDetail.value = msg
+  errorDialogVisible.value = true
+}
+
 let curInstance: ComponentInternalInstance | null = null;
 let tipLogger: TipLogger | null = null;
 onMounted(() => {
@@ -39,6 +65,11 @@ const handleFileChanged = (file: { name: string; raw: Blob }) => {
   try {
     const reader = new FileReader()
     const dataNamme = file.name;
+    reader.onerror = () => {
+      loading.value = false;
+      appLogger.error('文件读取失败');
+      emitHandler('error', new Error('文件读取失败'));
+    }
     reader.onload = (e) => {
       const val = e.target?.result as string
       readContext(val, dataNamme).then((data: unknown) => {
@@ -47,10 +78,7 @@ const handleFileChanged = (file: { name: string; raw: Blob }) => {
       }).catch((e: Error) => {
         appLogger.error('文件解析失败:', e);
         emitHandler('error',e)
-        ElMessageBox.alert(`解析失败${e.message}`, "错误", {
-          type: 'error',
-          confirmButtonText: '确定',
-        })
+        showError(e, '文件解析')
       })
     }
     reader.readAsArrayBuffer(file.raw)
@@ -65,26 +93,24 @@ const handleHistoryRowClick = (row: GisFileData) => {
   }).catch((e: Error) => {
     appLogger.error('历史记录解析失败:', e);
     emitHandler('error',e)
-    ElMessageBox.alert(`解析失败${e.message}`, "错误", {
-      type: 'error',
-      confirmButtonText: '确定',
-    })
+    showError(e, '历史记录解析')
   })
 }
 
 const handleTextChanged = (_txt: string) => {
+  txt.value = _txt
+}
+const handleTextConfirm = () => {
+  if (!txt.value.trim()) return;
   try {
     const dataName = `文本-${new Date().getTime()}`;
-    readContext(_txt, dataName).then((data: unknown) => {
-      localDb.add(dataName, _txt)
+    readContext(txt.value, dataName).then((data: unknown) => {
+      localDb.add(dataName, txt.value)
       emitHandler('read', data)
     }).catch((e: Error) => {
       appLogger.error('文本解析失败:', e);
       emitHandler('error',e)
-      ElMessageBox.alert(`解析失败${e.message}`, "错误", {
-        type: 'error',
-        confirmButtonText: '确定',
-      })
+      showError(e, '文本解析')
     })
   } catch (e) {
     appLogger.error('文本处理失败:', e);
@@ -128,11 +154,12 @@ const hiastorySupported = ref(localDb.isSupport)
 const setTipText = (msg: string) => {
   tipText.value = msg
 }
-const handleMapDrawSubmit = (features: GeoJSON.Feature[]) => {
+const handleMapDrawSubmit = (features: GeoJSON.Feature[], crsEpsg: number) => {
   const dataNamme = `绘制-${new Date().getTime()}`;
   const jsonStr = JSON.stringify({
     type: "FeatureCollection",
-    features: features
+    features: features,
+    crs: { type: "name", properties: { name: `EPSG:${crsEpsg}` } }
   });
   readContext(jsonStr, dataNamme).then((data: unknown) => {
     localDb.add(dataNamme, jsonStr);
@@ -140,24 +167,35 @@ const handleMapDrawSubmit = (features: GeoJSON.Feature[]) => {
   }).catch((e: Error) => {
     appLogger.error('绘制数据解析失败:', e);
     emitHandler('error',e)
-    ElMessageBox.alert(`解析失败${e.message}`, "错误", {
-      type: 'error',
-      confirmButtonText: '确定',
-    })
+    showError(e, '绘制数据解析')
   })
 }
-const appendMode = ref(false)
+
+defineExpose({
+  handleTextConfirm,
+  txt,
+  activeReaderTab,
+  loading,
+})
 </script>
 <template>
   <div v-loading="loading" class="gis-data-reader-container">
-    <el-tabs type="border-card" class="gis-data-reader-tabs" editable :closable="false">
-
-      <template #add-icon>
-        <div style="margin-right: 10px; color: var(--el-color-primary)">
-          <el-switch v-model="appendMode" active-text="追加模式" />
-        </div>
+    <!-- 错误详情弹窗 -->
+    <el-dialog v-model="errorDialogVisible" :title="errorTitle" width="600" destroy-on-close>
+      <el-input
+        type="textarea"
+        :model-value="errorDetail"
+        :rows="10"
+        readonly
+        resize="vertical"
+        class="error-detail-textarea"
+      />
+      <template #footer>
+        <el-button type="primary" @click="errorDialogVisible = false">确定</el-button>
       </template>
-      <el-tab-pane label="上传文件">
+    </el-dialog>
+    <el-tabs v-model="activeReaderTab" type="border-card" class="gis-data-reader-tabs">
+      <el-tab-pane label="上传文件" name="upload">
         <el-upload
             class="w-full h-95%"
             drag
@@ -181,8 +219,8 @@ const appendMode = ref(false)
           </template>
         </el-upload>
       </el-tab-pane>
-      <el-tab-pane label="输入文本">
-        <geo-str-editor :value="txt" @input="handleTextChanged" />
+      <el-tab-pane label="输入文本" name="text">
+        <geo-str-editor :value="txt" :read-only="false" :format="true" @input="handleTextChanged" />
       </el-tab-pane>
       <el-tab-pane label="绘制图形">
         <map-drawer @submit="handleMapDrawSubmit" />
@@ -206,8 +244,8 @@ const appendMode = ref(false)
 <style scoped>
 .gis-data-reader-container {
   width: 100%;
-  height: 370px;
-  background: #FFF;
+  height: 100%;
+  background: var(--el-bg-color);
   box-sizing: border-box;
 }
 
@@ -248,4 +286,12 @@ const appendMode = ref(false)
   padding: 0;
 }
 
+.error-detail-textarea :deep(.el-textarea__inner) {
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--el-color-danger);
+}
 </style>

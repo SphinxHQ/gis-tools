@@ -7,8 +7,8 @@ import { GisMapOption } from "./GisMap";
 export default {
     newOlMapInstance(mapTarget: string | HTMLElement , options?: GisMapOption): olMap {
         const defaultOptions: GisMapOption ={
-            center: [106.6, 29.6],
-            zoom: 12,
+            center: [104.195, 35.8],
+            zoom: 4,
             projection: 'EPSG:4490'
         }
         return new olMap({

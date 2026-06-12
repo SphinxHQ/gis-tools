@@ -9,3 +9,34 @@ $--colors: (
 @forward "element-plus/theme-chalk/src/dark/var.scss" with (
   $colors: $--colors
 );
+
+// 同步 --ep-* 暗色变量到 --el-* 命名空间
+// 因为 index.scss 中自定义了 $namespace: "ep"，SCSS 编译出的暗色变量用 --ep- 前缀
+// 但 Element Plus 运行时组件读取 --el- 前缀，需要在 html.dark 下同步
+@mixin sync-ep-to-el-dark {
+  @each $var in (
+    'color-primary' 'color-primary-light-3' 'color-primary-light-5' 'color-primary-light-7'
+    'color-primary-light-8' 'color-primary-light-9' 'color-primary-dark-2'
+    'color-success' 'color-success-light-3' 'color-success-light-5' 'color-success-light-7'
+    'color-success-light-8' 'color-success-light-9' 'color-success-dark-2'
+    'color-warning' 'color-warning-light-3' 'color-warning-light-5' 'color-warning-light-7'
+    'color-warning-light-8' 'color-warning-light-9' 'color-warning-dark-2'
+    'color-danger' 'color-danger-light-3' 'color-danger-light-5' 'color-danger-light-7'
+    'color-danger-light-8' 'color-danger-light-9' 'color-danger-dark-2'
+    'color-error' 'color-error-light-3' 'color-error-light-5' 'color-error-light-7'
+    'color-error-light-8' 'color-error-light-9' 'color-error-dark-2'
+    'color-info' 'color-info-light-3' 'color-info-light-5' 'color-info-light-7'
+    'color-info-light-8' 'color-info-light-9' 'color-info-dark-2'
+    'bg-color-page' 'bg-color' 'bg-color-overlay'
+    'text-color-primary' 'text-color-regular' 'text-color-secondary'
+    'text-color-placeholder' 'text-color-disabled'
+    'border-color-darker' 'border-color-dark' 'border-color'
+    'border-color-light' 'border-color-lighter' 'border-color-extra-light'
+    'fill-color-darker' 'fill-color-dark' 'fill-color'
+    'fill-color-light' 'fill-color-lighter' 'fill-color-extra-light' 'fill-color-blank'
+    'mask-color' 'mask-color-extra-light'
+    'box-shadow' 'box-shadow-light' 'box-shadow-lighter' 'box-shadow-dark'
+  ) {
+    --el-#{$var}: var(--ep-#{$var});
+  }
+}

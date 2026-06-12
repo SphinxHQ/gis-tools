@@ -32,8 +32,8 @@ export const base64ToArrayBuffer = (base64: string): ArrayBuffer => {
 export const getDataType = (content: unknown): GisDataType => {
     let geoString: string;
     if (content instanceof ArrayBuffer) {
-        if (content.byteLength === 0) {
-            throw new GisError(GisErrorCode.DATA_PARSE_FAILED, 'Content is empty');
+        if (content.byteLength < 4) {
+            throw new GisError(GisErrorCode.DATA_PARSE_FAILED, 'Content is too small to identify format');
         }
         const dataView = new DataView(content);
         const fileFlag = dataView.getInt32(0);

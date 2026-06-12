@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import {getCurrentInstance, onBeforeUnmount, onMounted, ref} from "vue";
 
+import {ElMessageBox} from "element-plus";
 import GeomUtils from "~/common/GeomUtils";
 import {Types} from "~/components/gismap/events/GisMapEvents";
 import {GisMapLayer} from "~/components/gismap/layer/GisLayer";
 import {eventBus} from "~/composables/eventBus";
+
 const mapName = `mapDraw-${Math.random().toString(36).slice(2)}`
-const emit = defineEmits(['change', 'submit'])
+const emit = defineEmits<{
+  'change': []
+  'submit': [features: Record<string, unknown>[], crsEpsg: number]
+}>()
 const featureList = ref<Array<{id: string; type: string; feature: Record<string, unknown>}>>([])
 const elHeight = ref(0)
+const mapProjection = ref<number>(4490)
+const mapKey = ref(0) // 用于强制重建地图组件
 const resizeObserver = new ResizeObserver(entries => {
   for (const entry of entries) {
     elHeight.value = entry.contentRect.height;
@@ -39,6 +46,23 @@ eventBus.on(mapName, Types.NOTIFY, handle )
 onBeforeUnmount(()=>{
   eventBus.off(mapName, Types.NOTIFY, handle )
 })
+
+const handleCrsChange = async (epsgCode: number) => {
+  if (featureList.value.length > 0) {
+    try {
+      await ElMessageBox.confirm(
+        `切换坐标系将从 EPSG:${mapProjection.value} 变为 EPSG:${epsgCode}，已绘制的图形将进行坐标转换。是否继续？`,
+        '切换坐标系',
+        { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
+      )
+    } catch {
+      return // 用户取消
+    }
+  }
+  mapProjection.value = epsgCode
+  mapKey.value++ // 强制重建地图
+  // TODO: 对已绘制的 feature 做坐标转换后重新加载
+}
 </script>
 
 <template>
@@ -52,14 +76,15 @@ onBeforeUnmount(()=>{
         </el-table>
       </div>
       <div class="md-left-bottom">
-        <el-button type="primary" :disabled="featureList?.length===0" @click="emit('submit', featureList.map(x=>x.feature))">确定</el-button>
+        <el-button type="primary" :disabled="featureList?.length===0" @click="emit('submit', featureList.map(x=>x.feature), mapProjection)">确定</el-button>
       </div>
     </div>
     <div class="md-right">
       <map-control-panel :map-name="mapName"
                          style="position: absolute; left: 0; top:0; z-index: 2;"
-/>
-      <main-map :map-name="mapName" style="position: absolute; left: 0; top:0; z-index: 1;" />
+                         @crs-change="handleCrsChange"
+      />
+      <gis-map-blank :key="mapKey" :map-name="mapName" :options="{ projection: mapProjection }" style="position: absolute; left: 0; top:0; z-index: 1;" />
     </div>
   </div>
 </template>

@@ -5,6 +5,7 @@ import * as turf from "@turf/turf";
 import {ElMessage, ElMessageBox} from "element-plus";
 import type { Feature as GeoFeature, Point as GeoPoint, Position, Feature } from "geojson";
 import {ComponentInternalInstance,
+  computed,
   getCurrentInstance,
   markRaw,
   nextTick,
@@ -14,6 +15,8 @@ import {ComponentInternalInstance,
   Ref,
   watch
 } from "vue";
+import { Splitpanes, Pane } from 'splitpanes'
+import 'splitpanes/dist/splitpanes.css'
 
 import Common from "~/common/Common";
 import GeomUtils from "~/common/GeomUtils";
@@ -238,6 +241,7 @@ class GeoInfoNode {
   id?: string;
   disabled: boolean = false;
   geometry?: Record<string, unknown>;
+  sourceFeature?: GeoJSON.Feature;
 
   constructor(_label: string, _children?: GeoInfoNode[], _geoType?: string, _geoData?: unknown) {
     this.label = _label;
@@ -363,6 +367,7 @@ const inspectFeature = (feature: GeoJSON.Feature, _idx: number = 0): GeoInfoNode
   const node = new GeoInfoNode("要素对象", [geoInfoNode, propertyInfoNode]);
   node.label2 = `${_idx} : ${geoTypeName}`;
   node.geometry = feature.geometry as Record<string, unknown>;
+  node.sourceFeature = feature;
   return node;
 }
 
@@ -403,6 +408,83 @@ watch(() => props.data, (newData, oldData) => {
     geoJsonTreeData2.value = undefined;
   }
 }, {deep: true, immediate: true})
+
+const selectedNodeId = ref<string | null>(null);
+const selectedNodeData = ref<GeoInfoNode | null>(null);
+
+const getOriginalJson = (node: GeoInfoNode | null): string => {
+  if (!node) return '';
+  if (node.sourceFeature) {
+    return JSON.stringify(node.sourceFeature, null, 2);
+  }
+  if (node.geometry) {
+    return JSON.stringify(node.geometry, null, 2);
+  }
+  if (node.value !== undefined) {
+    return JSON.stringify(node.value, null, 2);
+  }
+  return '';
+};
+
+const editedJson = ref('');
+const isDirty = ref(false);
+
+const handleEditorInput = (val: string) => {
+  editedJson.value = val;
+  isDirty.value = val !== getOriginalJson(selectedNodeData.value);
+}
+
+const handleJsonUpdate = () => {
+  const node = selectedNodeData.value;
+  if (!node) return;
+  try {
+    const parsed = JSON.parse(editedJson.value);
+    if (node.sourceFeature && parsed.type === 'Feature') {
+      // 更新 Feature 的 geometry 和 properties
+      if (parsed.geometry) {
+        node.sourceFeature.geometry = parsed.geometry;
+        node.geometry = parsed.geometry as Record<string, unknown>;
+      }
+      if (parsed.properties) {
+        node.sourceFeature.properties = parsed.properties;
+      }
+      // 重建树
+      const idx = props.data.features.indexOf(node.sourceFeature);
+      if (idx >= 0) {
+        const newFeature = { ...node.sourceFeature } as GeoJSON.Feature;
+        props.data.features[idx] = newFeature;
+        node.sourceFeature = newFeature;
+      }
+      renderMapFeatures();
+    } else if (node.geometry) {
+      node.geometry = parsed as Record<string, unknown>;
+      if (node.sourceFeature) {
+        node.sourceFeature.geometry = parsed as GeoJSON.Geometry;
+        renderMapFeatures();
+      }
+    }
+    isDirty.value = false;
+    ElMessage.success('更新成功');
+  } catch (e: unknown) {
+    ElMessage.error('JSON 格式错误，无法更新');
+  }
+}
+
+const handleJsonCancel = () => {
+  editedJson.value = getOriginalJson(selectedNodeData.value);
+  isDirty.value = false;
+}
+
+const handleTreeNodeClick = (data: GeoInfoNode) => {
+  selectedNodeId.value = data.id ?? null;
+  selectedNodeData.value = data;
+  editedJson.value = getOriginalJson(data);
+  isDirty.value = false;
+  if (data.geometry) {
+    flashGeometries([data.geometry]);
+  }
+}
+
 const flashGeometries = (geometries: Record<string, unknown>[]) => {
   logger.info('[Inspact] flashGeometries called', {
     geometriesCount: geometries.length,
@@ -531,7 +613,7 @@ const validHandlers: Record<string, (coordinates: unknown) => GeoFeature[]> = {
     }
     if (ringNum > 3) {
       for (let i = 1; i < ringNum; i++) {
-        for (let j = i; j < ringNum; j++) {
+        for (let j = i + 1; j < ringNum; j++) {
           const hole1 = turf.polygon([coords[i]]);
           const hole2 = turf.polygon([coords[j]]);
           if (turf.booleanIntersects(hole1, hole2)) {
@@ -615,58 +697,74 @@ watch(validResult, () => {
 </script>
 <template>
   <div v-loading="!mapReloaded || busy" class="gis-data-inspector-container">
-    <el-tabs v-model="activeName" :type="'border-card'" class="gis-data-inspector-tree">
-      <el-tab-pane label="Struct" name="first">
-        <el-tree-v2 ref="theTree" :height="treeHeight" :default-expanded-keys="['root']"
-                    :data="geoJsonTreeData2"
-                    :props="{ label: 'label', children: 'children' }"
-                    :highlight-current="false"
-                    :check-on-click-node="true"
-                    :expand-on-click-node="false"
-                    node-key="id"
+    <Splitpanes class="default-theme">
+      <Pane :size="20" :min-size="10" :max-size="40">
+        <el-tabs v-model="activeName" :type="'border-card'" class="gis-data-inspector-tree">
+          <el-tab-pane label="结构" name="first">
+            <el-tree-v2 ref="theTree" :height="treeHeight" :default-expanded-keys="['root']"
+                        :data="geoJsonTreeData2"
+                        :props="{ label: 'label', children: 'children' }"
+                        :highlight-current="true"
+                        :check-on-click-node="true"
+                        :expand-on-click-node="false"
+                        node-key="id"
+                        @node-click="handleTreeNodeClick"
 >
-          <template #default="{ data }">
-            <span v-if="data" :class="`custom-tree-node ${data.disabled?'disabled':''}`">
-            <span class="key">{{ data.label }}:</span>
-            <span v-if="data.label2" class="label2">[{{ data.label2 }}]</span>
-             <span :class="`val-${ data.typeName}`">{{ data.value }}</span>
-           </span>
-            <span v-if="data?.geometry!==undefined" class="node-btns"><View
-                @click.stop.prevent="handleTreeNodeView(data)"
+              <template #default="{ data }">
+                <span v-if="data" :class="`custom-tree-node ${data.disabled?'disabled':''}`">
+                <span class="key">{{ data.label }}:</span>
+                <span v-if="data.label2" class="label2">[{{ data.label2 }}]</span>
+                 <span :class="`val-${ data.typeName}`">{{ data.value }}</span>
+               </span>
+                <span v-if="data?.geometry!==undefined" class="node-btns"><View
+                    @click.stop.prevent="handleTreeNodeView(data)"
 /></span>
-          </template>
-        </el-tree-v2>
-      </el-tab-pane>
-      <el-tab-pane label="validation" name="second">
-        <div :style="{height:`${treeHeight-40}px`}">
-          <el-tree-v2 :height="treeHeight-40" :default-expanded-keys="['root']"
-                      :data="validResultTreeData"
-                      :props="{ label: 'label', children: 'children' }"
-                      :highlight-current="false"
-                      :check-on-click-node="true"
-                      :expand-on-click-node="false"
-                      node-key="id"
+              </template>
+            </el-tree-v2>
+          </el-tab-pane>
+          <el-tab-pane label="校验" name="second">
+            <div :style="{height:`${treeHeight-40}px`}">
+              <el-tree-v2 :height="treeHeight-40" :default-expanded-keys="['root']"
+                          :data="validResultTreeData"
+                          :props="{ label: 'label', children: 'children' }"
+                          :highlight-current="false"
+                          :check-on-click-node="true"
+                          :expand-on-click-node="false"
+                          node-key="id"
 >
-            <template #default="{ data }">
-            <span v-if="data" :class="`custom-tree-node error ${data.disabled?'disabled':''}`">
-            <span class="key">{{ data.label }}:</span>
-            <span v-if="data.label2" class="label2">[{{ data.label2 }}]</span>
-             <span :class="`val-${ data.typeName}`">{{ data.value }}</span>
-           </span>
-              <span v-if="data?.geometry!==undefined" class="node-btns"><View
-                  @click.stop.prevent="handleTreeNodeView(data)"
+                <template #default="{ data }">
+                <span v-if="data" :class="`custom-tree-node error ${data.disabled?'disabled':''}`">
+                <span class="key">{{ data.label }}:</span>
+                <span v-if="data.label2" class="label2">[{{ data.label2 }}]</span>
+                 <span :class="`val-${ data.typeName}`">{{ data.value }}</span>
+               </span>
+                  <span v-if="data?.geometry!==undefined" class="node-btns"><View
+                      @click.stop.prevent="handleTreeNodeView(data)"
 /></span>
-            </template>
-          </el-tree-v2>
+                </template>
+              </el-tree-v2>
+            </div>
+            <div style="text-align: center">
+              <el-button type="primary" @click="handleValid">执行校验</el-button>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </Pane>
+      <Pane v-if="activeName === 'first' && editedJson" :size="30" :min-size="15" :max-size="50">
+        <div class="json-editor-container">
+          <geo-str-editor :value="editedJson" :read-only="false" :minimap="false" language="json" class="json-editor-main" @input="handleEditorInput" />
+          <div class="json-editor-footer">
+            <el-button type="primary" size="small" :disabled="!isDirty" @click="handleJsonUpdate">更新</el-button>
+            <el-button size="small" :disabled="!isDirty" @click="handleJsonCancel">取消/还原</el-button>
+          </div>
         </div>
-        <div style="text-align: center">
-          <el-button type="primary" @click="handleValid">Run</el-button>
+      </Pane>
+      <Pane v-if="mapReloaded && (conpomentVisiblity||mapInited)" :size="50" :min-size="20">
+        <div class="map-container">
+          <gis-map-blank :map-name="`${curInstanceId}`" :options="{projection:epsgCode}" />
         </div>
-      </el-tab-pane>
-    </el-tabs>
-    <div v-if="mapReloaded && (conpomentVisiblity||mapInited)" class="map-container">
-      <gis-map-blank :map-name="`${curInstanceId}`" :options="{projection:epsgCode}" />
-    </div>
+      </Pane>
+    </Splitpanes>
   </div>
 </template>
 
@@ -699,19 +797,19 @@ watch(validResult, () => {
 }
 
 .gis-data-inspector-container :deep( .custom-tree-node .val-null, .custom-tree-node .val-undefined ) {
-  color: #909399;
+  color: var(--el-text-color-secondary);
 }
 
 .gis-data-inspector-container :deep( .custom-tree-node .label2 ) {
-  color: #bfc6cb;
+  color: var(--el-text-color-placeholder);
 }
 
 .gis-data-inspector-container :deep( .custom-tree-node .type ) {
-  color: #fbe792;
+  color: var(--el-color-warning);
 }
 
 .gis-data-inspector-container :deep( .custom-tree-node.disabled * ) {
-  color: #bfc6cb !important;
+  color: var(--el-text-color-placeholder) !important;
   cursor: not-allowed;
   pointer-events: none;
 }
@@ -720,19 +818,44 @@ watch(validResult, () => {
   height: 100%;
   width: 100%;
   box-sizing: border-box;
-  display: flex;
-  border: 1px solid #CCC;
+  border: 1px solid var(--el-border-color-lighter);
+}
+
+.gis-data-inspector-container :deep(.splitpanes) {
+  height: 100%;
 }
 
 .map-container {
-  width: calc(100% - 240px);
   height: 100%;
-  border-left: 1px solid #CCC;
   box-sizing: border-box;
 }
 
+.json-editor-container {
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.json-editor-main {
+  flex: 1;
+  min-height: 0;
+}
+
+.json-editor-footer {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 8px;
+  border-top: 1px solid var(--el-border-color-lighter);
+  background: var(--el-fill-color-lighter);
+}
+
 .gis-data-inspector-tree {
-  width: 240px;
+  height: 100%;
 }
 
 .gis-data-inspector-tree :deep( .el-tree-node__content ) {
@@ -751,7 +874,7 @@ watch(validResult, () => {
   height: 14px;
   cursor: pointer;
   padding: 4px;
-  color: #DDD;
+  color: var(--el-text-color-placeholder);
 }
 
 .node-btns svg:hover {

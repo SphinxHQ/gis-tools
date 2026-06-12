@@ -66,7 +66,12 @@ export function handleError(error: unknown, context?: string): GisError {
 
 export function createUserMessage(error: unknown): string {
     if (error instanceof GisError) {
-        return error.message
+        const baseMsg = ERROR_MESSAGES[error.code] || error.code
+        // 如果 message 跟默认描述不同（即携带了详细信息），拼接展示
+        if (error.message && error.message !== baseMsg) {
+            return `${baseMsg}\n\n${error.message}`
+        }
+        return baseMsg
     }
     if (error instanceof Error) {
         return error.message

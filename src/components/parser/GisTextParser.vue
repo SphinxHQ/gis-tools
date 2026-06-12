@@ -21,7 +21,7 @@ const activeTab = ref('wkt')
 .gis-text-parser-container {
   width: 100%;
   height: 100%;
-  background: #fff;
+  background: var(--el-bg-color);
   border-radius: 5px;
   box-sizing: border-box;
 }
