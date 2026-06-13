@@ -48,7 +48,13 @@ onMounted(async () => {
   const me = await ensureMonaco()
 
   self.MonacoEnvironment = {
-    getWorker() {
+    getWorker(moduleId: string, label: string) {
+      if (label === 'json') {
+        return new Worker(
+          new URL('monaco-editor/esm/vs/language/json/json.worker.js', import.meta.url),
+          { type: 'module' }
+        )
+      }
       return new Worker(
         new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url),
         { type: 'module' }
