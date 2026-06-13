@@ -22,6 +22,10 @@ const datasetCount = computed(() => datasets.value.length)
       <span class="toolbar-title">Gis Tools</span>
     </div>
     <div class="toolbar-right">
+      <a href="mailto:yuanyu@supermap.com" class="toolbar-contact" title="yuanyu@supermap.com">
+        <el-icon :size="14"><Message /></el-icon>
+        <span>yuanyu@supermap.com</span>
+      </a>
       <span v-if="datasetCount > 0" class="toolbar-badge">{{ datasetCount }} 个数据集</span>
       <el-radio-group v-model="themeMode" size="small" class="theme-switch">
         <el-radio-button value="auto">
@@ -76,6 +80,24 @@ const datasetCount = computed(() => datasets.value.length)
   background: var(--el-fill-color-light);
   padding: 2px 8px;
   border-radius: 10px;
+}
+
+.toolbar-contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--el-text-color-regular);
+  text-decoration: none;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--el-fill-color-light);
+  transition: color 0.2s, background 0.2s;
+}
+
+.toolbar-contact:hover {
+  color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
 }
 
 .theme-switch :deep(.el-radio-button__inner) {
