@@ -2,6 +2,10 @@
 import type { editor as MonacoEditorNS } from 'monaco-editor/esm/vs/editor/editor.api'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
+// Vite ?worker 导入 — 编译时生成 Worker 构建产物
+import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
+import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
+
 import { isActuallyDark } from '~/composables/dark'
 
 const props = withDefaults(defineProps<{
@@ -29,6 +33,7 @@ let editor: MonacoEditorNS.IStandaloneCodeEditor | null = null
 let monacoEditor: typeof MonacoEditorNS | null = null
 let resizeObserver: ResizeObserver | null = null
 let ignoreNextChange = false
+let languagesRegistered = false
 
 const displayValue = () => {
   if (Array.isArray(props.value)) return props.value.join('\n')
@@ -37,14 +42,28 @@ const displayValue = () => {
 
 async function ensureMonaco() {
   if (monacoEditor) return monacoEditor
+
+  // 注册 Worker
+  self.MonacoEnvironment = {
+    getWorker(_moduleId: string, label: string) {
+      if (label === 'json') {
+        return new JsonWorker()
+      }
+      return new EditorWorker()
+    },
+  }
+
   const mod = await import('monaco-editor/esm/vs/editor/editor.api')
   monacoEditor = mod.editor
 
-  // 注册 WKT 语法高亮
-  const monacoLanguages = mod.languages
-  if (!monacoLanguages.getLanguages().some(l => l.id === 'wkt')) {
-    monacoLanguages.register({ id: 'wkt' })
-    monacoLanguages.setMonarchTokensProvider('wkt', {
+  // 注册自定义语言（仅一次）
+  if (!languagesRegistered) {
+    languagesRegistered = true
+    const langs = mod.languages
+
+    // WKT 语法高亮
+    langs.register({ id: 'wkt' })
+    langs.setMonarchTokensProvider('wkt', {
       tokenizer: {
         root: [
           [/\b(GEOMETRYCOLLECTION|MULTIPOLYGON|MULTILINESTRING|MULTIPOINT|POLYGON|LINESTRING|POINT)\b/, 'keyword'],
@@ -55,12 +74,10 @@ async function ensureMonaco() {
         ]
       }
     })
-  }
 
-  // 注册电子报盘语法高亮
-  if (!monacoLanguages.getLanguages().some(l => l.id === 'exchange')) {
-    monacoLanguages.register({ id: 'exchange' })
-    monacoLanguages.setMonarchTokensProvider('exchange', {
+    // 电子报盘语法高亮
+    langs.register({ id: 'exchange' })
+    langs.setMonarchTokensProvider('exchange', {
       tokenizer: {
         root: [
           [/\[属性描述\]|\[地块坐标\]/, 'keyword'],

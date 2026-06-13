@@ -102,9 +102,6 @@ importers:
       vite:
         specifier: 5.4.2
         version: 5.4.2(@types/node@20.16.1)(sass@1.77.8)(terser@5.31.6)
-      vite-plugin-monaco-editor:
-        specifier: ^1.1.0
-        version: 1.1.0(monaco-editor@0.55.1)
       vite-plugin-node-polyfills:
         specifier: 0.22.0
         version: 0.22.0(rollup@4.21.1)(vite@5.4.2(@types/node@20.16.1)(sass@1.77.8)(terser@5.31.6))
@@ -3406,11 +3403,6 @@ packages:
     resolution: {integrity: sha512-YAXkfvGtuTzwWbDSACdJSg4A4DZiAqckWe90Zapc/sEX3XvHcw1NdurM/6od8J207tSDqNbSsgdCacBgvJKFuA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
-
-  vite-plugin-monaco-editor@1.1.0:
-    resolution: {integrity: sha512-IvtUqZotrRoVqwT0PBBDIZPNraya3BxN/bfcNfnxZ5rkJiGcNtO5eAOWWSgT7zullIAEqQwxMU83yL9J5k7gww==}
-    peerDependencies:
-      monaco-editor: '>=0.33.0'
 
   vite-plugin-node-polyfills@0.22.0:
     resolution: {integrity: sha512-F+G3LjiGbG8QpbH9bZ//GSBr9i1InSTkaulfUHFa9jkLqVGORFBoqc2A/Yu5Mmh1kNAbiAeKeK+6aaQUf3x0JA==}
@@ -8246,10 +8238,6 @@ snapshots:
       - sugarss
       - supports-color
       - terser
-
-  vite-plugin-monaco-editor@1.1.0(monaco-editor@0.55.1):
-    dependencies:
-      monaco-editor: 0.55.1
 
   vite-plugin-node-polyfills@0.22.0(rollup@4.21.1)(vite@5.4.2(@types/node@20.16.1)(sass@1.77.8)(terser@5.31.6)):
     dependencies:
