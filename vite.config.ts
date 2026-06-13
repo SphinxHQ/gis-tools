@@ -14,6 +14,7 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
+import monacoEditorPlugin from 'vite-plugin-monaco-editor'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -75,6 +76,10 @@ export default defineConfig({
         transformerDirectives(),
         transformerVariantGroup(),
       ]
+    }),
+
+    monacoEditorPlugin.default({
+      languageWorkers: ['editorWorkerService', 'json']
     }),
   ],
   test: {

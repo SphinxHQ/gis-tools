@@ -47,21 +47,6 @@ onMounted(async () => {
 
   const me = await ensureMonaco()
 
-  self.MonacoEnvironment = {
-    getWorker(moduleId: string, label: string) {
-      if (label === 'json') {
-        return new Worker(
-          new URL('monaco-editor/esm/vs/language/json/json.worker.js', import.meta.url),
-          { type: 'module' }
-        )
-      }
-      return new Worker(
-        new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url),
-        { type: 'module' }
-      )
-    },
-  }
-
   editor = me.create(editorContainer.value, {
     value: displayValue(),
     language: props.language,
@@ -73,9 +58,34 @@ onMounted(async () => {
     scrollBeyondLastLine: false,
     automaticLayout: false,
     fontSize: 13,
-    renderLineHighlight: 'none',
+    renderLineHighlight: 'all',
     folding: props.language === 'json',
+    foldingStrategy: 'auto',
+    foldingHighlight: true,
+    showFoldingControls: 'mouseover',
     overviewRulerBorder: false,
+    matchBrackets: 'always',
+    bracketPairColorization: { enabled: true },
+    guides: {
+      bracketPairs: true,
+      indentation: true,
+      highlightActiveBracketPair: true,
+      highlightActiveIndentation: true,
+    },
+    autoClosingBrackets: 'always',
+    autoClosingQuotes: 'always',
+    autoIndent: 'advanced',
+    formatOnPaste: true,
+    selectionHighlight: true,
+    occurrencesHighlight: 'singleFile',
+    renderWhitespace: 'selection',
+    renderControlCharacters: true,
+    cursorBlinking: 'smooth',
+    cursorSmoothCaretAnimation: 'on',
+    smoothScrolling: true,
+    contextmenu: true,
+    links: true,
+    colorDecorators: true,
     scrollbar: {
       verticalScrollbarSize: 8,
       horizontalScrollbarSize: 8,
