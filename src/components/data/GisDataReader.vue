@@ -25,6 +25,25 @@ defineProps({
 const txt = ref('')
 const tipText = ref('')
 const loading = ref(false)
+const editorLanguage = ref('json')
+
+// 根据内容自动检测编辑器语言
+const detectLanguage = (content: string): string => {
+  const trimmed = content.trim()
+  if (!trimmed) return 'json'
+  // JSON: 以 { 或 [ 开头
+  if (/^[\[{]/.test(trimmed)) return 'json'
+  // WKT: 以 GEOMETRYCOLLECTION/POLYGON/LINESTRING/POINT/MULTI... 开头
+  if (/^\s*(GEOMETRYCOLLECTION|MULTIPOLYGON|MULTILINESTRING|MULTIPOINT|POLYGON|LINESTRING|POINT)\b/i.test(trimmed)) return 'wkt'
+  // 电子报盘: 含 [属性描述] 或 [地块坐标]
+  if (/\[属性描述\]|\[地块坐标\]/.test(trimmed)) return 'exchange'
+  return 'json'
+}
+
+const handleTextChanged = (_txt: string) => {
+  txt.value = _txt
+  editorLanguage.value = detectLanguage(_txt)
+}
 
 // 错误详情弹窗
 const errorDialogVisible = ref(false)
@@ -97,9 +116,6 @@ const handleHistoryRowClick = (row: GisFileData) => {
   })
 }
 
-const handleTextChanged = (_txt: string) => {
-  txt.value = _txt
-}
 const handleTextConfirm = () => {
   if (!txt.value.trim()) return;
   try {
@@ -220,7 +236,10 @@ defineExpose({
         </el-upload>
       </el-tab-pane>
       <el-tab-pane label="输入文本" name="text">
-        <geo-str-editor :value="txt" :read-only="false" :format="true" @input="handleTextChanged" />
+        <div class="language-hint">
+          <el-tag size="small" type="info" disable-transitions>{{ editorLanguage === 'json' ? 'GeoJSON' : editorLanguage === 'wkt' ? 'WKT' : '电子报盘' }}</el-tag>
+        </div>
+        <geo-str-editor :value="txt" :read-only="false" :format="true" :language="editorLanguage" class="h-[calc(100%-24px)]" @input="handleTextChanged" />
       </el-tab-pane>
       <el-tab-pane label="绘制图形">
         <map-drawer @submit="handleMapDrawSubmit" />
@@ -284,6 +303,14 @@ defineExpose({
   width: 100%;
   overflow: auto;
   padding: 0;
+}
+
+.language-hint {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
 }
 
 .error-detail-textarea :deep(.el-textarea__inner) {
