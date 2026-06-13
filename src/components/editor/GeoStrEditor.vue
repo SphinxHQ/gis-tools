@@ -39,6 +39,42 @@ async function ensureMonaco() {
   if (monacoEditor) return monacoEditor
   const mod = await import('monaco-editor/esm/vs/editor/editor.api')
   monacoEditor = mod.editor
+
+  // 注册 WKT 语法高亮
+  const monacoLanguages = mod.languages
+  if (!monacoLanguages.getLanguages().some(l => l.id === 'wkt')) {
+    monacoLanguages.register({ id: 'wkt' })
+    monacoLanguages.setMonarchTokensProvider('wkt', {
+      tokenizer: {
+        root: [
+          [/\b(GEOMETRYCOLLECTION|MULTIPOLYGON|MULTILINESTRING|MULTIPOINT|POLYGON|LINESTRING|POINT)\b/, 'keyword'],
+          [/\b(EMPTY|Z|M|ZM)\b/, 'type'],
+          [/\(|\)/, 'delimiter.parenthesis'],
+          [/,/, 'delimiter.comma'],
+          [/-?\d+\.?\d*(?:[eE][+-]?\d+)?/, 'number'],
+        ]
+      }
+    })
+  }
+
+  // 注册电子报盘语法高亮
+  if (!monacoLanguages.getLanguages().some(l => l.id === 'exchange')) {
+    monacoLanguages.register({ id: 'exchange' })
+    monacoLanguages.setMonarchTokensProvider('exchange', {
+      tokenizer: {
+        root: [
+          [/\[属性描述\]|\[地块坐标\]/, 'keyword'],
+          [/^[^=\[\]]+(?==)/, 'variable'],
+          [/=/, 'delimiter'],
+          [/\bJ\d+\b/, 'variable.predefined'],
+          [/-?\d+\.?\d*/, 'number'],
+          [/@/, 'tag'],
+          [/\b(点|线|面)\b/, 'type'],
+        ]
+      }
+    })
+  }
+
   return monacoEditor!
 }
 

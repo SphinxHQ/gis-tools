@@ -303,7 +303,7 @@ const crsInfo = computed(() => props.data?.crs?.crsInfo ?? null)
         <div class="h-[calc(100%-40px)]">
           <geo-str-editor
               :value="wktType === 'GeometrySplit'? dataStr_wkt.join(`\r\n\r\n\r\n`) :`GEOMETRYCOLLECTION(${ dataStr_wkt.join(`,`)})`"
-              language="plaintext"
+              language="wkt"
           />
         </div>
       </el-tab-pane>
@@ -318,7 +318,7 @@ const crsInfo = computed(() => props.data?.crs?.crsInfo ?? null)
           <el-button type="primary" @click="handleDownloadExchange">DownloadTxt</el-button>
         </div>
         <div class="h-[calc(100%-40px)]">
-          <geo-str-editor :value="display_exchange" language="plaintext" />
+          <geo-str-editor :value="display_exchange" language="exchange" />
         </div>
       </el-tab-pane>
     </el-tabs>
