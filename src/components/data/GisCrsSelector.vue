@@ -98,16 +98,16 @@ type CascaderOptions = {
 const generateData = () => {
   const optPrj: CascaderOptions = {
     key: 0,
-    label: '投影坐标系',
+    label: '投影',
     disabled: false,
-    value: { name: '投影坐标系' },
+    value: { name: '投影' },
     children: []
   };
   const optGra: CascaderOptions = {
     key: 2,
-    label: '地理坐标系',
+    label: '地理',
     disabled: false,
-    value: { name: '地理坐标系' },
+    value: { name: '地理' },
     children: []
   }
   baseCrsList.value.forEach(item => {
@@ -123,9 +123,11 @@ const generateData = () => {
       })
     }
     const find = _opt?.children?.find(item => item.label === groupName);
+    // 叶子节点标签：去掉分组前缀，只保留后半部分
+    const shortName = item.name.split("/").slice(1).join("/").trim() || item.name;
     find?.children?.push({
       key: item.epsgCode,
-      label: item.name,
+      label: `EPSG:${item.epsgCode} ${shortName}`,
       value: item,
       isLeaf: true,
       disabled: props.disableValues.includes(item.epsgCode)
@@ -398,5 +400,26 @@ const handleConfirm = () => {
 .custom-error {
   color: var(--el-color-danger);
   font-size: 12px;
+}
+
+/**
+ * 级联面板：3列横排，每列 200px，总宽 600px 适配 640px popover
+ */
+:deep(.el-cascader-panel) {
+  width: 600px;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-lighter);
+}
+
+:deep(.el-cascader-panel .el-cascader-menu) {
+  min-width: 200px;
+  max-width: 200px;
+}
+
+:deep(.el-cascader-panel .el-cascader-menu .el-cascader-node__label) {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

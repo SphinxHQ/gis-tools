@@ -19,6 +19,8 @@ export const isActuallyDark = computed(() => {
 // 同步到 html.dark class
 watch(isActuallyDark, (dark) => {
   document.documentElement.classList.toggle('dark', dark)
+  // 同步给内联 loading 屏（index.html）使用
+  document.documentElement.setAttribute('data-entry-theme', dark ? 'dark' : 'light')
 }, { immediate: true })
 
 export function setThemeMode(mode: ThemeMode) {

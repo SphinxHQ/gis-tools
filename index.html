@@ -4,13 +4,321 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- element css cdn, if you use custom theme, remove it. -->
-    <!-- <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css"
-    /> -->
+    <!-- 主入口 loading 屏：写在 HTML 中，浏览器解析即渲染，-->
+    <!-- 不依赖任何 JS / CSS 资源，最早出现的视觉反馈。-->
+    <!-- 浅色 / 深色主题分别配色，由 data-entry-theme 属性控制；默认 dark。-->
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; }
+
+      /* ===== 浅色主题（与 scss --gis-panel-bg 一致：#ffffff / #1d1e1f） ===== */
+      html[data-entry-theme="light"] body { background: #ffffff; }
+      html[data-entry-theme="light"] #entry-loader-mask { background: #ffffff; }
+
+      /* ===== 深色主题（默认，与 scss html.dark --gis-panel-bg 一致：#1d1e1f） ===== */
+      html, body { background: #1d1e1f; }
+      html[data-entry-theme="dark"] body,
+      html:not([data-entry-theme]) body { background: #1d1e1f; }
+      #entry-loader-mask { background: #1d1e1f; }
+
+      #entry-loader-mask {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        transition: opacity 0.55s ease, transform 0.55s ease;
+      }
+      #entry-loader-mask.entry-loader-hide {
+        opacity: 0;
+        transform: scale(1.04);
+        pointer-events: none;
+      }
+
+      /* 唯一画布：所有视觉（几何动画 + 标题 + 百分比 + 进度条 + 提示语）全部用 Canvas 2D 绘制 */
+      #entry-loader-canvas {
+        display: block;
+      }
+    </style>
+    <!-- 在主入口脚本之前同步检测主题：localStorage 优先，否则按系统偏好。-->
+    <script>
+      (function () {
+        try {
+          var mode = localStorage.getItem('gis-theme-mode');
+          var dark = mode === 'dark' || (mode !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.setAttribute('data-entry-theme', dark ? 'dark' : 'light');
+        } catch (e) {
+          document.documentElement.setAttribute('data-entry-theme', 'dark');
+        }
+      })();
+    </script>
   </head>
   <body>
+    <!-- 主入口 loading 屏（纯 HTML，文字 + 几何全由 canvas 绘制，避免 DOM reflow） -->
+    <div id="entry-loader-mask">
+      <canvas id="entry-loader-canvas" width="280" height="380"></canvas>
+    </div>
+    <script>
+      // 主入口 loading 动画：纯 Canvas 2D 绘制（几何 + 标题 + % + 进度条 + 提示语）
+      // 所有文字由 canvas fillText 绘制，零 DOM 文本变化，主进程不会因为文字 reflow 卡顿
+      // 文字数据通过 window.__loaderText 通道传递，entryLoader.ts 写入
+      (function () {
+        var canvas = document.getElementById('entry-loader-canvas');
+        if (!canvas || !canvas.getContext) return;
+        var ctx = canvas.getContext('2d');
+        var LOGICAL_W = 280;
+        var LOGICAL_H = 380;
+        var W = LOGICAL_W;
+        var H = LOGICAL_H;
+        var GEO_CY = 110;            // 几何动画中心 y
+        var GEO_RADIUS = 78;         // 几何外框半径
+        var TEXT_Y_TITLE = 232;      // 标题视觉中线
+        var TEXT_Y_PROGRESS = 268;   // 百分比视觉中线
+        var PROGRESS_BAR_Y = 286;    // 进度条 y
+        var PROGRESS_BAR_W = 200;    // 进度条宽度
+        var PROGRESS_BAR_H = 4;      // 进度条高度
+        var TEXT_Y_TIP = 318;        // 提示语视觉中线
+        var rafId = null;
+        var startTs = 0;
+
+        // 高 DPI 自适应
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        if (dpr !== 1) {
+          canvas.width = LOGICAL_W * dpr;
+          canvas.height = LOGICAL_H * dpr;
+          canvas.style.width = LOGICAL_W + 'px';
+          canvas.style.height = LOGICAL_H + 'px';
+          ctx.scale(dpr, dpr);
+        }
+
+        // 主题适配：根据 data-entry-theme 切换灰阶
+        var isLight = document.documentElement.getAttribute('data-entry-theme') === 'light';
+        // 几何灰度调色板：与 scss --gis-text-primary / secondary / placeholder 保持一致
+        var GRAY_FRAME = isLight ? 'rgba(144, 147, 153, 0.45)' : 'rgba(163, 166, 173, 0.45)';
+        var GRAY_DASH = isLight ? 'rgba(192, 196, 204, 0.35)' : 'rgba(108, 110, 114, 0.35)';
+        // 语义色：与 scss --gis-geo-point / line / polygon 保持一致（深浅主题相同）
+        var GEO_POINT_LINE = '#2563eb';
+        var GEO_POINT_FILL = 'rgba(37, 99, 235, 0.12)';
+        var GEO_LINE_LINE = '#16a34a';
+        var GEO_POLY_LINE = '#ea580c';
+        var GEO_POLY_FILL = 'rgba(234, 88, 12, 0.12)';
+        // 文字颜色与 scss --gis-text-primary / secondary 保持一致
+        var TEXT_TITLE = isLight ? '#303133' : '#e5eaf3';
+        var TEXT_PERCENT = isLight ? 'rgba(48, 49, 51, 0.85)' : 'rgba(229, 234, 243, 0.85)';
+        var TEXT_TIP = isLight ? 'rgba(48, 49, 51, 0.5)' : 'rgba(229, 234, 243, 0.5)';
+        // 进度条配色（Element Plus primary，深浅主题通用）
+        var PROGRESS_TRACK = isLight ? 'rgba(144, 147, 153, 0.2)' : 'rgba(163, 166, 173, 0.2)';
+        var PROGRESS_FILL = '#409EFF';
+
+        try {
+          var themeObserver = new MutationObserver(function () {
+            var nowLight = document.documentElement.getAttribute('data-entry-theme') === 'light';
+            GRAY_FRAME = nowLight ? 'rgba(144, 147, 153, 0.45)' : 'rgba(163, 166, 173, 0.45)';
+            GRAY_DASH = nowLight ? 'rgba(192, 196, 204, 0.35)' : 'rgba(108, 110, 114, 0.35)';
+            TEXT_TITLE = nowLight ? '#303133' : '#e5eaf3';
+            TEXT_PERCENT = nowLight ? 'rgba(48, 49, 51, 0.85)' : 'rgba(229, 234, 243, 0.85)';
+            TEXT_TIP = nowLight ? 'rgba(48, 49, 51, 0.5)' : 'rgba(229, 234, 243, 0.5)';
+            PROGRESS_TRACK = nowLight ? 'rgba(144, 147, 153, 0.2)' : 'rgba(163, 166, 173, 0.2)';
+          });
+          themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-entry-theme'] });
+        } catch (e) { /* noop */ }
+
+        // 文字通道：entryLoader.ts 通过 window.__loaderText = { percent: '0%', tip: '...' } 写入
+        if (!window.__loaderText) window.__loaderText = { percent: '0%', tip: '正在加载地图核心模块' };
+
+        var STAGE_DURATION = 1200; // 每段动画 1.2s（3 段总 3.6s 一个完整循环）
+        var FADE = 220;            // 切换过渡时长
+
+        function drawGeometry(t) {
+          var cx = W / 2;
+          var cy = GEO_CY;
+
+          // 外框：固定圆
+          ctx.save();
+          ctx.strokeStyle = GRAY_FRAME;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(cx, cy, GEO_RADIUS, 0, Math.PI * 2);
+          ctx.stroke();
+          // 4 个角的小十字刻度（GIS 风格）
+          ctx.strokeStyle = GRAY_DASH;
+          ctx.lineWidth = 1;
+          for (var i = 0; i < 4; i++) {
+            var a = (i * Math.PI) / 2 + Math.PI / 4;
+            var x1 = cx + Math.cos(a) * (GEO_RADIUS + 4);
+            var y1 = cy + Math.sin(a) * (GEO_RADIUS + 4);
+            var x2 = cx + Math.cos(a) * (GEO_RADIUS + 12);
+            var y2 = cy + Math.sin(a) * (GEO_RADIUS + 12);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+          }
+          ctx.restore();
+
+          // 当前阶段（点 → 线 → 面 循环）
+          var stage = Math.floor(t / STAGE_DURATION) % 3;
+          var local = t % STAGE_DURATION;
+          var alpha = 1;
+          if (local < FADE) alpha = local / FADE;
+          else if (local > STAGE_DURATION - FADE) alpha = (STAGE_DURATION - local) / FADE;
+          ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+
+          if (stage === 0) drawPoint(cx, cy);
+          else if (stage === 1) drawLine(cx, cy);
+          else drawPolygon(cx, cy);
+
+          ctx.globalAlpha = 1;
+        }
+
+        function drawPoint(cx, cy) {
+          ctx.save();
+          ctx.strokeStyle = GEO_POINT_LINE;
+          ctx.fillStyle = GEO_POINT_FILL;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fill();
+          ctx.fillStyle = GEO_POINT_LINE;
+          ctx.beginPath();
+          ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function drawLine(cx, cy) {
+          ctx.save();
+          ctx.strokeStyle = GEO_LINE_LINE;
+          ctx.lineWidth = 2;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          var pts = [
+            { x: cx - 56, y: cy + 30 },
+            { x: cx - 18, y: cy - 40 },
+            { x: cx + 24, y: cy + 12 },
+            { x: cx + 58, y: cy - 24 },
+          ];
+          ctx.beginPath();
+          ctx.moveTo(pts[0].x, pts[0].y);
+          for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+          ctx.stroke();
+          ctx.fillStyle = GEO_LINE_LINE;
+          for (var j = 0; j < pts.length; j++) {
+            ctx.beginPath();
+            ctx.arc(pts[j].x, pts[j].y, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        function drawPolygon(cx, cy) {
+          ctx.save();
+          ctx.strokeStyle = GEO_POLY_LINE;
+          ctx.fillStyle = GEO_POLY_FILL;
+          ctx.lineWidth = 2;
+          ctx.lineJoin = 'round';
+          var R = 46;
+          var pts = [];
+          for (var k = 0; k < 5; k++) {
+            var ang = -Math.PI / 2 + (k * 2 * Math.PI) / 5;
+            pts.push({ x: cx + Math.cos(ang) * R, y: cy + Math.sin(ang) * R });
+          }
+          ctx.beginPath();
+          ctx.moveTo(pts[0].x, pts[0].y);
+          for (var m = 1; m < pts.length; m++) ctx.lineTo(pts[m].x, pts[m].y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = GEO_POLY_LINE;
+          for (var n = 0; n < pts.length; n++) {
+            ctx.beginPath();
+            ctx.arc(pts[n].x, pts[n].y, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        // 文字 + 进度条绘制（全部 fillText + Canvas 图形，无 DOM 文本）
+        // 用 middle 基线：y 表示视觉中线，不同字号仍能竖直居中对齐
+        function drawText() {
+          var txt = window.__loaderText || { percent: '0%', tip: '' };
+
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+
+          // 标题
+          ctx.fillStyle = TEXT_TITLE;
+          ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif';
+          ctx.fillText('GIS Tools', W / 2, TEXT_Y_TITLE);
+
+          // 进度百分比（monospace 字体）
+          ctx.fillStyle = TEXT_PERCENT;
+          ctx.font = '500 14px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+          ctx.fillText(txt.percent, W / 2, TEXT_Y_PROGRESS);
+
+          // 进度条
+          var barX = (W - PROGRESS_BAR_W) / 2;
+          var barY = PROGRESS_BAR_Y;
+          // 轨道
+          ctx.fillStyle = PROGRESS_TRACK;
+          roundRect(ctx, barX, barY, PROGRESS_BAR_W, PROGRESS_BAR_H, 2);
+          ctx.fill();
+          // 填充
+          var pct = parseFloat(txt.percent) || 0;
+          if (pct > 0) {
+            ctx.fillStyle = PROGRESS_FILL;
+            var fillW = Math.max(PROGRESS_BAR_H, PROGRESS_BAR_W * pct / 100);
+            roundRect(ctx, barX, barY, fillW, PROGRESS_BAR_H, 2);
+            ctx.fill();
+          }
+
+          // 提示语
+          ctx.fillStyle = TEXT_TIP;
+          ctx.font = '400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif';
+          ctx.fillText(txt.tip || '', W / 2, TEXT_Y_TIP);
+        }
+
+        // 圆角矩形辅助函数
+        function roundRect(ctx, x, y, w, h, r) {
+          r = Math.min(r, w / 2, h / 2);
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.arcTo(x + w, y, x + w, y + h, r);
+          ctx.arcTo(x + w, y + h, x, y + h, r);
+          ctx.arcTo(x, y + h, x, y, r);
+          ctx.arcTo(x, y, x + w, y, r);
+          ctx.closePath();
+        }
+
+        function drawFrame(t) {
+          ctx.clearRect(0, 0, W, H);
+          drawGeometry(t);
+          drawText();
+        }
+
+        function tick(ts) {
+          if (!startTs) startTs = ts;
+          var t = ts - startTs;
+          drawFrame(t);
+          rafId = requestAnimationFrame(tick);
+        }
+        rafId = requestAnimationFrame(tick);
+
+        // 遮罩隐藏时停止动画
+        var mask = document.getElementById('entry-loader-mask');
+        if (mask) {
+          var stopObserver = new MutationObserver(function () {
+            if (!document.getElementById('entry-loader-canvas')) {
+              if (rafId) cancelAnimationFrame(rafId);
+              stopObserver.disconnect();
+            }
+          });
+          stopObserver.observe(mask, { attributes: true, childList: true, subtree: true });
+        }
+      })();
+    </script>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

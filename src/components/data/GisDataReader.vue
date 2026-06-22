@@ -11,6 +11,9 @@ import GisDataInfo from "~/components/data/GisDataInfo";
 import {GisFileData} from "~/components/data/LocalDb";
 import MapDrawer from "~/components/data/MapDrawer.vue";
 import {TipLog, TipLogger} from "~/components/data/TipLogger";
+import VertexCountBadge from "~/components/data/VertexCountBadge.vue";
+import GeoTypeIcon from "~/components/icons/GeoTypeIcon.vue";
+import GeoTypeTag from "~/components/icons/GeoTypeTag.vue";
 import {localDb} from "~/composables/localDb";
 
 const emitHandler = defineEmits(['read','error'])
@@ -92,7 +95,7 @@ const handleFileChanged = (file: { name: string; raw: Blob }) => {
     reader.onload = (e) => {
       const val = e.target?.result as string
       readContext(val, dataNamme).then((data: unknown) => {
-        localDb.add(dataNamme, val)
+        localDb.add(dataNamme, val, extractMeta(data as GisDataInfo))
         emitHandler('read', data)
       }).catch((e: Error) => {
         appLogger.error('文件解析失败:', e);
@@ -121,7 +124,7 @@ const handleTextConfirm = () => {
   try {
     const dataName = `文本-${new Date().getTime()}`;
     readContext(txt.value, dataName).then((data: unknown) => {
-      localDb.add(dataName, txt.value)
+      localDb.add(dataName, txt.value, extractMeta(data as GisDataInfo))
       emitHandler('read', data)
     }).catch((e: Error) => {
       appLogger.error('文本解析失败:', e);
@@ -157,6 +160,14 @@ const readContext = (context: unknown, dataName: string): Promise<unknown> => {
     }
   })
 }
+
+/** 从解析结果中提取元数据，用于历史记录展示 */
+const extractMeta = (data: GisDataInfo) => ({
+  crs: data.crs?.epsgCode ? `EPSG:${data.crs.epsgCode}` : '',
+  types: data.getTypes()?.join(', ') || '',
+  featureCount: data.features?.length ?? 0,
+  vertexCount: data.getTotalVertexCount(),
+})
 const historyDatas = ref<GisFileData[]>([])
 const setHistory = () => {
   localDb.listAll().then((datas: GisFileData[]) => {
@@ -178,7 +189,7 @@ const handleMapDrawSubmit = (features: GeoJSON.Feature[], crsEpsg: number) => {
     crs: { type: "name", properties: { name: `EPSG:${crsEpsg}` } }
   });
   readContext(jsonStr, dataNamme).then((data: unknown) => {
-    localDb.add(dataNamme, jsonStr);
+    localDb.add(dataNamme, jsonStr, extractMeta(data as GisDataInfo));
     emitHandler('read', data)
   }).catch((e: Error) => {
     appLogger.error('绘制数据解析失败:', e);
@@ -251,9 +262,27 @@ defineExpose({
         </div>
         <el-table :data="historyDatas" stripe class="h-[100%-40px]" @row-click="handleHistoryRowClick">
           <el-table-column prop="id" label="时间" width="150"
-                           :formatter="(row: GisFileData) => Common.dataTimeToLocal(row.id) "
-/>
-          <el-table-column prop="name" label="名称" />
+                           :formatter="(row: GisFileData) => Common.dataTimeToLocal(row.id) "/>
+          <el-table-column prop="name" label="名称" min-width="120" />
+          <el-table-column prop="crs" label="坐标系" width="100" />
+          <el-table-column label="要素类型" min-width="120">
+            <template #default="{ row }">
+              <div class="geo-types-cell">
+                <GeoTypeTag
+                  v-for="t in (row.types || '').split(', ').filter(Boolean)"
+                  :key="t"
+                  :type="t"
+                  :size="13"
+                />
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="featureCount" label="要素数" width="70" align="center" />
+          <el-table-column label="顶点数" width="90" align="center">
+            <template #default="{ row }">
+              <VertexCountBadge :count="row.vertexCount ?? 0" />
+            </template>
+          </el-table-column>
         </el-table>
       </el-tab-pane>
     </el-tabs>
@@ -320,5 +349,11 @@ defineExpose({
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--el-color-danger);
+}
+.geo-types-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 </style>

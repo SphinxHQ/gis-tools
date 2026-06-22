@@ -6,7 +6,7 @@ const importDialogVisible = ref(false)
 
 <template>
   <div class="gis-data-page">
-    <gis-data-toolbar @open-import="importDialogVisible = true" />
+    <gis-data-toolbar />
     <gis-data-import-dialog v-model="importDialogVisible" />
     <div class="data-content">
       <gis-data-set-tabs @open-import="importDialogVisible = true" />

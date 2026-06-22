@@ -11,6 +11,14 @@ export const Types = {
     FLY_TO: "map-event:fly-to",
     ZOOM_TO: "map-event:zoom-to",
     FLASH: "map-event:flash",
+    START_MODIFY: "map-event:start-modify",
+    STOP_MODIFY: "map-event:stop-modify",
+    MODIFY_CHANGE: "map-event:modify-change",
+    UPDATE_EDIT_FEATURE: "map-event:update-edit-feature",
+    SHOW_EDIT_SHADOW: "map-event:show-edit-shadow",
+    CLEAR_EDIT_SHADOW: "map-event:clear-edit-shadow",
+    SET_LAYER_VISIBILITY: "map-event:set-layer-visibility",
+    CLEAN_LAYER: "map-event:clean-layer",
 }
 
 
@@ -66,6 +74,30 @@ export class GisMapZoomToEvent extends GisEvent {
 export class GisMapflashFeaturesEvent extends GisEvent {
     constructor(features: GeoJSON.Feature[], options?: Record<string, unknown>) {
         super(Types.FLASH, options, features);
+    }
+}
+
+export class GisMapStartModifyEvent extends GisEvent {
+    constructor(feature: GeoJSON.Feature, options?: Record<string, unknown>) {
+        super(Types.START_MODIFY, options, feature);
+    }
+}
+
+export class GisMapStopModifyEvent extends GisEvent {
+    constructor(options?: Record<string, unknown>) {
+        super(Types.STOP_MODIFY, options ?? {});
+    }
+}
+
+export class GisMapModifyChangeEvent extends GisEvent {
+    constructor(feature: GeoJSON.Feature) {
+        super(Types.MODIFY_CHANGE, {}, feature);
+    }
+}
+
+export class GisMapUpdateEditFeatureEvent extends GisEvent {
+    constructor(feature: GeoJSON.Feature) {
+        super(Types.UPDATE_EDIT_FEATURE, {}, feature);
     }
 }
 

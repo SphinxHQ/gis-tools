@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 
 import { logger } from '~/common/logger'
 import { TianDiTuGisMapLayer } from '~/components/gismap/layer/GisLayer'
+import type { GisMapLayer } from '~/components/gismap/layer/GisLayer'
 import {
   buildTianDiTuLayerUrl,
   checkTianDiTuAvailability,
@@ -10,7 +11,6 @@ import {
   TIAN_DI_TU_BASEMAPS,
   type TianDiTuBasemapType,
 } from '~/components/gismap/tiandituConfig'
-import type { GisMapLayer } from '~/components/gismap/layer/GisLayer'
 
 /**
  * 底图类型

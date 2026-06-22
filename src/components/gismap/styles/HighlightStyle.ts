@@ -1,11 +1,18 @@
 import {Circle, Fill, Stroke, Style} from 'ol/style.js';
 
+/**
+ * 高亮样式（选中/闪烁）
+ * 语义色与 scss --gis-geo-* 保持一致：
+ *   点=蓝(#2563eb) 线=绿(#16a34a) 面=橙(#ea580c)
+ */
 export default function createHighlightStyle():Record<string,Style[]> {
     const styles:Record<string,Style[]> =  {};
     const white = [255, 255, 255, 1];
-    const blue = [0, 153, 255, 1];
-    const red = [255, 33, 0, 1];
+    // 语义色
+    const pointColor = [37, 99, 235, 1];          // 点=蓝
+    const lineColor = [22, 163, 74, 1];           // 线=绿
     const width = 2;
+
     styles['Polygon'] = [
         new Style({
             fill: new Fill({
@@ -24,7 +31,7 @@ export default function createHighlightStyle():Record<string,Style[]> {
         }),
         new Style({
             stroke: new Stroke({
-                color: blue,
+                color: lineColor,
                 width: width,
             }),
         }),
@@ -38,7 +45,7 @@ export default function createHighlightStyle():Record<string,Style[]> {
             image: new Circle({
                 radius: width * 2,
                 fill: new Fill({
-                    color: red,
+                    color: pointColor,
                 }),
                 stroke: new Stroke({
                     color: white,

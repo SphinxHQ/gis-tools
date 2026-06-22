@@ -10,6 +10,11 @@ export class GisFileData {
     id: number = 0;
     name: string = '';
     content: ArrayBuffer | string = '';
+    /** 元数据（保存时从解析结果中提取，用于历史记录列表展示） */
+    crs?: string = '';
+    types?: string = '';
+    featureCount?: number = 0;
+    vertexCount?: number = 0;
 }
 
 export default class LocalDb {
@@ -73,11 +78,17 @@ export default class LocalDb {
         })
     }
 
-    add(name: string, content: ArrayBuffer | string): Promise<unknown> {
+    add(name: string, content: ArrayBuffer | string, meta?: { crs?: string; types?: string; featureCount?: number; vertexCount?: number }): Promise<unknown> {
         const gisFileData = new GisFileData();
         gisFileData.id = new Date().getTime()
         gisFileData.name = name;
         gisFileData.content = content;
+        if (meta) {
+            gisFileData.crs = meta.crs || '';
+            gisFileData.types = meta.types || '';
+            gisFileData.featureCount = meta.featureCount ?? 0;
+            gisFileData.vertexCount = meta.vertexCount ?? 0;
+        }
         return this.addGisFileData(gisFileData);
     }
 

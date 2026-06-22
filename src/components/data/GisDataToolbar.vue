@@ -4,10 +4,6 @@ import { computed } from 'vue'
 import { themeMode } from '~/composables/dark'
 import { useGisDataStore } from '~/composables/gisDataStore'
 
-const emit = defineEmits<{
-  'open-import': []
-}>()
-
 const { datasets } = useGisDataStore()
 const datasetCount = computed(() => datasets.value.length)
 </script>
@@ -15,10 +11,9 @@ const datasetCount = computed(() => datasets.value.length)
 <template>
   <div class="gis-data-toolbar">
     <div class="toolbar-left">
-      <el-button type="primary" size="small" @click="emit('open-import')">
-        <el-icon><upload-filled /></el-icon>
-        导入数据
-      </el-button>
+      <svg class="toolbar-logo" viewBox="0 0 44 44" width="22" height="22" aria-hidden="true">
+        <polygon points="22,5 39,17 33,39 11,39 5,17" fill="rgba(234,88,12,0.18)" stroke="#ea580c" stroke-width="3.5" stroke-linejoin="round" />
+      </svg>
       <span class="toolbar-title">Gis Tools</span>
     </div>
     <div class="toolbar-right">
@@ -59,6 +54,11 @@ const datasetCount = computed(() => datasets.value.length)
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.toolbar-logo {
+  flex-shrink: 0;
+  border-radius: 5px;
 }
 
 .toolbar-title {

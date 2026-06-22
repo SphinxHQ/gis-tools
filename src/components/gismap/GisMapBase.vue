@@ -19,32 +19,32 @@
   </div>
 </template>
 <script setup lang="ts">
-import GeoJSON from 'ol/format/GeoJSON';
-import {toLonLat} from 'ol/proj';
-import {get as getProjection, getTransform} from 'ol/proj';
-import {applyTransform} from 'ol/extent';
-import VectorLayer from 'ol/layer/Vector';
-import VectorSource from 'ol/source/Vector';
 import Feature from 'ol/Feature';
+import {applyTransform} from 'ol/extent';
+import GeoJSON from 'ol/format/GeoJSON';
 import LineString from 'ol/geom/LineString';
-import Polygon from 'ol/geom/Polygon';
-import Style from 'ol/style/Style';
+import VectorLayer from 'ol/layer/Vector';
+import {toLonLat, getTransform} from 'ol/proj';
+import VectorSource from 'ol/source/Vector';
 import Stroke from 'ol/style/Stroke';
-import Fill from 'ol/style/Fill';
+import Style from 'ol/style/Style';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref} from 'vue';
 
 import {logger} from '~/common/logger';
+import {CrsBounds} from '~/components/data/GisProjectedBounds';
+import {hideEntryLoader} from '~/composables/entryLoader';
 import {eventBus, GisEvent} from '~/composables/eventBus';
 import {setMainMap} from '~/composables/gisMap';
 
 import BasemapSwitcher from './BasemapSwitcher.vue';
 import {BaseTianDiTuMap, BlankMap, GisMap, GisMapOption} from './GisMap';
-import { selectAvailableTianDiTuKey } from './tiandituConfig';
+import {getChinaBoundaryImage} from './data/chinaBoundaryCache';
+import {Types as MapTypes} from './events/GisMapEvents';
 import type {GisMapLayer} from './layer/GisLayer';
 import {ImageGisMapLayer} from './layer/GisLayer';
-import {Types as MapTypes} from './events/GisMapEvents';
-import {CrsBounds} from '~/components/data/GisProjectedBounds';
-import {getChinaBoundaryImage} from './data/chinaBoundaryCache';
+import { selectAvailableTianDiTuKey } from './tiandituConfig';
+
+
 
 
 const mapContainerRef = ref<HTMLElement | null>(null);
@@ -68,6 +68,13 @@ const handles: Record<string, (...args: unknown[]) => unknown> = {
   [MapTypes.FLY_TO]: async (_options: unknown, center: unknown, zoom?: unknown) => await map.flyTo(center as number[], zoom as number | undefined),
   [MapTypes.ZOOM_TO]: async (_options: unknown, center: unknown, zoom?: unknown) => map.zoomTo(center as number[], zoom as number | undefined),
   [MapTypes.FLASH]: async (_options: unknown, features: unknown) => map.flashFeatures(features as GeoJSON.Feature[], _options as { layerName?: string; clear?: boolean; fit?: unknown; style?: unknown } | undefined),
+  [MapTypes.START_MODIFY]: async (_options: unknown, feature: unknown) => map.startModify(feature as GeoJSON.Feature, _options as { originalFeature?: GeoJSON.Feature; skipLayerSetup?: boolean } | undefined),
+  [MapTypes.STOP_MODIFY]: async (_options: unknown) => map.stopModify(_options as { skipLayerCleanup?: boolean } | undefined),
+  [MapTypes.UPDATE_EDIT_FEATURE]: async (_options: unknown, feature: unknown) => map.updateEditFeature(feature as GeoJSON.Feature),
+  [MapTypes.SHOW_EDIT_SHADOW]: async (_options: unknown, features: unknown) => map.showEditShadow(features as GeoJSON.Feature[]),
+  [MapTypes.CLEAR_EDIT_SHADOW]: async () => map.clearEditShadow(),
+  [MapTypes.SET_LAYER_VISIBILITY]: async (_options: unknown, layerName: unknown, visible: unknown) => map.setLayerVisibility(layerName as string, visible as boolean),
+  [MapTypes.CLEAN_LAYER]: async (_options: unknown, layerName: unknown) => map.cleanLayer(layerName as string),
 }
 
 /**
@@ -113,26 +120,16 @@ function handleSwitchBasemap(layers: GisMapLayer[]): void {
 
 /**
  * 坐标系 extent 标注图层（虚线半透明框，显示当前投影的标准范围，不记入选择）
+ * 使用 VECTOR_MARKER 数据源
  */
 let crsExtentLayer: VectorLayer | null = null;
 
 function setupCrsExtentLayer(olMap: any): void {
-  // 创建矢量图层用于绘制 bbox
-  const source = new VectorSource();
-  crsExtentLayer = new VectorLayer({
-    source,
-    style: new Style({
-      stroke: new Stroke({
-        color: 'rgba(255, 70, 70, 0.9)',
-        width: 1.5,
-        lineDash: [6, 4],
-      }),
-    }),
-    zIndex: 1000, // 高 zIndex 确保显示在最上层
-  });
-  crsExtentLayer.set('_crsExtentLayer', true); // 标记为坐标系范围框图层，供 layerFilter 跳过
-  olMap.addLayer(crsExtentLayer);
-
+  // 使用标识数据源(VECTOR_MARKER)来显示坐标系范围框
+  const markerLayer = map?.getLayerByName('vector-marker') as SysGisMapLayer;
+  if (markerLayer?.layer) {
+    crsExtentLayer = markerLayer.layer as VectorLayer;
+  }
   // 初始绘制
   updateCrsExtentBox(olMap);
 
@@ -190,6 +187,16 @@ function updateCrsExtentBox(olMap: any): void {
   const rightFeature = new Feature({ geometry: rightLine });
   leftFeature.set('_crsExtentBox', true); // 标记为坐标系范围框，不参与交互
   rightFeature.set('_crsExtentBox', true);
+  // CRS extent 使用红色虚线样式，覆盖 marker layer 默认灰度样式
+  const crsStyle = new Style({
+    stroke: new Stroke({
+      color: 'rgba(255, 70, 70, 0.9)',
+      width: 1.5,
+      lineDash: [6, 4],
+    }),
+  });
+  leftFeature.setStyle(crsStyle);
+  rightFeature.setStyle(crsStyle);
   source.addFeature(leftFeature);
   source.addFeature(rightFeature);
   logger.info(`CRS extent edges updated for ${viewProjCode} from envelope:`, lonLatExtent);
@@ -254,6 +261,8 @@ onMounted(async () => {
     });
   }
   setMainMap(map);
+  // 通知主入口的 loading 屏：地图初始化已完成
+  hideEntryLoader();
   mapReady.value = true;
   logger.info('GisMapBase initialized:', props.mapName);
 
@@ -267,6 +276,13 @@ onMounted(async () => {
   eventBus.on(mapName, MapTypes.FLY_TO, handles[MapTypes.FLY_TO])
   eventBus.on(mapName, MapTypes.ZOOM_TO, handles[MapTypes.ZOOM_TO])
   eventBus.on(mapName, MapTypes.FLASH, handles[MapTypes.FLASH])
+  eventBus.on(mapName, MapTypes.START_MODIFY, handles[MapTypes.START_MODIFY])
+  eventBus.on(mapName, MapTypes.STOP_MODIFY, handles[MapTypes.STOP_MODIFY])
+  eventBus.on(mapName, MapTypes.UPDATE_EDIT_FEATURE, handles[MapTypes.UPDATE_EDIT_FEATURE])
+  eventBus.on(mapName, MapTypes.SHOW_EDIT_SHADOW, handles[MapTypes.SHOW_EDIT_SHADOW])
+  eventBus.on(mapName, MapTypes.CLEAR_EDIT_SHADOW, handles[MapTypes.CLEAR_EDIT_SHADOW])
+  eventBus.on(mapName, MapTypes.SET_LAYER_VISIBILITY, handles[MapTypes.SET_LAYER_VISIBILITY])
+  eventBus.on(mapName, MapTypes.CLEAN_LAYER, handles[MapTypes.CLEAN_LAYER])
 
   // 通知父组件地图已准备好，可以发送事件
   const mapReadyEvent = new GisEvent('map-ready', null);
@@ -281,6 +297,13 @@ onBeforeUnmount(() => {
   eventBus.off(mapName, MapTypes.FLY_TO, handles[MapTypes.FLY_TO])
   eventBus.off(mapName, MapTypes.ZOOM_TO, handles[MapTypes.ZOOM_TO])
   eventBus.off(mapName, MapTypes.FLASH, handles[MapTypes.FLASH])
+  eventBus.off(mapName, MapTypes.START_MODIFY, handles[MapTypes.START_MODIFY])
+  eventBus.off(mapName, MapTypes.STOP_MODIFY, handles[MapTypes.STOP_MODIFY])
+  eventBus.off(mapName, MapTypes.UPDATE_EDIT_FEATURE, handles[MapTypes.UPDATE_EDIT_FEATURE])
+  eventBus.off(mapName, MapTypes.SHOW_EDIT_SHADOW, handles[MapTypes.SHOW_EDIT_SHADOW])
+  eventBus.off(mapName, MapTypes.CLEAR_EDIT_SHADOW, handles[MapTypes.CLEAR_EDIT_SHADOW])
+  eventBus.off(mapName, MapTypes.SET_LAYER_VISIBILITY, handles[MapTypes.SET_LAYER_VISIBILITY])
+  eventBus.off(mapName, MapTypes.CLEAN_LAYER, handles[MapTypes.CLEAN_LAYER])
   map.dispose();
   setMainMap(null as any);
 })

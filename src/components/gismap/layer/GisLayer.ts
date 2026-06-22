@@ -13,9 +13,10 @@ import type { StyleLike } from "ol/style/Style";
 
 import Common from "~/common/Common";
 import {logger} from "~/common/logger";
-import { getCurrentTianDiTuKey } from "../tiandituConfig";
 
 import { getLayerStyles } from "../styles/GisStyle";
+import { getCurrentTianDiTuKey } from "../tiandituConfig";
+
 
 export interface GisLayerOption {
     id?: string;

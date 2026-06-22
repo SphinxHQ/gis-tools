@@ -7,7 +7,7 @@ import { GisError, createUserMessage } from '~/common/GisError'
 import { SimpleDataFormat } from '~/components/data/DataFormat'
 import { useGisDataStore } from '~/composables/gisDataStore'
 
-defineEmits<{
+const emit = defineEmits<{
   'open-import': []
 }>()
 
@@ -21,6 +21,24 @@ const activeTab = computed({
 const handleTabRemove = (name: TabPaneName | undefined) => {
   if (!name) return
   removeDataset(name as string)
+}
+
+/**
+ * el-tabs editable 模式下，@edit 事件收到 (name, action)。
+ * - action === 'remove'：删除指定 name 的 tab
+ * - action === 'add'：点击了 + 按钮，这里改用作【导入数据】
+ */
+const handleTabEdit = (
+  name: TabPaneName | undefined,
+  action: 'remove' | 'add',
+): void => {
+  if (action === 'add') {
+    emit('open-import')
+    return
+  }
+  if (action === 'remove') {
+    handleTabRemove(name)
+  }
 }
 
 const handleDragOver = (e: DragEvent) => {
@@ -70,7 +88,15 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
     @drop="handleDrop"
   >
     <!-- 空状态 -->
-    <div v-if="datasets.length === 0" class="empty-state">
+    <div
+      v-if="datasets.length === 0"
+      class="empty-state"
+      role="button"
+      tabindex="0"
+      @click="$emit('open-import')"
+      @keydown.enter="$emit('open-import')"
+      @keydown.space.prevent="$emit('open-import')"
+    >
       <div class="empty-content">
         <el-icon :size="48" color="var(--el-color-info-light-3)">
           <upload-filled />
@@ -87,7 +113,7 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
       type="card"
       editable
       class="dataset-tabs"
-      @edit="handleTabRemove"
+      @edit="handleTabEdit"
     >
       <template #add-icon>
         <span />
@@ -120,12 +146,9 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   border-radius: 8px;
   box-sizing: border-box;
   background: var(--el-fill-color-lighter);
-  transition: border-color 0.3s, background 0.3s;
-}
-
-.empty-state:hover {
-  border-color: var(--el-color-primary-light-5);
-  background: var(--el-color-primary-light-9);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
 }
 
 .empty-content {
@@ -152,6 +175,10 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   height: 100%;
 }
 
+.dataset-tabs {
+  height: 100%;
+}
+
 .dataset-tabs :deep(.el-tabs__content) {
   height: calc(100% - 40px);
 }
@@ -159,5 +186,34 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
 .dataset-tabs :deep(.el-tabs__content .el-tab-pane) {
   height: 100%;
   overflow: auto;
+}
+
+/* 用伪元素给 + 按钮改成 "导入数据" 蓝底白字按钮（click 已由 @edit action='add' 拦截） */
+.dataset-tabs :deep(.el-tabs__new-tab) {
+  position: relative;
+  flex: 0 0 78px;
+  padding: 0 6px;
+  border-radius: 16px;
+}
+.dataset-tabs :deep(.el-tabs__new-tab::before) {
+  content: '导入数据';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #fff;
+  background-color: var(--el-color-primary);
+  border-radius: 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+.dataset-tabs :deep(.el-tabs__new-tab:hover::before) {
+  background-color: var(--el-color-primary-light-3);
+}
+.dataset-tabs :deep(.el-tabs__new-tab .is-icon) {
+  visibility: hidden;
 }
 </style>

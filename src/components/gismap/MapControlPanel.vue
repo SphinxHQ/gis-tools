@@ -3,7 +3,7 @@
     <div class="gismap-btns-wrap">
       <div class="gismap-btns">
         <map-city-selector :map-name="mapName" style="width: 140px;" />
-        <el-popover ref="crsPopoverRef" placement="bottom" :width="320" trigger="click" @show="crsSelectorKey++">
+        <el-popover ref="crsPopoverRef" placement="bottom" :width="640" trigger="click" @show="crsSelectorKey++">
           <template #reference>
             <button type="button" class="gismap-btn">坐标系: EPSG:{{ crsCode }}</button>
           </template>
@@ -24,12 +24,6 @@
     </div>
   </div>
 </template>
-
-<style scoped>
-.map-control-panel {
-  padding: 10px 0 0 40px;
-}
-</style>
 
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue';
@@ -79,3 +73,9 @@ onBeforeUnmount(() => {
     eventBus.off(props.mapName, MapTypes.DRAWEND, drawEndHandler)
 })
 </script>
+
+<style scoped>
+.map-control-panel {
+  padding: 10px 0 0 40px;
+}
+</style>

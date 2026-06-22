@@ -1,13 +1,19 @@
 import "ol/ol.css";
 import {Map as olMap, View as olView} from "ol";
 import Feature from "ol/Feature";
-import GeoJSON from 'ol/format/GeoJSON';
 import {applyTransform} from 'ol/extent';
+import GeoJSON from 'ol/format/GeoJSON';
 import type Geometry from "ol/geom/Geometry";
-import {Draw, Interaction} from "ol/interaction";
+import LineString from "ol/geom/LineString";
+import MultiLineString from "ol/geom/MultiLineString";
+import MultiPoint from "ol/geom/MultiPoint";
+import MultiPolygon from "ol/geom/MultiPolygon";
+import Point from "ol/geom/Point";
+import Polygon from "ol/geom/Polygon";
+import {Draw, Interaction, Modify, Snap} from "ol/interaction";
 import type BaseLayer from "ol/layer/Base";
 import {fromLonLat, get as getProjection, getTransform} from "ol/proj";
-import {Circle, Fill, Stroke, Style} from "ol/style";
+import {Circle, Fill, Stroke, Style, Text} from "ol/style";
 import {isRef, Ref, toValue} from "vue";
 
 import Common from "~/common/Common";
@@ -19,11 +25,11 @@ import EventBase from "~/event/EventBase";
 
 
 import MapHelper from "./MapHelper";
-import {buildTianDiTuLayerUrl, getTianDiTuProjSuffix} from "./tiandituConfig";
 import {getChinaBoundaryImage} from "./data/chinaBoundaryCache";
-import {GisMapDrawEndEvent, GisMapNotifyEvent} from "./events/GisMapEvents";
+import {GisMapDrawEndEvent, GisMapNotifyEvent, GisMapModifyChangeEvent} from "./events/GisMapEvents";
 import {TianDiTuGisMapLayer, GisMapLayer, SysGisMapLayer, GisLayerOption, ImageGisMapLayer} from "./layer/GisLayer";
 import GisStyle from "./styles/GisStyle";
+import {buildTianDiTuLayerUrl, getTianDiTuProjSuffix} from "./tiandituConfig";
 
 
 export const DefaultLayerNames = {
@@ -32,10 +38,37 @@ export const DefaultLayerNames = {
     USER_DRAW: "user-draw",
     USER_TEMP: "user-temp",
     SYS_TEMP_FLASH: "sys-temp-flash",
+    /** 输入数据源：导入/绘制的原始数据 */
+    VECTOR_INPUT: "vector-input",
+    /** 编辑数据源：节点编辑的变更要素 */
+    VECTOR_EDIT: "vector-edit",
+    /** 操作数据源：分割线、裁剪面等临时操作 */
+    VECTOR_OPERATION: "vector-operation",
+    /** 影子数据源：对照参考、编辑影子 */
+    VECTOR_SHADOW: "vector-shadow",
+    /** 标识数据源：坐标系范围等标识 */
+    VECTOR_MARKER: "vector-marker",
+    SYS_EDIT_SNAP: "sys-edit-snap",
+    /** 编辑参考数据源：节点编辑时对照显示原始要素 */
+    SYS_EDIT_REF: "sys-edit-ref",
     SYS_TIANDITU: "sys-tianditu",
     SYS_TIANDITU_VEC: "sys-tianditu-vec",
     SYS_TIANDITU_IMG: "sys-tianditu-img",
     SYS_TIANDITU_TER: "sys-tianditu-ter",
+}
+
+/** 固定矢量数据源 zIndex 定义（从下到上，基数100方便扩展）
+ *  MARKER(0) → INPUT(100) → SHADOW(200) → SYS_EDIT_REF(300) → EDIT(400) → OPERATION(1000)
+ *  - 正常浏览：INPUT + SHADOW叠加（影子在原始数据之上）
+ *  - 要素列表：SHADOW(对照) + EDIT(变更)，变更为主
+ *  - 节点编辑：SHADOW + SYS_EDIT_REF(当前要素参考) + EDIT + OPERATION(顶点编号)
+ */
+export const VectorLayerZIndex = {
+    VECTOR_MARKER: 0,
+    VECTOR_INPUT: 100,
+    VECTOR_SHADOW: 200,
+    VECTOR_EDIT: 400,
+    VECTOR_OPERATION: 1000,
 }
 
 export interface GisMapOption {
@@ -92,6 +125,88 @@ export class GisMap extends EventBase {
         this.olMap = MapHelper.newOlMapInstance(this.mapTargetElement, options)
         this.olView = this.olMap?.getView();
         this.addLayer(this.olMap, this.baseLayers)
+        this.initVectorSources()
+        // 暴露到window方便调试
+        if (typeof window !== 'undefined') {
+            (window as any).__olMap = this.olMap;
+            (window as any).__gisMap = this;
+            if (!(window as any).__gisMaps) (window as any).__gisMaps = {};
+            (window as any).__gisMaps[this.instanceId] = this;
+        }
+    }
+
+    /**
+     * 初始化5个固定矢量数据源，地图创建时即存在
+     * zIndex 从下到上：标识(0) → 输入(1) → 编辑(2) → 操作(3) → 影子(4)
+     */
+    private initVectorSources() {
+        const vectorDefs: Array<{name: string; zIndex: number; style: Style}> = [
+            {
+                name: DefaultLayerNames.VECTOR_MARKER,
+                zIndex: VectorLayerZIndex.VECTOR_MARKER,
+                style: new Style({
+                    fill: new Fill({ color: 'rgba(200, 200, 200, 0.1)' }),
+                    stroke: new Stroke({ color: 'rgba(180, 180, 180, 0.5)', width: 1, lineDash: [6, 4] }),
+                    image: new Circle({ radius: 2, fill: new Fill({ color: 'rgba(180, 180, 180, 0.5)' }) }),
+                }),
+            },
+            {
+                name: DefaultLayerNames.VECTOR_INPUT,
+                zIndex: VectorLayerZIndex.VECTOR_INPUT,
+                style: new Style({
+                    fill: new Fill({ color: 'rgba(64, 158, 255, 0.15)' }),
+                    stroke: new Stroke({ color: '#409EFF', width: 2 }),
+                    image: new Circle({ radius: 4, fill: new Fill({ color: '#409EFF' }), stroke: new Stroke({ color: '#fff', width: 1 }) }),
+                }),
+            },
+            {
+                name: DefaultLayerNames.VECTOR_EDIT,
+                zIndex: VectorLayerZIndex.VECTOR_EDIT,
+                style: new Style({
+                    fill: new Fill({ color: 'rgba(64, 158, 255, 0.3)' }),
+                    stroke: new Stroke({ color: '#409EFF', width: 2.5 }),
+                    image: new Circle({ radius: 5, fill: new Fill({ color: '#409EFF' }), stroke: new Stroke({ color: '#fff', width: 2 }) }),
+                }),
+            },
+            {
+                name: DefaultLayerNames.SYS_EDIT_REF,
+                zIndex: VectorLayerZIndex.VECTOR_SHADOW + 100,
+                style: new Style({
+                    fill: new Fill({ color: 'rgba(150, 150, 150, 0.2)' }),
+                    stroke: new Stroke({ color: 'rgba(150, 150, 150, 0.4)', width: 2, lineDash: [6, 4] }),
+                    image: new Circle({ radius: 3, fill: new Fill({ color: 'rgba(150, 150, 150, 0.2)' }), stroke: new Stroke({ color: 'rgba(150, 150, 150, 0.4)', width: 1 }) }),
+                }),
+            },
+            {
+                name: DefaultLayerNames.VECTOR_OPERATION,
+                zIndex: VectorLayerZIndex.VECTOR_OPERATION,
+                style: new Style({
+                    fill: new Fill({ color: 'rgba(230, 162, 60, 0.2)' }),
+                    stroke: new Stroke({ color: '#E6A23C', width: 2, lineDash: [8, 4] }),
+                    image: new Circle({ radius: 4, fill: new Fill({ color: '#E6A23C' }), stroke: new Stroke({ color: '#fff', width: 1 }) }),
+                }),
+            },
+            {
+                name: DefaultLayerNames.VECTOR_SHADOW,
+                zIndex: VectorLayerZIndex.VECTOR_SHADOW,
+                style: new Style({
+                    fill: new Fill({ color: 'rgba(150, 150, 150, 0.25)' }),
+                    stroke: new Stroke({ color: 'rgba(100, 100, 100, 0.5)', width: 2, lineDash: [6, 4] }),
+                    image: new Circle({ radius: 3, fill: new Fill({ color: 'rgba(150, 150, 150, 0.3)' }), stroke: new Stroke({ color: 'rgba(100, 100, 100, 0.5)', width: 1 }) }),
+                }),
+            },
+        ]
+        vectorDefs.forEach(def => {
+            const layer = new SysGisMapLayer({ name: def.name, zIndex: def.zIndex, style: def.style })
+            layer.projection = this.olView?.getProjection().getCode()
+            // 系统临时图层默认不可见，由具体功能按需显示
+            if (def.name === DefaultLayerNames.SYS_EDIT_REF) {
+                layer.layer?.setVisible(false)
+            }
+            this.sysLayers.push(layer)
+            this.addLayer(this.olMap!, [layer])
+        })
+        logger.info('initVectorSources: 6 fixed vector sources initialized')
     }
 
     initMapPointermove(): void {
@@ -352,7 +467,10 @@ export class GisMap extends EventBase {
                             }
                         }
                     } else {
-                        drawFeature = displayLayer.addFeature?.(drawFeature as unknown as Feature);
+                        // 非 Polygon 类型：keep=false 时不保留在 display 图层
+                        if (keep) {
+                            drawFeature = displayLayer.addFeature?.(drawFeature as unknown as Feature);
+                        }
                     }
                     eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::drawTool::drawend', displayLayer, drawFeature));
                     // 将绘制结果转为 EPSG:4326 的 GeoJSON（GeoJSON 标准要求 WGS84 坐标）
@@ -384,7 +502,18 @@ export class GisMap extends EventBase {
                 eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::cleanSource', curLayer));
                 resolve();
             }, 0);
-        })
+
+        });
+    }
+
+    /**
+     * 设置图层可见性
+     */
+    setLayerVisibility(layerName: string, visible: boolean) {
+        const layer = this.getLayerByName(layerName) as SysGisMapLayer;
+        if (layer?.layer) {
+            (layer.layer as unknown as { setVisible: (v: boolean) => void }).setVisible(visible);
+        }
     }
 
     getCenter(): number[] | undefined {
@@ -419,7 +548,7 @@ export class GisMap extends EventBase {
         fit?: unknown,
         style?: unknown
     }) {
-        const layerName = options?.layerName || DefaultLayerNames.USER_TEMP;
+        const layerName = options?.layerName || DefaultLayerNames.VECTOR_INPUT;
         this.addFeaturesToLayer(features, layerName, {clear: options?.clear, fit: options?.fit, style: options?.style});
     }
 
@@ -485,6 +614,296 @@ export class GisMap extends EventBase {
         this.drawTool({type: 'None'});
         this.cleanLayer(DefaultLayerNames.SYS_DRAW_TOOL_ACTION);
         this.cleanLayer(DefaultLayerNames.SYS_DRAW_TOOL_DISPLAY);
+    }
+
+    /**
+     * 启动要素编辑：
+     * 1. 隐藏输入数据源(VECTOR_INPUT)，完全隔离
+     * 2. 在影子数据源(VECTOR_SHADOW)显示原始要素（对照）
+     * 3. 在编辑数据源(VECTOR_EDIT)显示当前编辑要素
+     * 4. 激活 Modify + Snap 交互
+     */
+    startModify(feature: GeoJSON.Feature, options?: { originalFeature?: GeoJSON.Feature; skipLayerSetup?: boolean }) {
+        if (!this.olMap) {
+            logger.warn('startModify: olMap not initialized');
+            return;
+        }
+
+        // 先清理可能存在的旧编辑交互（不操作图层）
+        this.removeModifyInteractions();
+
+        const skipLayerSetup = options?.skipLayerSetup === true;
+
+        if (!skipLayerSetup) {
+            // 首次进入编辑模式：设置图层可见性和内容
+            // 隐藏输入数据源，实现编辑隔离
+            this.setLayerVisibility(DefaultLayerNames.VECTOR_INPUT, false);
+
+            // 影子数据源：显示原始要素（对照）
+            const refFeature = options?.originalFeature || feature;
+            const shadowLayer = this.getLayerByName(DefaultLayerNames.VECTOR_SHADOW) as SysGisMapLayer;
+            shadowLayer.clear();
+            const refOlFeatures = this.readFeaturesFromGeoJSON([refFeature]);
+            shadowLayer.addFeatures?.(refOlFeatures);
+
+            // 编辑数据源：显示变更要素
+            const editLayer = this.getLayerByName(DefaultLayerNames.VECTOR_EDIT) as SysGisMapLayer;
+            editLayer.clear();
+            const olFeatures = this.readFeaturesFromGeoJSON([feature]);
+            editLayer.addFeatures?.(olFeatures);
+        }
+
+        // 参考图层：始终更新对照要素（淡显，独立于SHADOW层）
+        const refLayer = this.getLayerByName(DefaultLayerNames.SYS_EDIT_REF) as SysGisMapLayer;
+        if (refLayer) {
+            const refFeature = options?.originalFeature || feature;
+            refLayer.clear();
+            const refOlFeatures = this.readFeaturesFromGeoJSON([refFeature]);
+            refLayer.addFeatures?.(refOlFeatures);
+            this.setLayerVisibility(DefaultLayerNames.SYS_EDIT_REF, true);
+        }
+
+        const editLayer = this.getLayerByName(DefaultLayerNames.VECTOR_EDIT) as SysGisMapLayer;
+
+        // 创建 Modify 交互
+        const source = editLayer.source;
+        if (!source) {
+            logger.error('startModify: edit layer source is null');
+            return;
+        }
+
+        const modifyInteraction = new Modify({
+            source,
+            style: GisStyle.getModifyStyleFunction(),
+        });
+
+        modifyInteraction.addEventListener('modifyend', () => {
+            // 修改结束后，将 OL Feature 转回 GeoJSON 并通过事件通知
+            const modifiedOlFeature = source.getFeatures()[0];
+            if (modifiedOlFeature) {
+                const geoJsonStr = new GeoJSON().writeFeature(modifiedOlFeature, {
+                    featureProjection: this.olView?.getProjection().getCode(),
+                    rightHanded: true,
+                });
+                const modifiedGeoJson = JSON.parse(geoJsonStr) as GeoJSON.Feature;
+                eventBus.emit(this.mapName, new GisMapModifyChangeEvent(modifiedGeoJson));
+            }
+            // 同步更新顶点编号标注
+            this.renderVertexLabels();
+        });
+
+        // 创建 Snap 交互（吸附到编辑图层自身顶点）
+        const snapInteraction = new Snap({
+            source,
+            pixelTolerance: 10,
+        });
+
+        this.olMap.addInteraction(modifyInteraction);
+        this.olMap.addInteraction(snapInteraction);
+        this.interactionMap.set('modify-edit', modifyInteraction);
+        this.interactionMap.set('modify-snap', snapInteraction);
+
+        // fit 到编辑要素
+        const extent = editLayer.getExtent?.() as import("ol/extent").Extent | undefined;
+        if (extent) {
+            this.olView?.fit(extent, { padding: Array(4).fill(40) });
+        }
+
+        // 渲染顶点编号标注（skipLayerSetup=true 时由 updateEditFeature 已调用，此处跳过避免冗余）
+        if (!skipLayerSetup) {
+            this.renderVertexLabels();
+        }
+
+        logger.info('startModify: modify interaction activated', { skipLayerSetup });
+    }
+
+    /** 仅移除 Modify/Snap 交互，不操作图层 */
+    private removeModifyInteractions() {
+        if (!this.olMap) return;
+        const modifyInteraction = this.interactionMap.get('modify-edit');
+        const snapInteraction = this.interactionMap.get('modify-snap');
+        if (modifyInteraction) {
+            this.olMap.removeInteraction(modifyInteraction);
+            this.interactionMap.delete('modify-edit');
+        }
+        if (snapInteraction) {
+            this.olMap.removeInteraction(snapInteraction);
+            this.interactionMap.delete('modify-snap');
+        }
+    }
+
+    /**
+     * 更新编辑数据源上的要素（从列表编辑后同步到地图）
+     */
+    updateEditFeature(feature: GeoJSON.Feature) {
+        const editLayer = this.getLayerByName(DefaultLayerNames.VECTOR_EDIT) as SysGisMapLayer;
+        if (!editLayer.source) return;
+        editLayer.source.clear();
+        const olFeatures = this.readFeaturesFromGeoJSON([feature]);
+        editLayer.addFeatures?.(olFeatures);
+        // 同步更新顶点编号标注
+        this.renderVertexLabels();
+    }
+
+    /**
+     * 渲染编辑要素的顶点编号标注到 OPERATION 图层
+     * 从 EDIT 图层读取当前要素的顶点，生成带编号的 Point 要素
+     */
+    renderVertexLabels() {
+        const opLayer = this.getLayerByName(DefaultLayerNames.VECTOR_OPERATION) as SysGisMapLayer;
+        if (!opLayer?.source) return;
+
+        // 只清除旧的顶点标注要素，保留其他操作要素（如分割线）
+        const source = opLayer.source;
+        const oldLabels = source.getFeatures().filter(f => f.get('__vertexLabel') === true);
+        oldLabels.forEach(f => source.removeFeature(f));
+
+        const editLayer = this.getLayerByName(DefaultLayerNames.VECTOR_EDIT) as SysGisMapLayer;
+        if (!editLayer?.source) return;
+
+        const editFeatures = editLayer.source.getFeatures();
+        if (!editFeatures.length) return;
+
+        // 共享的 Circle image（无状态，可安全复用）
+        const vertexImage = new Circle({
+            radius: 10,
+            fill: new Fill({ color: '#409EFF' }),
+            stroke: new Stroke({ color: '#fff', width: 2 }),
+        });
+        const textFill = new Fill({ color: '#fff' });
+        const textStroke = new Stroke({ color: 'rgba(0,0,0,0.5)', width: 2 });
+
+        let idx = 1;
+        for (const feature of editFeatures) {
+            const geom = feature.getGeometry();
+            if (!geom) continue;
+
+            const type = geom.getType();
+            const allCoords: number[][] = [];
+
+            if (type === 'Polygon') {
+                const rings = (geom as Polygon).getCoordinates();
+                // 外环（不含闭合点）
+                if (rings[0] && rings[0].length > 1) {
+                    rings[0].slice(0, -1).forEach((c: number[]) => allCoords.push(c));
+                }
+                // 内环（洞，不含闭合点）
+                for (let i = 1; i < rings.length; i++) {
+                    rings[i].slice(0, -1).forEach((c: number[]) => allCoords.push(c));
+                }
+            } else if (type === 'MultiPolygon') {
+                (geom as MultiPolygon).getCoordinates().forEach((polygon: number[][][]) => {
+                    polygon.forEach((ring: number[][]) => {
+                        ring.slice(0, -1).forEach((c: number[]) => allCoords.push(c));
+                    });
+                });
+            } else if (type === 'LineString') {
+                (geom as LineString).getCoordinates().forEach((c: number[]) => allCoords.push(c));
+            } else if (type === 'MultiLineString') {
+                (geom as MultiLineString).getCoordinates().forEach((line: number[][]) => {
+                    line.forEach((c: number[]) => allCoords.push(c));
+                });
+            } else if (type === 'Point') {
+                allCoords.push((geom as Point).getCoordinates());
+            } else if (type === 'MultiPoint') {
+                (geom as MultiPoint).getCoordinates().forEach((c: number[]) => allCoords.push(c));
+            }
+
+            for (const coord of allCoords) {
+                const pointFeature = new Feature({
+                    geometry: new Point(coord),
+                    __vertexLabel: true,
+                });
+                // 每个要素需要独立的 Style（Text 文本各不同），但复用 image/fill/stroke
+                pointFeature.setStyle(new Style({
+                    image: vertexImage,
+                    text: new Text({
+                        text: `${idx}`,
+                        font: 'bold 11px sans-serif',
+                        fill: textFill,
+                        stroke: textStroke,
+                        offsetY: 0,
+                    }),
+                }));
+                source.addFeature(pointFeature);
+                idx++;
+            }
+        }
+    }
+
+    /** 清空顶点编号标注 */
+    clearVertexLabels() {
+        const opLayer = this.getLayerByName(DefaultLayerNames.VECTOR_OPERATION) as SysGisMapLayer;
+        if (!opLayer?.source) return;
+        const source = opLayer.source;
+        // 只清除顶点标注要素，不影响其他操作要素
+        const toRemove = source.getFeatures().filter(f => f.get('__vertexLabel') === true);
+        toRemove.forEach(f => source.removeFeature(f));
+    }
+
+    /**
+     * 停止要素编辑：
+     * 1. 移除 Modify/Snap 交互
+     * 2. 清空编辑数据源和参考数据源（除非 skipLayerCleanup）
+     * 3. 恢复输入数据源可见性（除非 skipLayerCleanup）
+     */
+    stopModify(options?: { skipLayerCleanup?: boolean }) {
+        if (!this.olMap) return;
+
+        const skipCleanup = options?.skipLayerCleanup === true;
+
+        // 移除交互
+        this.removeModifyInteractions();
+
+        // 清理顶点编号标注
+        this.clearVertexLabels();
+
+        // 清理参考图层
+        const refLayer = this.getLayerByName(DefaultLayerNames.SYS_EDIT_REF) as SysGisMapLayer;
+        if (refLayer) {
+            refLayer.clear();
+            this.setLayerVisibility(DefaultLayerNames.SYS_EDIT_REF, false);
+        }
+
+        if (!skipCleanup) {
+            // 完全退出编辑模式：清空图层 + 恢复可见性
+            this.cleanLayer(DefaultLayerNames.VECTOR_EDIT);
+            // 不在这里清空影子层，由 showEditShadow/clearEditShadow 同步管理
+            this.setLayerVisibility(DefaultLayerNames.VECTOR_INPUT, true);
+        }
+
+        logger.info('stopModify: modify interaction deactivated', { skipCleanup });
+    }
+
+    /**
+     * 展示编辑影子：以影子数据源(VECTOR_SHADOW)显示已编辑的要素
+     * 用于离开要素列表后，在主地图上也能看到修改过的数据"影子"
+     */
+    showEditShadow(features: GeoJSON.Feature[]) {
+        if (!this.olMap || !features.length) {
+            logger.info('showEditShadow skipped', { hasMap: !!this.olMap, featuresLen: features.length });
+            return;
+        }
+        const shadowLayer = this.getLayerByName(DefaultLayerNames.VECTOR_SHADOW) as SysGisMapLayer;
+        if (!shadowLayer) {
+            logger.error('showEditShadow: shadow layer not found!');
+            return;
+        }
+        // 同步清空再添加（不能用cleanLayer，它是异步的）
+        shadowLayer.clear();
+        const olFeatures = this.readFeaturesFromGeoJSON(features);
+        logger.info('showEditShadow adding features', { olFeaturesLen: olFeatures.length });
+        const result = shadowLayer.addFeatures?.(olFeatures);
+        logger.info('showEditShadow: shadow layer displayed', { addedCount: result?.length, afterCount: shadowLayer.source?.getFeatures()?.length });
+    }
+
+    /**
+     * 清除影子数据源
+     */
+    clearEditShadow() {
+        const shadowLayer = this.getLayerByName(DefaultLayerNames.VECTOR_SHADOW) as SysGisMapLayer;
+        if (shadowLayer) shadowLayer.clear();
+        logger.info('clearEditShadow: shadow layer cleared');
     }
 
     flyTo(geoCenter: number[], zoom?: number): Promise<boolean> {

@@ -82,6 +82,34 @@ export default class GisDataInfo implements DataInfo {
         return [];
     }
 
+    /**
+     * 计算所有要素的总顶点数（Polygon/MultiPolygon 不含闭合点）
+     */
+    getTotalVertexCount(): number {
+        let count = 0;
+        for (const feature of this.features) {
+            const geo = feature.geometry;
+            if (!geo) continue;
+            switch (geo.type) {
+                case 'Point': count += 1; break;
+                case 'MultiPoint': count += (geo.coordinates as number[][]).length; break;
+                case 'LineString': count += (geo.coordinates as number[][]).length; break;
+                case 'MultiLineString':
+                    (geo.coordinates as number[][][]).forEach(line => { count += line.length; });
+                    break;
+                case 'Polygon':
+                    (geo.coordinates as number[][][]).forEach(ring => { count += Math.max(0, ring.length - 1); });
+                    break;
+                case 'MultiPolygon':
+                    (geo.coordinates as number[][][][]).forEach(poly =>
+                        poly.forEach(ring => { count += Math.max(0, ring.length - 1); })
+                    );
+                    break;
+            }
+        }
+        return count;
+    }
+
     static clone(originData: GisDataInfo): GisDataInfo {
         const gisDataInfo = new GisDataInfo(originData.name, originData.crs);
         try {

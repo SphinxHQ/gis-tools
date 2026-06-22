@@ -5,6 +5,9 @@ import {computed, Ref, ref, watch} from "vue";
 
 import {ExchangeDataFormat} from "~/components/data/ExchangeDataFormat";
 import GisDataInfo from "~/components/data/GisDataInfo";
+import VertexCountBadge from "~/components/data/VertexCountBadge.vue";
+import GeoTypeIcon from "~/components/icons/GeoTypeIcon.vue";
+import GeoTypeTag from "~/components/icons/GeoTypeTag.vue";
 import {WktDataFormat} from "~/components/data/WktDataFormat";
 
 const props = defineProps({
@@ -191,6 +194,9 @@ const hasValidCrs = computed(() => {
 
 const crsInfo = computed(() => props.data?.crs?.crsInfo ?? null)
 
+const totalVertexCount = computed(() => props.data?.getTotalVertexCount?.() ?? 0)
+const geometryTypes = computed(() => props.data?.getTypes?.() ?? [])
+
 </script>
 <template>
   <div class="gis-data-viewer-container">
@@ -200,7 +206,13 @@ const crsInfo = computed(() => props.data?.crs?.crsInfo ?? null)
           <el-descriptions :column="2" border label-class-name="info-label" class="data-info-desc">
             <el-descriptions-item label="数据名称">{{ props.data?.name || '未命名' }}</el-descriptions-item>
             <el-descriptions-item label="要素数量">{{ props.data?.features?.length ?? 0 }}</el-descriptions-item>
-            <el-descriptions-item label="几何类型">{{ props.data?.getTypes?.()?.join(', ') || '无' }}</el-descriptions-item>
+            <el-descriptions-item label="几何类型">
+              <div v-if="geometryTypes.length" class="geo-types-cell">
+                <GeoTypeTag v-for="t in geometryTypes" :key="t" :type="t" />
+              </div>
+              <span v-else>无</span>
+            </el-descriptions-item>
+            <el-descriptions-item label="总顶点数"><VertexCountBadge :count="totalVertexCount" /></el-descriptions-item>
             <el-descriptions-item label="坐标系">
               <span v-if="hasValidCrs">EPSG:{{ props.data?.crs?.epsgCode }}</span>
               <span v-else class="text-muted">未设置</span>
@@ -208,7 +220,12 @@ const crsInfo = computed(() => props.data?.crs?.crsInfo ?? null)
             <template v-if="crsInfo">
               <el-descriptions-item label="坐标系名称">{{ crsInfo.name }}</el-descriptions-item>
               <el-descriptions-item label="坐标系类型">
-                <el-tag size="small" :type="crsInfo.projected ? 'warning' : 'success'">
+                <el-tag
+                  size="small"
+                  effect="light"
+                  :class="crsInfo.projected ? 'crs-tag-projected' : 'crs-tag-geographic'"
+                  round
+                >
                   {{ crsInfo.projected ? '投影坐标系' : '地理坐标系' }}
                 </el-tag>
               </el-descriptions-item>
@@ -436,5 +453,27 @@ const crsInfo = computed(() => props.data?.crs?.crsInfo ?? null)
 .text-muted {
   color: var(--el-text-color-placeholder);
   font-style: italic;
+}
+
+/* 坐标系类型 chip（投影 = 紫，地理 = 青） */
+:deep(.crs-tag-projected.el-tag) {
+  --el-tag-bg-color: var(--gis-crs-projected-bg);
+  --el-tag-border-color: var(--gis-crs-projected-bg);
+  --el-tag-text-color: var(--gis-crs-projected);
+}
+:deep(.crs-tag-geographic.el-tag) {
+  --el-tag-bg-color: var(--gis-crs-geographic-bg);
+  --el-tag-border-color: var(--gis-crs-geographic-bg);
+  --el-tag-text-color: var(--gis-crs-geographic);
+}
+.geo-types-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.geo-types-text {
+  font-size: 13px;
+  color: var(--gis-text-secondary);
 }
 </style>

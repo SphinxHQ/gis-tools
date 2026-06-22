@@ -1,16 +1,27 @@
 import {Circle, Fill, Stroke, Style,Text} from 'ol/style.js';
 
+/**
+ * 默认地图要素样式
+ * 语义色与 scss --gis-geo-* 保持一致：
+ *   点=蓝(#2563eb) 线=绿(#16a34a) 面=橙(#ea580c) 集合=灰(#64748b)
+ */
 export default function createDefaultStyle(): Record<string, Style[]> {
     const styles: Record<string, Style[]> = {};
     const white = [255, 255, 255, 1];
-    const blue = [0, 153, 255, 0.4];
-    const blue_dark = [0, 53, 155, 0.4];
-    const red = [255, 33, 0, 0.4];
+    // 语义色
+    const pointColor = [37, 99, 235, 0.4];        // 点=蓝
+    const pointColorSolid = [37, 99, 235, 0.85];
+    const lineColor = [22, 163, 74, 0.85];        // 线=绿
+    const polygonFill = [234, 88, 12, 0.15];      // 面填充=橙
+    const polygonStroke = [234, 88, 12, 0.85];    // 面描边=橙
+    const collectionColor = [100, 116, 139, 0.85]; // 集合=灰
+    const selectColor = [255, 33, 0, 0.4];         // 选择高亮（非语义色）
     const width = 2;
+
     styles['Polygon'] = [
         new Style({
             fill: new Fill({
-                color: blue,
+                color: polygonFill,
             }),
         }),
         new Style({
@@ -21,7 +32,7 @@ export default function createDefaultStyle(): Record<string, Style[]> {
         }),
         new Style({
             stroke: new Stroke({
-                color: blue_dark,
+                color: polygonStroke,
                 width: width,
             }),
         }),
@@ -37,7 +48,7 @@ export default function createDefaultStyle(): Record<string, Style[]> {
         }),
         new Style({
             stroke: new Stroke({
-                color: blue,
+                color: lineColor,
                 width: width,
             }),
         }),
@@ -51,7 +62,7 @@ export default function createDefaultStyle(): Record<string, Style[]> {
             image: new Circle({
                 radius: width * 2,
                 fill: new Fill({
-                    color: red,
+                    color: pointColor,
                 }),
                 stroke: new Stroke({
                     color: white,
@@ -73,7 +84,7 @@ export default function createDefaultStyle(): Record<string, Style[]> {
                 textBaseline: "middle",
                 font: 'normal 14px 微软雅黑',
                 textAlign: "center",
-                fill: new Fill({color: [255,0,0,1]}),
+                fill: new Fill({color: collectionColor}),
                 overflow:true,
                 stroke: new Stroke({
                     color: white,
@@ -86,7 +97,7 @@ export default function createDefaultStyle(): Record<string, Style[]> {
     styles['select'] = [
         new Style({
             fill: new Fill({
-                color: red,
+                color: selectColor,
             }),
         }),
         new Style({
@@ -97,7 +108,7 @@ export default function createDefaultStyle(): Record<string, Style[]> {
         }),
         new Style({
             stroke: new Stroke({
-                color: red,
+                color: [255, 33, 0, 0.85],
                 width: width,
             }),
         }),

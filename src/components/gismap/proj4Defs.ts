@@ -1,7 +1,8 @@
-import {register} from 'ol/proj/proj4';
-import {get as getProjection, getTransform} from 'ol/proj';
 import {applyTransform} from 'ol/extent';
+import {get as getProjection, getTransform} from 'ol/proj';
+import {register} from 'ol/proj/proj4';
 import proj4 from 'proj4';
+
 import {CrsBounds} from '../data/GisProjectedBounds';
 
 declare const self: Window & typeof globalThis;

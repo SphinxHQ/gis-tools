@@ -17,6 +17,26 @@
   --gis-map-props-bg: rgba(255, 255, 255, 0.5);
   --gis-map-props-text: var(--el-text-color-regular);
   --gis-map-props-border: rgba(0, 0, 0, 0.2);
+  // ===== 语义色：几何类型（深浅主题保持视觉对比度一致） =====
+  // 点 = 蓝
+  --gis-geo-point: #2563eb;
+  --gis-geo-point-bg: rgba(37, 99, 235, 0.12);
+  // 线 = 绿
+  --gis-geo-line: #16a34a;
+  --gis-geo-line-bg: rgba(22, 163, 74, 0.12);
+  // 面 = 橙
+  --gis-geo-polygon: #ea580c;
+  --gis-geo-polygon-bg: rgba(234, 88, 12, 0.12);
+  // 集合 = 灰
+  --gis-geo-collection: #64748b;
+  --gis-geo-collection-bg: rgba(100, 116, 139, 0.12);
+  // ===== 语义色：坐标系类型 =====
+  // 投影 = 紫
+  --gis-crs-projected: #7c3aed;
+  --gis-crs-projected-bg: rgba(124, 58, 237, 0.12);
+  // 地理 = 青
+  --gis-crs-geographic: #0891b2;
+  --gis-crs-geographic-bg: rgba(8, 145, 178, 0.12);
   // 过渡
   --gis-theme-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }

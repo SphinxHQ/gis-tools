@@ -1,10 +1,20 @@
 import {Circle, Fill, Stroke, Style} from 'ol/style.js';
+
+/**
+ * 绘制工具样式
+ * 语义色与 scss --gis-geo-* 保持一致：
+ *   点=蓝(#2563eb) 线=绿(#16a34a) 面=橙(#ea580c)
+ */
 export  function createSysDrawStyle():Record<string,Style[]> {
     const styles:Record<string,Style[]> =  {};
     const white = [255, 255, 255, 1];
-    const red = [255, 33, 0, 1];
-    const blue = [0, 153, 255, 1];
+    // 语义色
+    const pointColor = [37, 99, 235, 1];          // 点=蓝
+    const lineColor = [22, 163, 74, 1];           // 线=绿
+    const polygonFill = [234, 88, 12, 0.1];       // 面填充=橙
+    const polygonStroke = [234, 88, 12, 1];       // 面描边=橙
     const width = 2;
+
     styles['Polygon'] = [
         new Style({
             stroke: new Stroke({
@@ -14,10 +24,10 @@ export  function createSysDrawStyle():Record<string,Style[]> {
         }),
         new Style({
             fill: new Fill({
-                color: [255, 33, 0, 0.1],
+                color: polygonFill,
             }),
             stroke: new Stroke({
-                color: red,
+                color: polygonStroke,
                 width: width,
             })
         }),
@@ -33,7 +43,7 @@ export  function createSysDrawStyle():Record<string,Style[]> {
         }),
         new Style({
             stroke: new Stroke({
-                color: blue,
+                color: lineColor,
                 width: width,
             }),
         }),
@@ -47,7 +57,7 @@ export  function createSysDrawStyle():Record<string,Style[]> {
             image: new Circle({
                 radius: width * 2,
                 fill: new Fill({
-                    color: red,
+                    color: pointColor,
                 }),
                 stroke: new Stroke({
                     color: white,
@@ -71,8 +81,13 @@ export  function createSysDrawStyle():Record<string,Style[]> {
 export  function createSysDrawHandleStyle():Record<string,Style[]> {
     const styles:Record<string,Style[]> =  {};
     const white = [255, 255, 255, 1];
-    const red = [255, 33, 0, 1];
+    // 语义色（handle 用纯色）
+    const pointColor = [37, 99, 235, 1];          // 点=蓝
+    const lineColor = [22, 163, 74, 1];           // 线=绿
+    const polygonFill = [234, 88, 12, 0.1];       // 面填充=橙
+    const polygonStroke = [234, 88, 12, 1];       // 面描边=橙
     const width = 2;
+
     styles['Polygon'] = [
         new Style({
             stroke: new Stroke({
@@ -82,10 +97,10 @@ export  function createSysDrawHandleStyle():Record<string,Style[]> {
         }),
         new Style({
             fill: new Fill({
-                color: [255, 33, 0, 0.1],
+                color: polygonFill,
             }),
             stroke: new Stroke({
-                color: red,
+                color: polygonStroke,
                 width: width,
             })
         }),
@@ -101,16 +116,10 @@ export  function createSysDrawHandleStyle():Record<string,Style[]> {
         }),
         new Style({
             stroke: new Stroke({
-                color: red,
+                color: lineColor,
                 width: width,
             }),
         }),
-        // new Style({
-        //     renderer: function (coordinates:Coordinate | Coordinate[] | Coordinate[][] | Coordinate[][][], state:State) {
-        //        // const render:CanvasImmediateRenderer =  toContext(state.context, {pixelRatio:state.pixelRatio});
-        //        // console.log(state)
-        //     }
-        // }),
     ];
     styles['MultiLineString'] = styles['LineString'];
 
@@ -121,7 +130,7 @@ export  function createSysDrawHandleStyle():Record<string,Style[]> {
             image: new Circle({
                 radius: width * 2,
                 fill: new Fill({
-                    color: red,
+                    color: pointColor,
                 }),
                 stroke: new Stroke({
                     color: white,

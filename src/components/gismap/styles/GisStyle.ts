@@ -1,6 +1,11 @@
 import { Feature } from 'ol';
 import type { FeatureLike } from 'ol/Feature';
-import { Style } from 'ol/style';
+import LineString from 'ol/geom/LineString';
+import MultiLineString from 'ol/geom/MultiLineString';
+import MultiPoint from 'ol/geom/MultiPoint';
+import MultiPolygon from 'ol/geom/MultiPolygon';
+import Polygon from 'ol/geom/Polygon';
+import { Circle, Fill, Stroke, Style } from 'ol/style';
 import type { StyleLike } from 'ol/style/Style';
 
 import { logger } from '~/common/logger';
@@ -65,6 +70,73 @@ function getDrawHandleStyleFunction(): (feature: FeatureLike) => Style[] {
     };
 }
 
+function getModifyStyleFunction(): (feature: FeatureLike) => Style[] {
+    const vertexStyle = new Style({
+        image: new Circle({
+            radius: 6,
+            fill: new Fill({ color: '#fff' }),
+            stroke: new Stroke({ color: '#409EFF', width: 2 }),
+        }),
+        geometry: (feature) => {
+            const geom = feature.getGeometry();
+            if (!geom) return geom;
+            const type = geom.getType();
+            // 为多边形/线显示顶点（不含最后一个闭合点）
+            if (type === 'Polygon') {
+                const rings = (geom as Polygon).getCoordinates();
+                const allCoords: number[][] = [];
+                // 外环（不含闭合点）
+                if (rings[0] && rings[0].length > 1) {
+                    rings[0].slice(0, -1).forEach((c: number[]) => allCoords.push(c));
+                }
+                // 内环（洞，不含闭合点）
+                for (let i = 1; i < rings.length; i++) {
+                    rings[i].slice(0, -1).forEach((c: number[]) => allCoords.push(c));
+                }
+                if (allCoords.length > 0) {
+                    return new MultiPoint(allCoords);
+                }
+            } else if (type === 'LineString') {
+                const coords = (geom as LineString).getCoordinates();
+                return new MultiPoint(coords);
+            } else if (type === 'MultiPolygon') {
+                const allCoords: number[][] = [];
+                (geom as MultiPolygon).getCoordinates().forEach((polygon: number[][][]) => {
+                    polygon.forEach((ring: number[][]) => {
+                        ring.slice(0, -1).forEach((c: number[]) => allCoords.push(c));
+                    });
+                });
+                if (allCoords.length > 0) {
+                    return new MultiPoint(allCoords);
+                }
+            } else if (type === 'MultiLineString') {
+                const allCoords: number[][] = [];
+                (geom as MultiLineString).getCoordinates().forEach((line: number[][]) => {
+                    line.forEach((c: number[]) => allCoords.push(c));
+                });
+                if (allCoords.length > 0) {
+                    return new MultiPoint(allCoords);
+                }
+            } else if (type === 'MultiPoint') {
+                return geom;
+            }
+            return geom;
+        },
+    });
+    const featureStyle = new Style({
+        fill: new Fill({ color: 'rgba(64, 158, 255, 0.15)' }),
+        stroke: new Stroke({ color: '#409EFF', width: 2, lineDash: [6, 3] }),
+        image: new Circle({
+            radius: 5,
+            fill: new Fill({ color: '#409EFF' }),
+            stroke: new Stroke({ color: '#fff', width: 2 }),
+        }),
+    });
+    return function (): Style[] {
+        return [featureStyle, vertexStyle];
+    };
+}
+
 const getDrawToolStyle = (): StyleLike => {
     return  getDrawStyleFunction()
 }
@@ -73,7 +145,8 @@ export default {
     getDefaultStyleFunction,
     getDrawToolStyle,
     getDrawHandleStyleFunction,
-    getDrawStyleFunction
+    getDrawStyleFunction,
+    getModifyStyleFunction
 }
 export const defaultStyle = getDefaultStyleFunction();
 export const drawStyle = getDrawStyleFunction();

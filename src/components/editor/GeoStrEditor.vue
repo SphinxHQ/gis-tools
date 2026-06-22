@@ -89,6 +89,70 @@ async function ensureMonaco() {
         ]
       }
     })
+
+    // GeoJSON 语法高亮：对 GeoJSON 关键字段名与几何类型值做特殊标注
+    langs.register({ id: 'geojson' })
+    // 复用 JSON 的括号 / 自动闭合 / 缩进规则，保证编辑体验与 JSON 一致
+    langs.setLanguageConfiguration('geojson', {
+      comments: { lineComment: '//', blockComment: ['/*', '*/'] },
+      brackets: [
+        ['{', '}'],
+        ['[', ']'],
+        ['(', ')'],
+      ],
+      autoClosingPairs: [
+        { open: '{', close: '}' },
+        { open: '[', close: ']' },
+        { open: '(', close: ')' },
+        { open: '"', close: '"', notIn: ['string'] },
+        { open: "'", close: "'", notIn: ['string', 'comment'] },
+      ],
+      surroundingPairs: [
+        { open: '{', close: '}' },
+        { open: '[', close: ']' },
+        { open: '(', close: ')' },
+        { open: '"', close: '"' },
+        { open: "'", close: "'" },
+      ],
+      indentationRules: {
+        increaseIndentPattern: /[{[(]\s*$/,
+        decreaseIndentPattern: /^\s*[}\])]/,
+      },
+    })
+    langs.setMonarchTokensProvider('geojson', {
+      defaultToken: 'invalid',
+      keywords: [
+        'type', 'coordinates', 'geometry', 'properties', 'features',
+        'geometries', 'crs', 'bbox', 'name', 'link', 'href',
+      ],
+      geoTypes: [
+        'Feature', 'FeatureCollection',
+        'Point', 'MultiPoint', 'LineString', 'MultiLineString',
+        'Polygon', 'MultiPolygon', 'GeometryCollection',
+      ],
+      tokenizer: {
+        root: [
+          // 关键字段名（带引号 + 后跟冒号）→ keyword
+          [/"(type|coordinates|geometry|properties|features|geometries|crs|bbox|name|link|href)"(?=\s*:)/, 'keyword'],
+          // 其他字段名（带引号 + 后跟冒号）→ 属性名
+          [/"([^"\\]|\\.)*"(?=\s*:)/, 'string.key'],
+          // GeoJSON 几何类型字符串值 → type.identifier
+          [/"(Feature|FeatureCollection|Point|MultiPoint|LineString|MultiLineString|Polygon|MultiPolygon|GeometryCollection)"/, 'type.identifier'],
+          // CRS 相关字符串值（name/link）也作为类型标识
+          [/"(EPSG|urn|ogc)":[^"]*"/, 'type.identifier'],
+          // 普通字符串值
+          [/"([^"\\]|\\.)*"/, 'string'],
+          // 数字
+          [/-?\d+\.?\d*(?:[eE][+-]?\d+)?/, 'number'],
+          // 布尔与 null
+          [/\b(true|false|null)\b/, 'keyword'],
+          // 标点
+          [/[{}[\],:]/, 'delimiter'],
+          // 空白
+          [/\s+/, 'white'],
+        ]
+      }
+    })
   }
 
   return monacoEditor!
@@ -108,8 +172,12 @@ onMounted(async () => {
     lineNumbers: 'on',
     wordWrap: 'on',
     scrollBeyondLastLine: false,
-    automaticLayout: false,
-    fontSize: 13,
+    // 开启自动布局：监听容器尺寸变化并重新排版，否则在弹窗/异步布局中会渲染成"一条线"
+    automaticLayout: true,
+    // 显式声明占满父容器
+    width: '100%',
+    height: '100%',
+    fontSize: 12,
     renderLineHighlight: 'all',
     folding: props.language === 'json',
     foldingStrategy: 'auto',
@@ -216,6 +284,7 @@ onUnmounted(() => {
 .geo-str-editor {
   width: 100%;
   height: 100%;
+  min-height: 240px;
   box-sizing: border-box;
   overflow: hidden;
   position: relative;
@@ -233,6 +302,8 @@ onUnmounted(() => {
 }
 
 .geo-str-editor-core {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
 }
