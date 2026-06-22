@@ -35,9 +35,11 @@ const props = defineProps<{
   onSwitchBasemap: (layers: GisMapLayer[]) => void
   /** 获取当前本地底图图层组（用于切回本地） */
   getLocalBaseLayers: () => GisMapLayer[]
+  /** 初始底图类型，用于设置初始选中状态和降级判断 */
+  initialBasemap?: 'none' | 'local' | 'vec' | 'img'
 }>()
 
-const currentBasemap = ref<BasemapId>('vec')
+const currentBasemap = ref<BasemapId>(props.initialBasemap ?? 'none')
 const tianDiTuAvailable = ref(false)
 const checking = ref(false)
 
@@ -116,7 +118,7 @@ async function checkAvailability(): Promise<void> {
   } finally {
     checking.value = false
   }
-  // 如果当前选中的天地图底图不可用，切回本地底图
+  // 如果天地图不可用且当前选中的是天地图底图，切回本地底图
   if (!tianDiTuAvailable.value && (currentBasemap.value === 'vec' || currentBasemap.value === 'img')) {
     handleSwitch('local')
   }

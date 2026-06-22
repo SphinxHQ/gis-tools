@@ -19,6 +19,7 @@ import EventBase from "~/event/EventBase";
 
 
 import MapHelper from "./MapHelper";
+import {buildTianDiTuLayerUrl, getTianDiTuProjSuffix} from "./tiandituConfig";
 import {getChinaBoundaryImage} from "./data/chinaBoundaryCache";
 import {GisMapDrawEndEvent, GisMapNotifyEvent} from "./events/GisMapEvents";
 import {TianDiTuGisMapLayer, GisMapLayer, SysGisMapLayer, GisLayerOption, ImageGisMapLayer} from "./layer/GisLayer";
@@ -601,9 +602,10 @@ export class BaseTianDiTuMap extends GisMap {
             zoom: isGeo ? 4 : 1,
             projection: _projection
         });
+        const projSuffix = getTianDiTuProjSuffix(_projection);
         this.baseLayers = [
-            new TianDiTuGisMapLayer({url: "http://t0.tianditu.com/DataServer?T=vec_w"}),
-            new TianDiTuGisMapLayer({url: "http://t0.tianditu.com/DataServer?T=cva_w"})
+            new TianDiTuGisMapLayer({url: buildTianDiTuLayerUrl('vec', projSuffix)}),
+            new TianDiTuGisMapLayer({url: buildTianDiTuLayerUrl('cva', projSuffix)})
         ];
         // 添加底图（init 只初始化 map，不会自动 addLayer）
         if (this.olMap) {

@@ -9,11 +9,12 @@
     <div v-if="mouseCoord" class="mouse-coord">{{ mouseCoord }}</div>
     <div ref="mapContainerRef" class="main-map" />
     <BasemapSwitcher
-      v-if="mapReady && localBaseLayers.length > 0"
+      v-if="mapReady"
       class="basemap-switcher-wrap"
       :get-view-proj-code="getViewProjCode"
       :on-switch-basemap="handleSwitchBasemap"
       :get-local-base-layers="getLocalBaseLayers"
+      :initial-basemap="initialBasemapId"
     />
   </div>
 </template>
@@ -30,7 +31,7 @@ import Polygon from 'ol/geom/Polygon';
 import Style from 'ol/style/Style';
 import Stroke from 'ol/style/Stroke';
 import Fill from 'ol/style/Fill';
-import { nextTick, onBeforeUnmount, onMounted, ref} from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref} from 'vue';
 
 import {logger} from '~/common/logger';
 import {eventBus, GisEvent} from '~/composables/eventBus';
@@ -40,15 +41,16 @@ import BasemapSwitcher from './BasemapSwitcher.vue';
 import {BaseTianDiTuMap, BlankMap, GisMap, GisMapOption} from './GisMap';
 import { selectAvailableTianDiTuKey } from './tiandituConfig';
 import type {GisMapLayer} from './layer/GisLayer';
+import {ImageGisMapLayer} from './layer/GisLayer';
 import {Types as MapTypes} from './events/GisMapEvents';
 import {CrsBounds} from '~/components/data/GisProjectedBounds';
+import {getChinaBoundaryImage} from './data/chinaBoundaryCache';
 
 
 const mapContainerRef = ref<HTMLElement | null>(null);
 let map: GisMap;
 const mouseCoord = ref<string>('');
 const mapReady = ref(false);
-const localBaseLayers = ref<GisMapLayer[]>([]);
 const mapTypes = {
   blank: BlankMap,
   tianditu: BaseTianDiTuMap
@@ -76,11 +78,30 @@ function getViewProjCode(): string {
 }
 
 /**
+ * 初始底图类型，传给 BasemapSwitcher 用于设置初始选中状态和降级判断
+ * mapType='blank' 时默认无底图，mapType='tianditu' 时默认矢量底图
+ */
+const initialBasemapId = computed<'none' | 'vec'>(() => {
+  return props.mapType === 'tianditu' ? 'vec' : 'none'
+})
+
+/**
  * 获取本地底图图层组（用于切回本地）
- * 返回保存的原始本地底图实例（setBaseLayers 不会 dispose 图层，可复用）
+ * 根据当前视图投影动态生成中国轮廓 ImageGisMapLayer
+ * 与初始 mapType 无关，确保"本地"始终显示中国轮廓底图
  */
 function getLocalBaseLayers(): GisMapLayer[] {
-  return localBaseLayers.value
+  const viewProjCode = map?.getViewProjCode?.() ?? 'EPSG:4490'
+  const { url, extent: geoExtent } = getChinaBoundaryImage(viewProjCode)
+  return [
+    new ImageGisMapLayer({
+      url,
+      imageExtent: geoExtent,
+      imageProjection: 'EPSG:4326',
+      name: '本地底图',
+      zIndex: -1,
+    })
+  ]
 }
 
 /**
@@ -204,8 +225,6 @@ onMounted(async () => {
     }
   })
 
-  // 保存初始本地底图（用于切回"本地"时复用）
-  localBaseLayers.value = map.getBaseLayers()
   // mapType='blank' 时默认无底图；mapType='tianditu' 时已由 BaseTianDiTuMap 默认加载矢量
   if (props.mapType === 'blank') {
     map.setBaseLayers([])
