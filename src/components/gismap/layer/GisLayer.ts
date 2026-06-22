@@ -2,8 +2,10 @@ import "ol/ol.css";
 import Feature from "ol/Feature";
 import GeoJSON from 'ol/format/GeoJSON';
 import BaseLayer from "ol/layer/Base";
+import ImageLayer from "ol/layer/Image";
 import TileLayer from "ol/layer/Tile";
 import VectorLayer from "ol/layer/Vector";
+import ImageStatic from "ol/source/ImageStatic";
 import VectorSource from "ol/source/Vector";
 import XYZ from "ol/source/XYZ";
 import { Style } from "ol/style";
@@ -11,6 +13,7 @@ import type { StyleLike } from "ol/style/Style";
 
 import Common from "~/common/Common";
 import {logger} from "~/common/logger";
+import { getCurrentTianDiTuKey } from "../tiandituConfig";
 
 import { getLayerStyles } from "../styles/GisStyle";
 
@@ -49,7 +52,7 @@ export class SysGisMapLayer implements GisMapLayer {
             }else if (options.style instanceof Style){
                 this.style = options.style;
             }else if (typeof options.style === 'object') {
-                this.style = new Style(options.style);
+                this.style = new Style(options.style as unknown as ConstructorParameters<typeof Style>[0]);
             }else if (typeof options.style === 'function') {
                 this.style = options.style;
             }else {
@@ -79,6 +82,7 @@ export class SysGisMapLayer implements GisMapLayer {
           source: source,
             background: '#FFFFFF00',
           style: this.style,
+          zIndex: this.zIndex ?? 0,
         });
         this.layer = vector;
         return this.layer;
@@ -103,14 +107,14 @@ export class SysGisMapLayer implements GisMapLayer {
             const jsonStr = new GeoJSON().writeFeature(feature);
             const fea = JSON.parse(jsonStr);
             fea.id =  feature.getId() as string
-            this.features.push(fea);
+            this.features.push(fea as GeoJSON.Feature);
             return feature;
         }
         if(feature?.type === 'Feature'){
             (feature as Record<string, unknown>).id = Common.uuid();
             const olFeature = new GeoJSON().readFeature(feature) as Feature;
             this.source?.addFeature(olFeature);
-            this.features.push(feature);
+            this.features.push(feature as unknown as GeoJSON.Feature);
             const result = this.source?.getFeatureById(feature.id as string);
             return result ?? undefined;
         }
@@ -158,7 +162,8 @@ export class TianDiTuGisMapLayer implements GisMapLayer {
     sercurityTokens: Map<string, string> = new Map();
     constructor(options:GisLayerOption) {
 
-        const tiandituApiKey = Common.getTiandituApiKey();
+        // 使用新轮换逻辑中的同步接口，避免 Common 旧逻辑
+        const tiandituApiKey = getCurrentTianDiTuKey();
         this.sercurityTokens.set('tdt', tiandituApiKey);
         let url = options.url || ''; // 提供一个默认URL
 
@@ -187,8 +192,15 @@ export class TianDiTuGisMapLayer implements GisMapLayer {
         const tiandituApiKey = this.sercurityTokens.get('tdt');
         this.layer = new TileLayer({
             source: new XYZ({
+                // 天地图 _w 瓦片是 EPSG:3857 球面墨卡托投影
+                // 明确设置 source projection，OL 会自动重投影到视图投影
+                projection: 'EPSG:3857',
                 url: `${this.url}&x={x}&y={y}&l={z}&tk=${tiandituApiKey}`,
+                // 天地图瓦片级别范围 0-18（最大 19 级含 0）
+                minZoom: 0,
+                maxZoom: 18,
             }),
+            zIndex: this.zIndex ?? -1,
         });
         return this.layer;
     }
@@ -200,7 +212,11 @@ export class TianDiTuGisMapLayer implements GisMapLayer {
     }
 }
 
-export interface GisMapLayer {
+/**
+ * 静态图片底图图层
+ * 用于包装 OpenLayers ImageLayer + ImageStatic，作为本地底图
+ */
+export class ImageGisMapLayer implements GisMapLayer {
     id?: string;
     name?: string;
     visible?: boolean;
@@ -208,11 +224,70 @@ export interface GisMapLayer {
     zIndex?: number;
     style?: StyleLike;
     layer?: BaseLayer;
+    url: string;
+    imageExtent: [number, number, number, number];
+    imageProjection: string;
+    source?: unknown;
+    features?: unknown[];
+    sercurityTokens: Map<string, string> = new Map();
+    constructor(options: GisLayerOption & { imageExtent: [number, number, number, number]; imageProjection?: string }) {
+        this.id = options.id || Common.uuid();
+        this.name = options.name || '本地底图';
+        this.visible = options.visible ?? true;
+        this.opacity = options.opacity ?? 1;
+        this.zIndex = options.zIndex ?? -1;
+        this.url = options.url || '';
+        this.imageExtent = options.imageExtent;
+        this.imageProjection = options.imageProjection || 'EPSG:4326';
+        if (!this.url) {
+            throw new Error('url is required for ImageGisMapLayer');
+        }
+    }
+    on(...args: unknown[]): unknown {
+        if (this.layer) {
+            return (this.layer.on as (...a: unknown[]) => unknown).apply(this.layer, args);
+        }
+        return undefined;
+    }
+    off(...args: unknown[]): unknown {
+        if (this.layer) {
+            return (this.layer.un as (...a: unknown[]) => unknown).apply(this.layer, args);
+        }
+        return undefined;
+    }
+    init() {
+        this.layer = new ImageLayer({
+            source: new ImageStatic({
+                url: this.url,
+                imageExtent: this.imageExtent,
+                projection: this.imageProjection,
+            }),
+            zIndex: this.zIndex,
+            opacity: this.opacity,
+        });
+        return this.layer;
+    }
+    clear(): void {
+        logger.warn("ImageGisMapLayer.clear not implemented")
+    }
+    setStyle(_style?: StyleLike): void {
+        logger.warn("ImageGisMapLayer.setStyle not implemented")
+    }
+}
+
+export interface GisMapLayer {
+    id?: string;
+    name?: string;
+    visible?: boolean;
+    opacity?: number;
+    zIndex?: number;
+    style?: unknown;
+    layer?: unknown;
     url?: string;
     sercurityTokens: Map<string, string>;
-    source?: VectorSource;
+    source?: unknown;
     features?: unknown[];
-    init(): BaseLayer;
+    init(): unknown;
     on(...args: unknown[]): unknown;
     off(...args: unknown[]): unknown;
     addFeature?(features: Feature | Record<string, unknown> | undefined): Feature | undefined;

@@ -3,11 +3,11 @@ import { ElMessageBox } from 'element-plus'
 import type { TabPaneName } from 'element-plus'
 import { computed } from 'vue'
 
-import { GisError, GisErrorCode, createUserMessage } from '~/common/GisError'
+import { GisError, createUserMessage } from '~/common/GisError'
 import { SimpleDataFormat } from '~/components/data/DataFormat'
 import { useGisDataStore } from '~/composables/gisDataStore'
 
-const emit = defineEmits<{
+defineEmits<{
   'open-import': []
 }>()
 

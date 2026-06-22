@@ -1,5 +1,8 @@
 import {register} from 'ol/proj/proj4';
+import {get as getProjection, getTransform} from 'ol/proj';
+import {applyTransform} from 'ol/extent';
 import proj4 from 'proj4';
+import {CrsBounds} from '../data/GisProjectedBounds';
 
 declare const self: Window & typeof globalThis;
 
@@ -97,6 +100,39 @@ export const proj4Init = () => {
     addProj("EPSG:4214","+title=Beijing 1954 +proj=longlat +ellps=krass +towgs84=15.8,-154.4,-82.3,0,0,0,0 +no_defs +type=crs");
 
     register(proj4)
+
+    // 为投影坐标系设置 extent（OL 重投影必需，否则瓦片无法重投影到自定义投影）
+    // 参考官方示例 https://openlayers.org/en/latest/examples/reprojection-by-code.html
+    // 标准做法：
+    //   1. setWorldExtent(bbox) - 设置投影的经纬度范围
+    //   2. setExtent(applyTransform(bbox, fromLonLat)) - 转换为投影坐标范围
+    // 对于高斯-克吕格分带投影：
+    //   - x 方向固定为中国范围 +5度扩展（68°~140°），避免分带投影远离中央经线时变形过大
+    //   - y 方向全球纬度范围（±85°避免极点奇点）
+    //   - extent 通过 applyTransform 转换得到，OL 会自动处理变形
+    const CHINA_LON_RANGE_WITH_PADDING: [number, number, number, number] = [68, -85, 140, 85]
+    for (const key in CrsBounds) {
+        const info = CrsBounds[key]
+        if (info.projected) {
+            const proj = getProjection(key)
+            if (proj && !proj.getExtent()) {
+                try {
+                    proj.setWorldExtent(CHINA_LON_RANGE_WITH_PADDING)
+                    // 用 applyTransform 将经纬度范围转换为投影坐标范围
+                    const fromLonLat = getTransform('EPSG:4326', key)
+                    const extent = applyTransform(CHINA_LON_RANGE_WITH_PADDING, fromLonLat, undefined, 8)
+                    proj.setExtent(extent)
+                } catch {
+                    // 转换失败时回退到 envelope
+                    if (info.envelope) {
+                        const e = info.envelope
+                        proj.setExtent([e.left, e.bottom, e.right, e.top])
+                    }
+                }
+            }
+        }
+    }
+
     if (!(self as any).proj4) {
         Object.defineProperty(self, 'proj4', {
             value: proj4,

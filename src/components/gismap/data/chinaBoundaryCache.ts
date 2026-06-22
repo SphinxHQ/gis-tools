@@ -1,5 +1,5 @@
-import chinaData from './china.json';
 import chinaCityData from './china-city.json';
+import chinaData from './china.json';
 
 /** 中国地理范围 [minLon, minLat, maxLon, maxLat] */
 const CHINA_EXTENT: [number, number, number, number] = [73.5, 3, 136, 54];

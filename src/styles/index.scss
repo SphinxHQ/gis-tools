@@ -14,9 +14,9 @@
   --gis-text-placeholder: #c0c4cc;
   // 地图容器
   --gis-map-filter: none;
-  --gis-map-props-bg: rgba(255, 255, 255, 0.6);
-  --gis-map-props-text: #999999;
-  --gis-map-props-border: #dddddd;
+  --gis-map-props-bg: rgba(255, 255, 255, 0.5);
+  --gis-map-props-text: var(--el-text-color-regular);
+  --gis-map-props-border: rgba(0, 0, 0, 0.2);
   // 过渡
   --gis-theme-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
@@ -32,11 +32,11 @@ html.dark {
   --gis-text-primary: #e5eaf3;
   --gis-text-secondary: #a3a6ad;
   --gis-text-placeholder: #6c6e72;
-  // 地图容器 — CSS 滤镜反相法（低成本暗色底图）
-  --gis-map-filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.95);
-  --gis-map-props-bg: rgba(30, 30, 30, 0.8);
-  --gis-map-props-text: #a3a6ad;
-  --gis-map-props-border: #4c4d4f;
+  // 地图容器 — 深色主题不再反相（天地图影像保持原色，避免影像被反色成异常颜色）
+  --gis-map-filter: brightness(0.8) contrast(0.95);
+  // 地图 UI 元素原生配色（跟随 Element Plus 主题）
+  --gis-map-props-bg: rgba(0, 0, 0, 0.5);
+  --gis-map-props-border: rgba(255, 255, 255, 0.2);
 }
 
 // ===== 全局样式 =====
@@ -60,4 +60,106 @@ code {
   padding: 2px 4px;
   background-color: var(--ep-color-primary-light-9);
   color: var(--ep-color-primary);
+}
+
+// ===== splitpanes 主题适配 =====
+// 覆盖 default-theme 的硬编码颜色，使其跟随主题
+.default-theme.splitpanes .splitpanes__pane {
+  background-color: var(--el-bg-color) !important;
+}
+
+.default-theme.splitpanes .splitpanes__splitter {
+  background-color: var(--el-bg-color) !important;
+}
+
+.default-theme.splitpanes--vertical>.splitpanes__splitter,
+.default-theme .splitpanes--vertical>.splitpanes__splitter,
+.default-theme.splitpanes--horizontal>.splitpanes__splitter,
+.default-theme .splitpanes--horizontal>.splitpanes__splitter {
+  border-color: var(--el-border-color-lighter) !important;
+}
+
+.default-theme.splitpanes .splitpanes__splitter::before,
+.default-theme.splitpanes .splitpanes__splitter::after {
+  background-color: var(--el-text-color-disabled) !important;
+}
+
+.default-theme.splitpanes .splitpanes__splitter:hover::before,
+.default-theme.splitpanes .splitpanes__splitter:hover::after {
+  background-color: var(--el-color-primary) !important;
+}
+
+// ===== 地图工具栏按钮统一样式（与底图切换器保持一致） =====
+// 内容层透明
+.gismap-btns {
+  display: inline-flex;
+  flex-direction: row;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 8px;
+}
+
+// 外层背景包装（额外的 div，承载背景/边框/blur）
+// flex 内联排布（display: inline-flex），随内容自动换行
+// 圆角 + 透明（颜色由 --gis-map-props-* 控制）
+.gismap-btns-wrap {
+  display: inline-flex;
+  flex-wrap: wrap;
+  background: var(--gis-map-props-bg);
+  border: 1px solid var(--gis-map-props-border);
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  max-width: 100%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+// 让工具栏内的 Element Plus 输入控件（下拉/级联/选择器）与按钮配色一致
+.gismap-btns .el-cascader,
+.gismap-btns .el-select,
+.gismap-btns .el-input,
+.gismap-btns .el-input__wrapper {
+  background-color: transparent !important;
+  box-shadow: 0 0 0 1px var(--gis-map-props-border) inset !important;
+  color: var(--gis-map-props-text);
+}
+
+.gismap-btns .el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px var(--el-color-primary) inset !important;
+}
+
+.gismap-btns .el-input__inner,
+.gismap-btns .el-cascader__placeholder {
+  color: var(--gis-map-props-text) !important;
+}
+
+.gismap-btn {
+  min-width: 36px;
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--gis-map-props-border);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--gis-map-props-text);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  user-select: none;
+}
+
+.gismap-btn:hover:not(.disabled):not(.active) {
+  background: var(--el-color-primary-light-9);
+  border-color: var(--el-color-primary-light-5);
+  color: var(--el-color-primary);
+}
+
+.gismap-btn.active {
+  background: var(--el-color-primary);
+  border-color: var(--el-color-primary);
+  color: #fff;
+}
+
+.gismap-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

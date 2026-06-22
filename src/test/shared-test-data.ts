@@ -6,7 +6,7 @@
  * 维护原则: 单一数据源 (Single Source of Truth)
  */
 
-import type { Geometry, Feature, Position } from 'geojson'
+import type { Geometry, Feature } from 'geojson'
 
 // ============================================================================
 // Section 1: 基础环形数据 (用于 getRingclockwise)

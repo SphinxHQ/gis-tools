@@ -273,7 +273,7 @@ export class ExchangeDataFormat implements DataFormat {
             PROPS_NAME_DLBM,
         ]
 
-        return new Promise((resolve, reject) => {
+        return new Promise<string[]>((resolve, reject) => {
             if (!exchangeDataInfo) {
                 reject(new Error('Data is Empty'));
                 return;
@@ -317,12 +317,13 @@ export class ExchangeDataFormat implements DataFormat {
                         }
 
                     } else {
+                        const properties = feature.properties;
                         propKeys.forEach(key => {
-                            props.push(feature.properties[key])
+                            props.push(properties[key])
                         })
                     }
 
-                    const coordinates = feature.geometry.coordinates as unknown[];
+                    const coordinates = (feature.geometry as GeoJSON.Geometry & { coordinates: unknown[] }).coordinates;
                     let point_idx = 1;
                     const firstLevel = coordinates[0] as unknown[];
                     const secondLevel = firstLevel?.[0] as unknown[];

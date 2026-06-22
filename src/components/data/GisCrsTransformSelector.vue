@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 
 import GisCrs from '~/components/data/GisCrs'
-import { CrsBounds, CrsInfo } from '~/components/data/GisProjectedBounds'
+import { CrsInfo } from '~/components/data/GisProjectedBounds'
 
 const props = defineProps<{
   sourceCrs: CrsInfo | null

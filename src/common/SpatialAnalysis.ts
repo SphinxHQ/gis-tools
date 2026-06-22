@@ -4,7 +4,7 @@
  */
 
 import * as turf from '@turf/turf';
-import type { Geometry, Feature, FeatureCollection, Position, LineString, Polygon, MultiPolygon } from 'geojson';
+import type { Geometry, FeatureCollection, Position, LineString, Polygon, MultiPolygon } from 'geojson';
 
 // ==================== 距离计算 ====================
 

@@ -215,7 +215,7 @@ export function radiansToDegrees(radians: number): number {
  */
 export function getMetersPerDegree(lon: number, lat: number): { lonPerMeter: number; latPerMeter: number } {
     // 地球半径（米）
-    const EARTH_RADIUS = 6371000;
+    const _EARTH_RADIUS = 6371000;
 
     // 纬度每度对应的米数（几乎恒定）
     const latPerMeter = 111320;

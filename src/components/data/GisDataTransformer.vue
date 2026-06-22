@@ -121,14 +121,6 @@ const activeTabCrsInfo = computed(() => {
   return activeTab.value?.data?.crs?.crsInfo ?? null
 })
 
-const hasValidCrs = computed(() => {
-  const crs = activeTab.value?.data?.crs
-  return crs && crs.epsgCode > 0 && crs.isValid
-})
-
-// 当前Tab的转换链
-const activeTransformChain = computed(() => activeTab.value?.transformChain ?? [])
-
 // 已存在的 EPSG 代码（用于转换选择器禁用已选）
 const existingEpsgCodes = computed(() =>
   editableTabs.value.map(t => t.data?.crs?.epsgCode).filter((c): c is number => !!c)

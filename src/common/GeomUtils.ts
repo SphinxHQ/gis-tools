@@ -1,5 +1,6 @@
 import * as turf from "@turf/turf";
 import type { Geometry, Feature, Polygon, MultiPolygon, FeatureCollection } from 'geojson';
+import type OlFeature from "ol/Feature";
 import * as Format from "ol/format";
 import * as olGeometry from "ol/geom";
 
@@ -108,7 +109,7 @@ const difference = function (feature1: Feature<Polygon | MultiPolygon>, feature2
 };
 
 const olFeatureToGeoJSON = (feature: unknown): Feature => {
-    return JSON.parse(new Format.GeoJSON().writeFeature(feature as object));
+    return JSON.parse(new Format.GeoJSON().writeFeature(feature as OlFeature<olGeometry.Geometry>)) as Feature;
 };
 
 const geoJSONToOlFeature = (geojson: Feature): unknown => {
@@ -120,7 +121,7 @@ const geoJSONToOlFeatures = (geojson: Feature | FeatureCollection): unknown[] =>
 };
 
 const olFeaturesToGeoJSON = (features: unknown[]): FeatureCollection => {
-    const parse = JSON.parse(new Format.GeoJSON().writeFeatures(features as object[]));
+    const parse = JSON.parse(new Format.GeoJSON().writeFeatures(features as OlFeature<olGeometry.Geometry>[]));
     return parse as FeatureCollection;
 };
 
@@ -152,11 +153,11 @@ const wkbToOlFeatures = (wkb: string): unknown[] => {
     return formatter.readFeatures(wkb);
 };
 
-const wktToGeoJSON = function (wkt: string): Feature {
+const wktToGeoJSON = function (wkt: string): FeatureCollection {
     return olFeaturesToGeoJSON(wktToOlFeatures(wkt));
 };
 
-const wkbToGeoJSON = function (wkb: string): Feature {
+const wkbToGeoJSON = function (wkb: string): FeatureCollection {
     return olFeaturesToGeoJSON(wkbToOlFeatures(wkb));
 };
 

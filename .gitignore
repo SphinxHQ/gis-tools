@@ -32,4 +32,5 @@ docs/
 # Env
 .env.development
 .env.production
+.env.local
 demo/

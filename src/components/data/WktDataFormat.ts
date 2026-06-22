@@ -18,11 +18,11 @@ export class WktDataFormat implements DataFormat {
                 }
                 if ((textContent as string).startsWith("GEOMETRYCOLLECTION")) {
                     const geometryCollection = Wkx.Geometry.parse((textContent as string).replace(/[\r\n]/g, "")) as Wkx.Geometry & { geometries: Wkx.Geometry[] };
-                    const features = geometryCollection.geometries.map((geometry: Wkx.Geometry) => {
+                    const features: GeoJSON.Feature[] = geometryCollection.geometries.map((geometry: Wkx.Geometry) => {
                         const geoJson = geometry.toGeoJSON()
                         return {
-                            type: "Feature",
-                            geometry: geoJson,
+                            type: "Feature" as const,
+                            geometry: geoJson as GeoJSON.Geometry,
                             properties: {}
                         }
                     })
@@ -74,12 +74,12 @@ export class WktDataFormat implements DataFormat {
                             wkts.push(lastWkt);
                         }
                     }
-                    const features = wkts.map(wkt => {
+                    const features: GeoJSON.Feature[] = wkts.map(wkt => {
                         const geometry = Wkx.Geometry.parse(wkt);
                         const geoJson = geometry.toGeoJSON()
                         return {
-                            type: "Feature",
-                            geometry: geoJson,
+                            type: "Feature" as const,
+                            geometry: geoJson as GeoJSON.Geometry,
                             properties: {}
                         }
                     })

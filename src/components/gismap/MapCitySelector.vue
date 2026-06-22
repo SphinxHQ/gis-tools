@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import Feature from 'ol/Feature';
-import GeoJSON from 'ol/format/GeoJSON';
-import type Geometry from 'ol/geom/Geometry';
 import {markRaw, onMounted, Ref, ref} from "vue";
 
 import {GisMapAddFeaturesEvent, GisMapFlyToEvent} from "~/components/gismap/events/GisMapEvents";
@@ -78,9 +75,9 @@ const handleChange = (values: any[]) => {
   }
 
   // 加载选中城市的边界到地图
-  const geojsonFeature = {
+  const geojsonFeature: GeoJSON.Feature = {
     type: 'Feature' as const,
-    geometry: feature.geometry,
+    geometry: feature.geometry as GeoJSON.Geometry,
     properties: { name: feature.properties.name, adcode: feature.properties.adcode }
   };
   void eventBus.emit(props.mapName, new GisMapAddFeaturesEvent([geojsonFeature], {

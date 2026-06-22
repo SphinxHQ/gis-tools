@@ -6,26 +6,49 @@
           <span class="value">&nbsp;{{ `${value}` }}</span>
       </div>
     </div>
-    <div class="mouse-coord" v-if="mouseCoord">{{ mouseCoord }}</div>
+    <div v-if="mouseCoord" class="mouse-coord">{{ mouseCoord }}</div>
     <div ref="mapContainerRef" class="main-map" />
+    <BasemapSwitcher
+      v-if="mapReady && localBaseLayers.length > 0"
+      class="basemap-switcher-wrap"
+      :get-view-proj-code="getViewProjCode"
+      :on-switch-basemap="handleSwitchBasemap"
+      :get-local-base-layers="getLocalBaseLayers"
+    />
   </div>
 </template>
 <script setup lang="ts">
 import GeoJSON from 'ol/format/GeoJSON';
+import {toLonLat} from 'ol/proj';
+import {get as getProjection, getTransform} from 'ol/proj';
+import {applyTransform} from 'ol/extent';
+import VectorLayer from 'ol/layer/Vector';
+import VectorSource from 'ol/source/Vector';
+import Feature from 'ol/Feature';
+import LineString from 'ol/geom/LineString';
+import Polygon from 'ol/geom/Polygon';
+import Style from 'ol/style/Style';
+import Stroke from 'ol/style/Stroke';
+import Fill from 'ol/style/Fill';
 import { nextTick, onBeforeUnmount, onMounted, ref} from 'vue';
 
 import {logger} from '~/common/logger';
 import {eventBus, GisEvent} from '~/composables/eventBus';
-import {setMainMap, getMainMap} from '~/composables/gisMap';
+import {setMainMap} from '~/composables/gisMap';
 
+import BasemapSwitcher from './BasemapSwitcher.vue';
 import {BaseTianDiTuMap, BlankMap, GisMap, GisMapOption} from './GisMap';
+import { selectAvailableTianDiTuKey } from './tiandituConfig';
+import type {GisMapLayer} from './layer/GisLayer';
 import {Types as MapTypes} from './events/GisMapEvents';
-import {toLonLat} from 'ol/proj';
+import {CrsBounds} from '~/components/data/GisProjectedBounds';
 
 
 const mapContainerRef = ref<HTMLElement | null>(null);
 let map: GisMap;
 const mouseCoord = ref<string>('');
+const mapReady = ref(false);
+const localBaseLayers = ref<GisMapLayer[]>([]);
 const mapTypes = {
   blank: BlankMap,
   tianditu: BaseTianDiTuMap
@@ -44,13 +67,122 @@ const handles: Record<string, (...args: unknown[]) => unknown> = {
   [MapTypes.ZOOM_TO]: async (_options: unknown, center: unknown, zoom?: unknown) => map.zoomTo(center as number[], zoom as number | undefined),
   [MapTypes.FLASH]: async (_options: unknown, features: unknown) => map.flashFeatures(features as GeoJSON.Feature[], _options as { layerName?: string; clear?: boolean; fit?: unknown; style?: unknown } | undefined),
 }
+
+/**
+ * 获取当前地图视图投影代码
+ */
+function getViewProjCode(): string {
+  return map?.getViewProjCode?.() ?? 'EPSG:4490'
+}
+
+/**
+ * 获取本地底图图层组（用于切回本地）
+ * 返回保存的原始本地底图实例（setBaseLayers 不会 dispose 图层，可复用）
+ */
+function getLocalBaseLayers(): GisMapLayer[] {
+  return localBaseLayers.value
+}
+
+/**
+ * 切换底图
+ */
+function handleSwitchBasemap(layers: GisMapLayer[]): void {
+  map?.setBaseLayers(layers)
+}
+
+/**
+ * 坐标系 extent 标注图层（虚线半透明框，显示当前投影的标准范围，不记入选择）
+ */
+let crsExtentLayer: VectorLayer | null = null;
+
+function setupCrsExtentLayer(olMap: any): void {
+  // 创建矢量图层用于绘制 bbox
+  const source = new VectorSource();
+  crsExtentLayer = new VectorLayer({
+    source,
+    style: new Style({
+      stroke: new Stroke({
+        color: 'rgba(255, 70, 70, 0.9)',
+        width: 1.5,
+        lineDash: [6, 4],
+      }),
+    }),
+    zIndex: 1000, // 高 zIndex 确保显示在最上层
+  });
+  crsExtentLayer.set('_crsExtentLayer', true); // 标记为坐标系范围框图层，供 layerFilter 跳过
+  olMap.addLayer(crsExtentLayer);
+
+  // 初始绘制
+  updateCrsExtentBox(olMap);
+
+  // 监听投影变化（视图属性变化）
+  const view = olMap.getView();
+  view.on('change:projection', () => {
+    updateCrsExtentBox(olMap);
+  });
+}
+
+/**
+ * 更新坐标系 extent 框
+ * 从 GisProjectedBounds 的 envelope 取标准范围，转换到当前视图投影绘制虚线框
+ * 如果当前投影不在 CrsBounds 中，则不绘制
+ */
+function updateCrsExtentBox(olMap: any): void {
+  if (!crsExtentLayer) return;
+  const source = crsExtentLayer.getSource() as VectorSource;
+  source.clear();
+
+  const view = olMap.getView();
+  const viewProj = view.getProjection();
+  const viewProjCode = viewProj.getCode();
+
+  // 从 CrsBounds 获取当前投影的标准范围（envelope 为经纬度范围）
+  const crsInfo = (CrsBounds as Record<string, any>)[viewProjCode];
+  if (!crsInfo || !crsInfo.envelope) {
+    // 没取到就不管了
+    return;
+  }
+
+  const { minLon, maxLon, envelope } = crsInfo;
+  if (minLon == null || maxLon == null || !envelope) {
+    return;
+  }
+  // 经纬度 bbox：经度用 minLon/maxLon，纬度用 ±180（用更大的范围确保高斯-克吕格分带投影下边线足够长）
+  const lonLatExtent: [number, number, number, number] = [minLon, -180, maxLon, 180];
+
+  // 将经纬度范围转换到当前视图投影坐标
+  let viewCoords: number[] | null = null;
+  try {
+    const fromLonLat = getTransform('EPSG:4326', viewProjCode);
+    viewCoords = applyTransform(lonLatExtent, fromLonLat, undefined, 8);
+  } catch {
+    // 转换失败就不管了
+    return;
+  }
+  if (!viewCoords) return;
+
+  const [minX, minY, maxX, maxY] = viewCoords;
+  // 左右两条边线（不绘制整个矩形，避免大范围覆盖几何导致卡顿）
+  const leftLine = new LineString([[minX, minY], [minX, maxY]]);
+  const rightLine = new LineString([[maxX, minY], [maxX, maxY]]);
+  const leftFeature = new Feature({ geometry: leftLine });
+  const rightFeature = new Feature({ geometry: rightLine });
+  leftFeature.set('_crsExtentBox', true); // 标记为坐标系范围框，不参与交互
+  rightFeature.set('_crsExtentBox', true);
+  source.addFeature(leftFeature);
+  source.addFeature(rightFeature);
+  logger.info(`CRS extent edges updated for ${viewProjCode} from envelope:`, lonLatExtent);
+}
 onMounted(async () => {
   await nextTick();
-  
+
   if (!mapContainerRef.value) {
     logger.error('Map container ref is not available');
     return;
   }
+
+  // 先探测可用 key，避免地图初始化时使用限额的 key
+  await selectAvailableTianDiTuKey();
 
   let mapClass = BlankMap
   const mapTypeKey = (props.mapType || 'blank').toLowerCase() as keyof typeof mapTypes;
@@ -72,26 +204,42 @@ onMounted(async () => {
     }
   })
 
+  // 保存初始本地底图（用于切回"本地"时复用）
+  localBaseLayers.value = map.getBaseLayers()
+  // mapType='blank' 时默认无底图；mapType='tianditu' 时已由 BaseTianDiTuMap 默认加载矢量
+  if (props.mapType === 'blank') {
+    map.setBaseLayers([])
+  }
+
   // 鼠标位置坐标显示
   const olMap = map.getMap();
   if (olMap) {
+    let coordRafId = 0;
     olMap.on('pointermove', (evt: any) => {
-      const viewProj = olMap.getView().getProjection().getCode();
-      const coord = evt.coordinate as number[];
-      if (viewProj === 'EPSG:4326' || viewProj === 'EPSG:4490') {
-        mouseCoord.value = `${coord[0].toFixed(6)}, ${coord[1].toFixed(6)}`;
-      } else {
-        // 投影坐标：同时显示经纬度
-        const lonLat = toLonLat(coord, viewProj);
-        mouseCoord.value = `${lonLat[0].toFixed(6)}, ${lonLat[1].toFixed(6)} | ${coord[0].toFixed(2)}, ${coord[1].toFixed(2)}`;
-      }
+      // RAF 节流 + 像素去重，避免拖动时每像素触发响应式更新
+      if (coordRafId) cancelAnimationFrame(coordRafId);
+      coordRafId = requestAnimationFrame(() => {
+        const viewProj = olMap.getView().getProjection().getCode();
+        const coord = evt.coordinate as number[];
+        if (viewProj === 'EPSG:4326' || viewProj === 'EPSG:4490') {
+          mouseCoord.value = `${coord[0].toFixed(6)}, ${coord[1].toFixed(6)}`;
+        } else {
+          // 投影坐标：同时显示经纬度
+          const lonLat = toLonLat(coord, viewProj);
+          mouseCoord.value = `${lonLat[0].toFixed(6)}, ${lonLat[1].toFixed(6)} | ${coord[0].toFixed(2)}, ${coord[1].toFixed(2)}`;
+        }
+      });
     });
-    olMap.on('pointermoveout', () => {
+    (olMap as unknown as { on: (type: string, cb: () => void) => void }).on('pointermoveout', () => {
       mouseCoord.value = '';
     });
   }
   setMainMap(map);
+  mapReady.value = true;
   logger.info('GisMapBase initialized:', props.mapName);
+
+  // 添加坐标系 extent 标注图层（虚线半透明框，不记入选择）
+  setupCrsExtentLayer(olMap);
 
   const mapName = props.mapName || '';
   eventBus.on(mapName, MapTypes.DRAWTOOL, handles[MapTypes.DRAWTOOL])
@@ -190,5 +338,14 @@ onBeforeUnmount(() => {
   z-index: 1;
   filter: var(--gis-map-filter);
   transition: filter 0.3s ease;
+}
+
+.basemap-switcher-wrap {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 4;
+  /* 不应用地图滤镜，避免切换器被反相 */
+  filter: none;
 }
 </style>

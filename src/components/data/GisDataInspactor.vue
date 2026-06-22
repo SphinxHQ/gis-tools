@@ -3,9 +3,9 @@
 import {View} from "@element-plus/icons-vue";
 import * as turf from "@turf/turf";
 import {ElMessage, ElMessageBox} from "element-plus";
-import type { Feature as GeoFeature, Point as GeoPoint, Position, Feature } from "geojson";
+import type { Feature as GeoFeature, Point as GeoPoint, Position } from "geojson";
+import { Splitpanes, Pane } from 'splitpanes'
 import {ComponentInternalInstance,
-  computed,
   getCurrentInstance,
   markRaw,
   nextTick,
@@ -15,14 +15,13 @@ import {ComponentInternalInstance,
   Ref,
   watch
 } from "vue";
-import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 
 import Common from "~/common/Common";
 import GeomUtils from "~/common/GeomUtils";
 import {logger} from "~/common/logger";
 import GisDataInfo from "~/components/data/GisDataInfo";
-import GisMapBlank from "~/components/gismap/GisMapBlank.vue";
+import GisMapTianditu from "~/components/gismap/GisMapTianditu.vue";
 import {GisMapAddFeaturesEvent, GisMapflashFeaturesEvent} from "~/components/gismap/events/GisMapEvents";
 import {eventBus} from "~/composables/eventBus";
 
@@ -342,7 +341,7 @@ const inspectFeature = (feature: GeoJSON.Feature, _idx: number = 0): GeoInfoNode
   if (!handleFun) {
     handleFun = () => new GeoInfoNode("未知几何类型:" + geoType)
   }
-  const geoInfoNode = handleFun(feature.geometry.coordinates as unknown[], _idx);
+  const geoInfoNode = handleFun((feature.geometry as GeoJSON.Geometry & { coordinates: unknown[] }).coordinates as unknown[], _idx);
 
   const properties = feature.properties;
   const propertyInfoNode = new GeoInfoNode("属性数据");
@@ -366,7 +365,7 @@ const inspectFeature = (feature: GeoJSON.Feature, _idx: number = 0): GeoInfoNode
   const geoTypeName = GeomUtils.getTypeName(geoType);
   const node = new GeoInfoNode("要素对象", [geoInfoNode, propertyInfoNode]);
   node.label2 = `${_idx} : ${geoTypeName}`;
-  node.geometry = feature.geometry as Record<string, unknown>;
+  node.geometry = feature.geometry as unknown as Record<string, unknown>;
   node.sourceFeature = feature;
   return node;
 }
@@ -452,6 +451,7 @@ const handleJsonUpdate = () => {
       const idx = props.data.features.indexOf(node.sourceFeature);
       if (idx >= 0) {
         const newFeature = { ...node.sourceFeature } as GeoJSON.Feature;
+        // eslint-disable-next-line vue/no-mutating-props
         props.data.features[idx] = newFeature;
         node.sourceFeature = newFeature;
       }
@@ -493,9 +493,10 @@ const flashGeometries = (geometries: Record<string, unknown>[]) => {
 
   const addFeaturesEvent = new GisMapflashFeaturesEvent(geometries.map(x => {
     return {
-      type: "Feature",
-      geometry: x,
-    }
+      type: "Feature" as const,
+      geometry: x as unknown as GeoJSON.Geometry,
+      properties: {} as GeoJSON.GeoJsonProperties,
+    } satisfies GeoJSON.Feature;
   }));
   eventBus.emit(`${curInstanceId.value}`, addFeaturesEvent);
 }
@@ -650,7 +651,7 @@ const handleValid = () => {
       const result = props.data.features.map(f => {
         const gType = f.geometry.type as string;
         if (validHandlers[gType]) {
-          let apply = Reflect.apply(validHandlers[gType], null, [f.geometry.coordinates]);
+          let apply = Reflect.apply(validHandlers[gType], null, [(f.geometry as GeoJSON.Geometry & { coordinates: unknown[] }).coordinates]);
           return apply as GeoFeature[];
         } else {
           return [];
@@ -681,7 +682,7 @@ watch(validResult, () => {
   });
 
   if (validResult.value.length > 0) {
-    const geoInfoNode = new GeoInfoNode("错误集合", validResult.value.map((f, _idx) => inspectFeature(f as unknown as { geometry: { type: string; coordinates: unknown[] }; properties: Record<string, unknown> }, _idx)));
+    const geoInfoNode = new GeoInfoNode("错误集合", validResult.value.map((f, _idx) => inspectFeature(f as unknown as GeoJSON.Feature, _idx)));
     geoInfoNode.id = 'root';
     geoInfoNode.label2 = `总数:${validResult.value.length}`;
     geoInfoNode.geometry = {
@@ -710,14 +711,14 @@ watch(validResult, () => {
                         node-key="id"
                         @node-click="handleTreeNodeClick"
 >
-              <template #default="{ data }">
-                <span v-if="data" :class="`custom-tree-node ${data.disabled?'disabled':''}`">
-                <span class="key">{{ data.label }}:</span>
-                <span v-if="data.label2" class="label2">[{{ data.label2 }}]</span>
-                 <span :class="`val-${ data.typeName}`">{{ data.value }}</span>
+              <template #default="{ data: nodeData }">
+                <span v-if="nodeData" :class="`custom-tree-node ${nodeData.disabled?'disabled':''}`">
+                <span class="key">{{ nodeData.label }}:</span>
+                <span v-if="nodeData.label2" class="label2">[{{ nodeData.label2 }}]</span>
+                 <span :class="`val-${ nodeData.typeName}`">{{ nodeData.value }}</span>
                </span>
-                <span v-if="data?.geometry!==undefined" class="node-btns"><View
-                    @click.stop.prevent="handleTreeNodeView(data)"
+                <span v-if="nodeData?.geometry!==undefined" class="node-btns"><View
+                    @click.stop.prevent="handleTreeNodeView(nodeData)"
 /></span>
               </template>
             </el-tree-v2>
@@ -732,14 +733,14 @@ watch(validResult, () => {
                           :expand-on-click-node="false"
                           node-key="id"
 >
-                <template #default="{ data }">
-                <span v-if="data" :class="`custom-tree-node error ${data.disabled?'disabled':''}`">
-                <span class="key">{{ data.label }}:</span>
-                <span v-if="data.label2" class="label2">[{{ data.label2 }}]</span>
-                 <span :class="`val-${ data.typeName}`">{{ data.value }}</span>
+                <template #default="{ data: nodeData }">
+                <span v-if="nodeData" :class="`custom-tree-node error ${nodeData.disabled?'disabled':''}`">
+                <span class="key">{{ nodeData.label }}:</span>
+                <span v-if="nodeData.label2" class="label2">[{{ nodeData.label2 }}]</span>
+                 <span :class="`val-${ nodeData.typeName}`">{{ nodeData.value }}</span>
                </span>
-                  <span v-if="data?.geometry!==undefined" class="node-btns"><View
-                      @click.stop.prevent="handleTreeNodeView(data)"
+                  <span v-if="nodeData?.geometry!==undefined" class="node-btns"><View
+                      @click.stop.prevent="handleTreeNodeView(nodeData)"
 /></span>
                 </template>
               </el-tree-v2>
@@ -761,7 +762,7 @@ watch(validResult, () => {
       </Pane>
       <Pane v-if="mapReloaded && (conpomentVisiblity||mapInited)" :size="50" :min-size="20">
         <div class="map-container">
-          <gis-map-blank :map-name="`${curInstanceId}`" :options="{projection:epsgCode}" />
+          <gis-map-tianditu :map-name="`${curInstanceId}`" :options="{projection:epsgCode}" />
         </div>
       </Pane>
     </Splitpanes>

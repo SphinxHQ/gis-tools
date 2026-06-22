@@ -1,31 +1,41 @@
 <template>
-  <div style="padding: 10px 0 0 40px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-    <map-city-selector :map-name="mapName" style="width: 140px;" />
-    <el-popover ref="crsPopoverRef" placement="bottom" :width="320" trigger="click" @show="crsSelectorKey++">
-      <template #reference>
-        <el-button size="small">坐标系: EPSG:{{ crsCode }}</el-button>
-      </template>
-      <gis-crs-selector
-        :key="crsSelectorKey"
-        mode="all"
-        :compact="true"
-        :show-confirm="true"
-        @change="handleCrsChange"
-      />
-    </el-popover>
-    <el-button size="small" @click="handleDrawTool('Point')">点</el-button>
-    <el-button size="small" @click="handleDrawTool('LineString')">线</el-button>
-    <el-button size="small" @click="handleDrawTool('Polygon')">面</el-button>
-    <el-button size="small" @click="handleDrawTool('None')">结</el-button>
-    <el-button size="small" @click="handleCleanDraw()">清</el-button>
+  <div class="map-control-panel">
+    <div class="gismap-btns-wrap">
+      <div class="gismap-btns">
+        <map-city-selector :map-name="mapName" style="width: 140px;" />
+        <el-popover ref="crsPopoverRef" placement="bottom" :width="320" trigger="click" @show="crsSelectorKey++">
+          <template #reference>
+            <button type="button" class="gismap-btn">坐标系: EPSG:{{ crsCode }}</button>
+          </template>
+          <gis-crs-selector
+            :key="crsSelectorKey"
+            mode="all"
+            :compact="true"
+            :show-confirm="true"
+            @change="handleCrsChange"
+          />
+        </el-popover>
+        <button type="button" class="gismap-btn" @click="handleDrawTool('Point')">点</button>
+        <button type="button" class="gismap-btn" @click="handleDrawTool('LineString')">线</button>
+        <button type="button" class="gismap-btn" @click="handleDrawTool('Polygon')">面</button>
+        <button type="button" class="gismap-btn" @click="handleDrawTool('None')">结</button>
+        <button type="button" class="gismap-btn" @click="handleCleanDraw()">清</button>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.map-control-panel {
+  padding: 10px 0 0 40px;
+}
+</style>
 
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue';
 
-import { CrsInfo } from '~/components/data/GisProjectedBounds';
 import GisCrsSelector from '~/components/data/GisCrsSelector.vue';
+import { CrsInfo } from '~/components/data/GisProjectedBounds';
 import MapCitySelector from "~/components/gismap/MapCitySelector.vue";
 import { eventBus } from '~/composables/eventBus';
 
@@ -69,5 +79,3 @@ onBeforeUnmount(() => {
     eventBus.off(props.mapName, MapTypes.DRAWEND, drawEndHandler)
 })
 </script>
-
-<style scoped></style>

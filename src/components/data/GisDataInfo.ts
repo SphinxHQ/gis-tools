@@ -1,7 +1,8 @@
 import * as GeoJSON from 'geojson';
-import GisCrs from "~/components/data/GisCrs";
-import {logger} from "~/common/logger";
+
 import {GisError, GisErrorCode} from "~/common/GisError";
+import {logger} from "~/common/logger";
+import GisCrs from "~/components/data/GisCrs";
 
 export enum GisDataType {
     // Base64编码格式
@@ -75,7 +76,7 @@ export default class GisDataInfo implements DataInfo {
         if (this.features.length > 0) {
             const allTypes = this.features
                 .map(x => x.geometry?.type)
-                .filter((type): type is string => type !== undefined);
+                .filter((type): type is GeoJSON.Geometry['type'] => type !== undefined);
             return [...new Set(allTypes)];
         }
         return [];

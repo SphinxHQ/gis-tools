@@ -58,7 +58,15 @@ const sharedGlobals = {
 }
 
 const sharedRules = {
-  '@typescript-eslint/no-unused-vars': 'error',
+  '@typescript-eslint/no-unused-vars': [
+    'error',
+    {
+      args: 'after-used',
+      argsIgnorePattern: '^_',
+      vars: 'all',
+      varsIgnorePattern: '^_',
+    },
+  ],
   '@typescript-eslint/no-explicit-any': 'off',
   '@typescript-eslint/ban-ts-comment': 'off',
   '@typescript-eslint/ban-types': 'off',

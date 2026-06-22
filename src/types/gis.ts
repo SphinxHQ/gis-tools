@@ -1,6 +1,6 @@
 import * as GeoJSON from 'geojson';
 import Feature from 'ol/Feature';
-import { Style, StyleLike } from 'ol/style';
+import type { StyleLike } from 'ol/style/Style';
 
 export interface GisFeatureItem extends GeoJSON.Feature {
     id?: string | number;

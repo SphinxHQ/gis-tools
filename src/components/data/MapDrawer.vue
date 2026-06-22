@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import {ElMessageBox} from "element-plus";
 import {getCurrentInstance, onBeforeUnmount, onMounted, ref} from "vue";
 
-import {ElMessageBox} from "element-plus";
 import GeomUtils from "~/common/GeomUtils";
 import {Types} from "~/components/gismap/events/GisMapEvents";
 import {GisMapLayer} from "~/components/gismap/layer/GisLayer";
@@ -84,7 +84,7 @@ const handleCrsChange = async (epsgCode: number) => {
                          style="position: absolute; left: 0; top:0; z-index: 2;"
                          @crs-change="handleCrsChange"
       />
-      <gis-map-blank :key="mapKey" :map-name="mapName" :options="{ projection: mapProjection }" style="position: absolute; left: 0; top:0; z-index: 1;" />
+      <gis-map-tianditu :key="mapKey" :map-name="mapName" :options="{ projection: mapProjection }" style="position: absolute; left: 0; top:0; z-index: 1;" />
     </div>
   </div>
 </template>

@@ -155,14 +155,14 @@ const handleSample = (type: string) => {
           EPSG:{{ sourceCrsInfo.epsgCode }} - {{ sourceCrsInfo.name }}
         </div>
         <div v-else class="crs-info-placeholder">请选择源坐标系</div>
-        <el-button size="small" @click="$refs.sourceDialog.show()">选择</el-button>
+        <el-button size="small" @click="($refs.sourceDialog as any)?.show()">选择</el-button>
       </el-form-item>
       <el-form-item label="目标坐标系">
         <div v-if="targetCrsInfo" class="crs-info-display">
           EPSG:{{ targetCrsInfo.epsgCode }} - {{ targetCrsInfo.name }}
         </div>
         <div v-else class="crs-info-placeholder">请选择目标坐标系</div>
-        <el-button size="small" @click="$refs.targetDialog.show()">选择</el-button>
+        <el-button size="small" @click="($refs.targetDialog as any)?.show()">选择</el-button>
       </el-form-item>
       <el-form-item>
         <el-button size="small" :disabled="!sourceCrsInfo || !targetCrsInfo" @click="handleSwapCrs">交换坐标系</el-button>

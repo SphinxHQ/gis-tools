@@ -20,7 +20,7 @@
  * @status 设计阶段
  */
 
-import type { Geometry, Feature, FeatureCollection, Position } from 'geojson';
+import type { Geometry, FeatureCollection, Position } from 'geojson';
 
 // ==================== 错误定义 ====================
 
@@ -100,8 +100,8 @@ export interface BatchTransformResult {
  * ```
  */
 export function batchTransformCoordinates(
-    features: FeatureCollection,
-    options: BatchTransformOptions
+    _features: FeatureCollection,
+    _options: BatchTransformOptions
 ): Promise<BatchTransformResult> {
     throw new NotImplementedError(
         'batchTransformCoordinates',
@@ -145,8 +145,8 @@ export interface ProjectedTransformOptions {
  * @throws NotImplementedError 功能未实现
  */
 export function transformProjectedCoordinates(
-    coordinates: Position[],
-    options: ProjectedTransformOptions
+    _coordinates: Position[],
+    _options: ProjectedTransformOptions
 ): Promise<Position[]> {
     throw new NotImplementedError(
         'transformProjectedCoordinates',
@@ -226,8 +226,8 @@ export interface VertexEditResult {
  * ```
  */
 export function editGeometryVertex(
-    geometry: Geometry,
-    options: VertexEditOptions
+    _geometry: Geometry,
+    _options: VertexEditOptions
 ): VertexEditResult {
     throw new NotImplementedError(
         'editGeometryVertex',
@@ -281,8 +281,8 @@ export interface GeometrySplitResult {
  * @throws NotImplementedError 功能未实现
  */
 export function splitPolygonByLine(
-    polygon: Geometry,
-    options: GeometrySplitOptions
+    _polygon: Geometry,
+    _options: GeometrySplitOptions
 ): GeometrySplitResult {
     throw new NotImplementedError(
         'splitPolygonByLine',
@@ -321,8 +321,8 @@ export interface MergePolygonsOptions {
  * @throws NotImplementedError 功能未实现
  */
 export function mergeAdjacentPolygons(
-    polygons: Geometry[],
-    options?: MergePolygonsOptions
+    _polygons: Geometry[],
+    _options?: MergePolygonsOptions
 ): Geometry {
     throw new NotImplementedError(
         'mergeAdjacentPolygons',
@@ -408,8 +408,8 @@ export interface SpatialQueryOptions {
  * ```
  */
 export function queryFeaturesBySpatial(
-    features: FeatureCollection,
-    options: SpatialQueryOptions
+    _features: FeatureCollection,
+    _options: SpatialQueryOptions
 ): Promise<FeatureCollection> {
     throw new NotImplementedError(
         'queryFeaturesBySpatial',
@@ -441,8 +441,8 @@ export interface BBoxQueryOptions {
  * @throws NotImplementedError 功能未实现
  */
 export function queryFeaturesByBBox(
-    features: FeatureCollection,
-    options: BBoxQueryOptions
+    _features: FeatureCollection,
+    _options: BBoxQueryOptions
 ): FeatureCollection {
     throw new NotImplementedError(
         'queryFeaturesByBBox',
@@ -526,8 +526,8 @@ export interface GeometryStatisticsResult {
  * ```
  */
 export function calculateGeometryStatistics(
-    features: FeatureCollection,
-    options?: GeometryStatisticsOptions
+    _features: FeatureCollection,
+    _options?: GeometryStatisticsOptions
 ): GeometryStatisticsResult {
     throw new NotImplementedError(
         'calculateGeometryStatistics',
@@ -569,8 +569,8 @@ export interface AttributeStatisticsResult {
  * @throws NotImplementedError 功能未实现
  */
 export function calculateAttributeStatistics(
-    features: FeatureCollection,
-    options: AttributeStatisticsOptions
+    _features: FeatureCollection,
+    _options: AttributeStatisticsOptions
 ): AttributeStatisticsResult {
     throw new NotImplementedError(
         'calculateAttributeStatistics',
@@ -681,8 +681,8 @@ export interface TopologyCheckResult {
  * ```
  */
 export function checkTopology(
-    features: FeatureCollection,
-    options?: TopologyCheckOptions
+    _features: FeatureCollection,
+    _options?: TopologyCheckOptions
 ): Promise<TopologyCheckResult> {
     throw new NotImplementedError(
         'checkTopology',
@@ -704,8 +704,8 @@ export function checkTopology(
  * @throws NotImplementedError 功能未实现
  */
 export function detectGaps(
-    polygons: Geometry[],
-    tolerance: number
+    _polygons: Geometry[],
+    _tolerance: number
 ): Promise<Array<{ geometry: Geometry; area: number }>> {
     throw new NotImplementedError(
         'detectGaps',
@@ -727,8 +727,8 @@ export function detectGaps(
  * @throws NotImplementedError 功能未实现
  */
 export function detectOverlaps(
-    polygons: Geometry[],
-    tolerance: number
+    _polygons: Geometry[],
+    _tolerance: number
 ): Promise<Array<{ geometry: Geometry; area: number; polygonIndices: [number, number] }>> {
     throw new NotImplementedError(
         'detectOverlaps',
@@ -810,8 +810,8 @@ export interface GeometryRepairResult {
  * ```
  */
 export function repairGeometryAuto(
-    geometry: Geometry,
-    options?: GeometryRepairOptions
+    _geometry: Geometry,
+    _options?: GeometryRepairOptions
 ): GeometryRepairResult {
     throw new NotImplementedError(
         'repairGeometryAuto',
@@ -831,7 +831,7 @@ export function repairGeometryAuto(
  * @returns 修复后的几何
  * @throws NotImplementedError 功能未实现
  */
-export function fixSelfIntersectionByBuffer(geometry: Geometry): Geometry {
+export function fixSelfIntersectionByBuffer(_geometry: Geometry): Geometry {
     throw new NotImplementedError(
         'fixSelfIntersectionByBuffer',
         '缓冲区修复自相交功能计划在下一版本实现'
@@ -851,7 +851,7 @@ export function fixSelfIntersectionByBuffer(geometry: Geometry): Geometry {
  * @returns 修复后的几何数组
  * @throws NotImplementedError 功能未实现
  */
-export function fixSelfIntersectionBySplit(geometry: Geometry): Geometry[] {
+export function fixSelfIntersectionBySplit(_geometry: Geometry): Geometry[] {
     throw new NotImplementedError(
         'fixSelfIntersectionBySplit',
         '分割修复自相交功能计划在下一版本实现'
@@ -900,9 +900,9 @@ export interface MeasurementResult {
  * ```
  */
 export function measureDistance(
-    point1: Position,
-    point2: Position,
-    unit?: 'm' | 'km' | 'mile' | 'ft'
+    _point1: Position,
+    _point2: Position,
+    _unit?: 'm' | 'km' | 'mile' | 'ft'
 ): number {
     throw new NotImplementedError(
         'measureDistance',
@@ -924,8 +924,8 @@ export function measureDistance(
  * @throws NotImplementedError 功能未实现
  */
 export function measureArea(
-    polygon: Geometry,
-    unit?: 'm2' | 'km2' | 'ha' | 'acre'
+    _polygon: Geometry,
+    _unit?: 'm2' | 'km2' | 'ha' | 'acre'
 ): number {
     throw new NotImplementedError(
         'measureArea',
@@ -949,10 +949,10 @@ export function measureArea(
  * @throws NotImplementedError 功能未实现
  */
 export function measureAngle(
-    point1: Position,
-    vertex: Position,
-    point2: Position,
-    inRadians?: boolean
+    _point1: Position,
+    _vertex: Position,
+    _point2: Position,
+    _inRadians?: boolean
 ): number {
     throw new NotImplementedError(
         'measureAngle',
@@ -972,7 +972,7 @@ export function measureAngle(
  * @returns 半径（米）
  * @throws NotImplementedError 功能未实现
  */
-export function measureRadius(center: Position | null, points: Position[]): number {
+export function measureRadius(_center: Position | null, _points: Position[]): number {
     throw new NotImplementedError(
         'measureRadius',
         '半径测量功能计划在下一版本实现'
@@ -1025,7 +1025,7 @@ export interface CustomCrsDefinition {
  * });
  * ```
  */
-export function registerCustomCrs(definition: CustomCrsDefinition): boolean {
+export function registerCustomCrs(_definition: CustomCrsDefinition): boolean {
     throw new NotImplementedError(
         'registerCustomCrs',
         '自定义坐标系注册功能计划在下一版本实现'
@@ -1085,8 +1085,8 @@ export interface FourParameterTransform {
  * @throws NotImplementedError 功能未实现
  */
 export function transformBySevenParameters(
-    coordinate: Position,
-    params: SevenParameterTransform
+    _coordinate: Position,
+    _params: SevenParameterTransform
 ): Position {
     throw new NotImplementedError(
         'transformBySevenParameters',
@@ -1113,8 +1113,8 @@ export function transformBySevenParameters(
  * @throws NotImplementedError 功能未实现
  */
 export function transformByFourParameters(
-    coordinate: Position,
-    params: FourParameterTransform
+    _coordinate: Position,
+    _params: FourParameterTransform
 ): Position {
     throw new NotImplementedError(
         'transformByFourParameters',
@@ -1136,8 +1136,8 @@ export function transformByFourParameters(
  * @throws NotImplementedError 功能未实现
  */
 export function calculateSevenParameters(
-    sourcePoints: Position[],
-    targetPoints: Position[]
+    _sourcePoints: Position[],
+    _targetPoints: Position[]
 ): SevenParameterTransform {
     throw new NotImplementedError(
         'calculateSevenParameters',
@@ -1159,8 +1159,8 @@ export function calculateSevenParameters(
  * @throws NotImplementedError 功能未实现
  */
 export function calculateFourParameters(
-    sourcePoints: Position[],
-    targetPoints: Position[]
+    _sourcePoints: Position[],
+    _targetPoints: Position[]
 ): FourParameterTransform {
     throw new NotImplementedError(
         'calculateFourParameters',
@@ -1249,9 +1249,9 @@ export interface LabelResult {
  * @throws NotImplementedError 功能未实现
  */
 export function generateLabels(
-    features: FeatureCollection,
-    labelField: string,
-    options?: LabelPlacementOptions
+    _features: FeatureCollection,
+    _labelField: string,
+    _options?: LabelPlacementOptions
 ): LabelResult[] {
     throw new NotImplementedError(
         'generateLabels',
@@ -1293,8 +1293,8 @@ export interface LabelAvoidanceOptions {
  * @throws NotImplementedError 功能未实现
  */
 export function avoidLabelOverlap(
-    labels: LabelResult[],
-    options?: LabelAvoidanceOptions
+    _labels: LabelResult[],
+    _options?: LabelAvoidanceOptions
 ): LabelResult[] {
     throw new NotImplementedError(
         'avoidLabelOverlap',

@@ -1,11 +1,13 @@
 import "ol/ol.css";
-import Feature from "ol/Feature";
-import type Geometry from "ol/geom/Geometry";
 import {Map as olMap, View as olView} from "ol";
-import {Draw, Interaction} from "ol/interaction";
-import {fromLonLat, toLonLat} from "ol/proj";
-import {Circle, Fill, Stroke, Style} from "ol/style";
+import Feature from "ol/Feature";
 import GeoJSON from 'ol/format/GeoJSON';
+import {applyTransform} from 'ol/extent';
+import type Geometry from "ol/geom/Geometry";
+import {Draw, Interaction} from "ol/interaction";
+import type BaseLayer from "ol/layer/Base";
+import {fromLonLat, get as getProjection, getTransform} from "ol/proj";
+import {Circle, Fill, Stroke, Style} from "ol/style";
 import {isRef, Ref, toValue} from "vue";
 
 import Common from "~/common/Common";
@@ -17,12 +19,11 @@ import EventBase from "~/event/EventBase";
 
 
 import MapHelper from "./MapHelper";
-import {GisMapDrawEndEvent, GisMapNotifyEvent} from "./events/GisMapEvents";
-import {TianDiTuGisMapLayer, GisMapLayer, SysGisMapLayer, GisLayerOption} from "./layer/GisLayer";
-import GisStyle from "./styles/GisStyle";
-import ImageLayer from "ol/layer/Image";
-import ImageStatic from "ol/source/ImageStatic";
 import {getChinaBoundaryImage} from "./data/chinaBoundaryCache";
+import {GisMapDrawEndEvent, GisMapNotifyEvent} from "./events/GisMapEvents";
+import {TianDiTuGisMapLayer, GisMapLayer, SysGisMapLayer, GisLayerOption, ImageGisMapLayer} from "./layer/GisLayer";
+import GisStyle from "./styles/GisStyle";
+
 
 export const DefaultLayerNames = {
     SYS_DRAW_TOOL_ACTION: "sys-draw-tool-action",
@@ -106,33 +107,62 @@ export class GisMap extends EventBase {
         let selected: SelectableFeature | null = null;
         let curFeature: unknown = null;
 
-        const pointerMoveHandler = (e: unknown) => {
-            const event = e as { pixel: [number, number] };
-            if (selected) {
-                selected.setStyle(undefined);
-                selected = null;
-            }
-            map?.forEachFeatureAtPixel(event.pixel, (f) => {
-                const feature = f as SelectableFeature;
-                if (selected !== feature) {
-                    selected?.setStyle(undefined);
-                    selected = feature;
-                    const label = feature.get("label");
-                    if (label !== undefined) {
-                        const txtStyles = textStyles.map(x => x.clone());
-                        txtStyles.forEach(s => s.getText()?.setText?.(`${label}`))
-                        feature.setStyle([...selectStyle, ...txtStyles])
-                    } else {
-                        feature.setStyle(selectStyle)
+        const pointerMoveHandler = (() => {
+            let lastPixel: [number, number] | null = null;
+            let rafId = 0;
+            return (e: unknown) => {
+                const event = e as { pixel: [number, number] };
+                // 相同像素不重复处理
+                if (lastPixel && lastPixel[0] === event.pixel[0] && lastPixel[1] === event.pixel[1]) return;
+                lastPixel = event.pixel;
+                // 用 RAF 节流，避免每帧多次查询
+                cancelAnimationFrame(rafId);
+                rafId = requestAnimationFrame(() => {
+                    if (selected) {
+                        selected.setStyle(undefined);
+                        selected = null;
                     }
-                }
-                return true;
-            });
-            if (curFeature !== selected) {
-                curFeature = selected;
-                this.dispatchEvent('FeatureOver', curFeature);
-            }
-        };
+                    // 用 layerFilter 跳过坐标系范围框图层，避免遍历框内大量几何造成卡顿
+                    map?.forEachFeatureAtPixel(event.pixel, (f) => {
+                        const feature = f as SelectableFeature;
+                        // 跳过坐标系范围框等非交互图层
+                        if (feature.get('_crsExtentBox')) {
+                            return false;
+                        }
+                        // 仅对显式标记 _selectable 的 feature 启用交互
+                        // 默认 GeoJSON 等图层不参与 hover/高亮，需调用 enableFeatureSelect 显式启用
+                        if (!feature.get('_selectable')) {
+                            return false;
+                        }
+                        // 临时全局禁用所有要素交互，hover/选择/FeatureOver 都禁用
+                        // 需要时注释掉该 return false 即可恢复
+                        // return false;
+                        if (selected !== feature) {
+                            selected?.setStyle(undefined);
+                            selected = feature;
+                            const label = feature.get("label");
+                            if (label !== undefined) {
+                                const txtStyles = textStyles.map(x => x.clone());
+                                txtStyles.forEach(s => s.getText()?.setText?.(`${label}`))
+                                feature.setStyle([...selectStyle, ...txtStyles])
+                            } else {
+                                feature.setStyle(selectStyle)
+                            }
+                        }
+                        return true;
+                    }, {
+                        // 跳过坐标系范围框图层
+                        layerFilter: (layer) => {
+                            return !layer.get('_crsExtentLayer');
+                        }
+                    });
+                    if (curFeature !== selected) {
+                        curFeature = selected;
+                        this.dispatchEvent('FeatureOver', curFeature);
+                    }
+                });
+            };
+        })();
 
         map?.on('pointermove', pointerMoveHandler);
 
@@ -141,8 +171,43 @@ export class GisMap extends EventBase {
         });
     }
 
+    /**
+     * 启用 feature 的 pointermove 交互（hover 高亮、FeatureOver 事件）
+     * 给图层的所有 feature 打上 _selectable 标记
+     * @param layer OL 图层
+     */
+    enableFeatureSelect(layer: unknown): void {
+        if (!layer) return;
+        const l = layer as { getSource?: () => { getFeatures?: () => unknown[]; forEachFeature?: (cb: (f: unknown) => void) => void } | undefined };
+        const source = l.getSource?.();
+        if (!source) return;
+        if (typeof source.forEachFeature === 'function') {
+            source.forEachFeature((f: unknown) => {
+                const feat = f as { set?: (k: string, v: unknown) => void; get?: (k: string) => unknown };
+                if (typeof feat.set === 'function' && !feat.get?.('_selectable')) {
+                    feat.set('_selectable', true);
+                }
+            });
+        } else if (typeof source.getFeatures === 'function') {
+            const feats = source.getFeatures() as unknown[];
+            feats.forEach((f) => {
+                const feat = f as { set?: (k: string, v: unknown) => void; get?: (k: string) => unknown };
+                if (typeof feat.set === 'function' && !feat.get?.('_selectable')) {
+                    feat.set('_selectable', true);
+                }
+            });
+        }
+    }
+
     getMap(): olMap | undefined {
         return this.olMap;
+    }
+
+    /**
+     * 获取当前地图视图投影代码
+     */
+    getViewProjCode(): string {
+        return this.olView?.getProjection().getCode() ?? 'EPSG:4490'
     }
 
     getMapOptions(gisMap: GisMap): GisMapOption | undefined {
@@ -159,7 +224,7 @@ export class GisMap extends EventBase {
 
     addLayer(map: olMap, baseLayers: GisMapLayer[]) {
         baseLayers.forEach(lay => {
-            const l = lay.init();
+            const l = lay.init() as BaseLayer;
             map?.addLayer(l);
         });
     }
@@ -253,7 +318,7 @@ export class GisMap extends EventBase {
                     const source = drawLayerDisplay?.source;
                     if (source) {
                         for (let index = 0; index < drawLayerDisplay.features.length; index++) {
-                            const fea = drawLayerDisplay.features[index] as Record<string, unknown>;
+                            const fea = drawLayerDisplay.features[index] as unknown as Record<string, unknown>;
                             if (GeomUtils.intersects(fea.geometry as GeoJSON.Geometry, point)) {
                                 drawTool.set('intersectId', fea.id);
                                 break;
@@ -330,14 +395,14 @@ export class GisMap extends EventBase {
         fit?: unknown,
         style?: unknown
     }) {
-        const lay = this.getLayerByName(layerName, {style: options?.style});
+        const lay = this.getLayerByName(layerName, {style: options?.style as GisLayerOption['style']});
         if (options?.clear) {
             lay.clear();
         }
         if (lay.source) {
             const feas = this.readFeaturesFromGeoJSON(features);
             lay.addFeatures?.(feas)
-            eventBus.emit(this.mapName, new GisMapNotifyEvent('GisMap::addFeaturesToLayer', undefined, feas, lay));
+            eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::addFeaturesToLayer', undefined, feas, lay));
             const extent = lay.getExtent?.() as import("ol/extent").Extent | undefined;
             if (extent) {
                 this.olView?.fit(extent, {
@@ -364,7 +429,7 @@ export class GisMap extends EventBase {
         style?: unknown
     }) {
         const layerName = options?.layerName || DefaultLayerNames.SYS_TEMP_FLASH;
-        const lay = this.getLayerByName(layerName, {style: options?.style});
+        const lay = this.getLayerByName(layerName, {style: options?.style as GisLayerOption['style']});
         lay.clear();
 
         const start = new Date().getTime();
@@ -407,7 +472,7 @@ export class GisMap extends EventBase {
         if (lay.source) {
             const feas = this.readFeaturesFromGeoJSON(features);
             lay.addFeatures?.(feas)
-            eventBus.emit(this.mapName, new GisMapNotifyEvent('GisMap::addFeaturesToLayer', undefined, feas, lay));
+            eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::addFeaturesToLayer', undefined, feas, lay));
             const extent2 = lay.getExtent?.() as import("ol/extent").Extent | undefined;
             if (extent2) {
                 this.olView?.fit(extent2, {padding: Array(4).fill(40)});
@@ -466,7 +531,7 @@ export class GisMap extends EventBase {
         // 清理所有图层
         const allLayers = [...this.baseLayers, ...this.userLayers, ...this.sysLayers];
         allLayers.forEach(layer => {
-            layer.dispose?.();
+            (layer as GisMapLayer & { dispose?: () => void }).dispose?.();
         });
         this.baseLayers = [];
         this.userLayers = [];
@@ -482,16 +547,92 @@ export class GisMap extends EventBase {
         }
         this.olView = undefined;
     }
+
+    /**
+     * 切换底图图层组
+     * 移除当前所有底图（不 dispose，便于切回），添加新的底图图层组
+     * @param newBaseLayers 新的底图图层组
+     */
+    setBaseLayers(newBaseLayers: GisMapLayer[]): void {
+        if (!this.olMap) {
+            logger.warn('setBaseLayers: olMap is not initialized')
+            return
+        }
+        // 仅从地图移除旧底图（不 dispose，便于切回时复用）
+        this.baseLayers.forEach(layer => {
+            const l = layer.layer as BaseLayer | undefined
+            if (l) {
+                this.olMap?.removeLayer(l)
+            }
+        })
+        this.baseLayers = newBaseLayers
+        // 添加新底图：若图层未初始化则 init，否则直接添加
+        newBaseLayers.forEach(lay => {
+            let l = lay.layer as BaseLayer | undefined
+            if (!l) {
+                l = lay.init() as BaseLayer
+            }
+            if (l) {
+                this.olMap?.addLayer(l)
+            }
+        })
+    }
+
+    /**
+     * 获取当前底图图层组
+     */
+    getBaseLayers(): GisMapLayer[] {
+        return this.baseLayers
+    }
 }
 
 export class BaseTianDiTuMap extends GisMap {
-    constructor(mapName: string, mapTarget: string | HTMLElement) {
+    constructor(mapName: string, mapTarget: string | HTMLElement, options?: GisMapOption) {
         super(mapName, mapTarget);
+        const projection = options?.projection === undefined ? 3857 : options?.projection;
+        const _projection = (typeof projection === 'string') ? projection : `EPSG:${projection}`;
+
+        // 先用地理中心初始化，投影坐标系稍后 fit 中国范围
+        const geoCenter = [104.195, 35.8];
+        const isGeo = _projection === 'EPSG:4326' || _projection === 'EPSG:4490';
+        const center = isGeo ? geoCenter : fromLonLat(geoCenter, _projection);
+        this.init({
+            center,
+            zoom: isGeo ? 4 : 1,
+            projection: _projection
+        });
         this.baseLayers = [
-            new TianDiTuGisMapLayer({url: "https://t0.tianditu.com/DataServer?T=vec_w"}),
-            new TianDiTuGisMapLayer({url: "https://t0.tianditu.com/DataServer?T=cva_w"})
-        ]
-        this.init();
+            new TianDiTuGisMapLayer({url: "http://t0.tianditu.com/DataServer?T=vec_w"}),
+            new TianDiTuGisMapLayer({url: "http://t0.tianditu.com/DataServer?T=cva_w"})
+        ];
+        // 添加底图（init 只初始化 map，不会自动 addLayer）
+        if (this.olMap) {
+            this.addLayer(this.olMap, this.baseLayers);
+        }
+
+        // 投影坐标系：fit 中国范围确保完整显示
+        if (!isGeo) {
+            try {
+                const proj = getProjection(_projection);
+                const view = this.olMap?.getView();
+                if (view && proj) {
+                    // fit 到中国范围附近
+                    const extent = proj.getExtent();
+                    if (extent) {
+                        view.fit(extent, { padding: [20, 20, 20, 20], maxZoom: 4 });
+                    } else {
+                        // 用默认中国经纬度范围
+                        const chinaExtent = applyTransform([73, 16, 136, 54], getTransform('EPSG:4326', _projection), undefined, 8);
+                        view.fit(chinaExtent, { padding: [20, 20, 20, 20], maxZoom: 4 });
+                    }
+                }
+            } catch (e) {
+                logger.warn(`BaseTianDiTuMap fit failed for ${_projection}:`, e);
+            }
+        }
+
+        this.initMapPointermove();
+        logger.info('BaseTianDiTuMap initialized:', mapName, _projection);
     }
 }
 
@@ -514,15 +655,16 @@ export class BlankMap extends GisMap {
         // 中国轮廓底图：渲染到 canvas 后缓存为 ImageStatic，零交互开销
         // Canvas 在 EPSG:4326 下绘制，OL 自动重投影到视图坐标系
         const { url, extent: geoExtent } = getChinaBoundaryImage(_projection);
-        const chinaImageLayer = new ImageLayer({
-            source: new ImageStatic({
-                url,
-                imageExtent: geoExtent,
-                projection: 'EPSG:4326',
-            }),
+        // 包装为 ImageGisMapLayer 加入 baseLayers，便于底图切换
+        const chinaImageLayer = new ImageGisMapLayer({
+            url,
+            imageExtent: geoExtent,
+            imageProjection: 'EPSG:4326',
+            name: '本地底图',
             zIndex: -1,
         });
-        this.olMap?.addLayer(chinaImageLayer);
+        this.baseLayers = [chinaImageLayer];
+        this.addLayer(this.olMap!, this.baseLayers);
 
         // 投影坐标系：fit 中国范围确保完整显示
         if (!isGeo && this.olView) {

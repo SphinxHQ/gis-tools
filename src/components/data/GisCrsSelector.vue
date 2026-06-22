@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import proj4 from 'proj4'
 import { computed, ref } from 'vue'
 
 import GisCrs from '~/components/data/GisCrs'
-import { registerProj4Def } from '~/components/gismap/proj4Defs'
 import { CrsBounds, CrsInfo } from '~/components/data/GisProjectedBounds'
+import { registerProj4Def } from '~/components/gismap/proj4Defs'
 
 const props = defineProps({
   /** 禁用的 EPSG 代码列表 */

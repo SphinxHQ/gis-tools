@@ -18,8 +18,8 @@ export class ExfDataFormat implements DataFormat {
         const blocks = exfPaser.blocks as Record<string, Array<{ wkt: string; properties: { F_BUILDING_NO: string; ID: string }; [k: string]: unknown }>> | undefined;
         if (blocks && Array.isArray(blocks.Polygon) && blocks.Polygon.length > 0) {
             gisDataInfo.features = blocks.Polygon
-                .map((x) => {
-                    return {wkt: x.wkt, info: x.properties.F_BUILDING_NO, handle: x.properties.ID, data: x}
+                .map((x): GeoJSON.Feature => {
+                    return { wkt: x.wkt, info: x.properties.F_BUILDING_NO, handle: x.properties.ID, data: x } as unknown as GeoJSON.Feature
                 })
         } else {
             logger.warn('ExfDataFormat 解析失败');

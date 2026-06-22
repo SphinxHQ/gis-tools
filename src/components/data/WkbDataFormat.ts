@@ -7,7 +7,7 @@ import GisDataInfo from "~/components/data/GisDataInfo";
 
 export class WkbDataFormat implements DataFormat {
 
-    async read(content: string | ArrayBuffer): Promise<GisDataInfo> {
+    async read(_content: string | ArrayBuffer): Promise<GisDataInfo> {
         throw new Error('WKB format reading is not yet implemented. Please use supported formats: GeoJSON, WKT, Shapefile, etc.');
     }
 

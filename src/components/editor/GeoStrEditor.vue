@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import type { editor as MonacoEditorNS } from 'monaco-editor/esm/vs/editor/editor.api'
-import { onMounted, onUnmounted, ref, watch } from 'vue'
-
 // Vite ?worker 导入 — 编译时生成 Worker 构建产物
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { isActuallyDark } from '~/composables/dark'
 

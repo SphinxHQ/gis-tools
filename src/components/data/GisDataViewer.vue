@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import {ShapefileParser, GeoJSONFeatureCollection} from "@sphinx_hq/shapefile-parser";
 import {ElMessage} from "element-plus";
 import {computed, Ref, ref, watch} from "vue";
-import {ShapefileParser, GeoJSONFeatureCollection} from "@sphinx_hq/shapefile-parser";
 
 import {ExchangeDataFormat} from "~/components/data/ExchangeDataFormat";
 import GisDataInfo from "~/components/data/GisDataInfo";
@@ -123,9 +123,13 @@ watch(() => [props.data, geoJsonType.value, includeCrs.value, jsonFormat.value],
 }, {deep: true, immediate: true})
 
 const handleDownloadJson = () => {
-  let downloadContent = dataStr_Geojson.value;
+  let downloadContent: string;
   if (geoJsonType.value === "FeatureSplit") {
-    downloadContent = curGeo.value;
+    downloadContent = curGeo.value ?? '';
+  } else if (Array.isArray(dataStr_Geojson.value)) {
+    downloadContent = dataStr_Geojson.value.join('\r\n');
+  } else {
+    downloadContent = dataStr_Geojson.value ?? '';
   }
   let fileName = geoJsonType.value + new Date().getTime();
   const blob = new Blob([downloadContent], {type: "application/json"});
@@ -166,7 +170,7 @@ const handleDownloadShp = async () => {
 
 
 const handleDownloadExchange = () => {
-  let downloadContent = dataStr_exchange.value;
+  let downloadContent: string = dataStr_exchange.value.join("\r\n");
   let fileName = "电子报盘" + new Date().getTime();
   const blob = new Blob([downloadContent], {type: "application/text"});
   const url = URL.createObjectURL(blob);
@@ -198,7 +202,7 @@ const crsInfo = computed(() => props.data?.crs?.crsInfo ?? null)
             <el-descriptions-item label="要素数量">{{ props.data?.features?.length ?? 0 }}</el-descriptions-item>
             <el-descriptions-item label="几何类型">{{ props.data?.getTypes?.()?.join(', ') || '无' }}</el-descriptions-item>
             <el-descriptions-item label="坐标系">
-              <span v-if="hasValidCrs">EPSG:{{ props.data.crs.epsgCode }}</span>
+              <span v-if="hasValidCrs">EPSG:{{ props.data?.crs?.epsgCode }}</span>
               <span v-else class="text-muted">未设置</span>
             </el-descriptions-item>
             <template v-if="crsInfo">

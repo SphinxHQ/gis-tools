@@ -1,5 +1,5 @@
-import { computed, watch } from 'vue'
 import { usePreferredDark, useStorage } from '@vueuse/core'
+import { computed, watch } from 'vue'
 
 export type ThemeMode = 'auto' | 'light' | 'dark'
 

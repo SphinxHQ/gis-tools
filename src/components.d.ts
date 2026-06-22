@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BaseMain: typeof import('./components/layouts/BaseMain.vue')['default']
+    BasemapSwitcher: typeof import('./components/gismap/BasemapSwitcher.vue')['default']
     BottomPanel: typeof import('./components/BottomPanel.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCascader: typeof import('element-plus/es')['ElCascader']
