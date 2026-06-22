@@ -75,8 +75,9 @@ export function buildTianDiTuLayerUrl(
   layerType: TianDiTuLayerConfig['type'],
   projSuffix: TianDiTuProjectionSuffix,
 ): string {
-  // 必须使用 HTTPS：GitHub Pages 等 HTTPS 部署下不能加载 HTTP 资源（mixed content）
-  return `https://t0.tianditu.com/DataServer?T=${layerType}_${projSuffix}`
+  // 使用 HTTP：兼容内网 HTTP 部署环境
+  // 注意：在 GitHub Pages（HTTPS）等 HTTPS 站点下，HTTP 瓦片会被浏览器拦截（mixed content）
+  return `http://t0.tianditu.com/DataServer?T=${layerType}_${projSuffix}`
 }
 
 // ============ 天地图 API Key 轮换与降级 ============
@@ -158,8 +159,8 @@ function saveState(state: TianDiTuKeyState): void {
  * @returns true 表示可用
  */
 async function probeKey(key: string, timeoutMs = 4000): Promise<boolean> {
-  // 天地图 tile (0,0,0) 在 3857 下是全球一张图（HTTPS）
-  const url = `https://t0.tianditu.com/DataServer?T=vec_w&x=0&y=0&l=0&tk=${key}`
+  // 天地图 tile (0,0,0) 在 3857 下是全球一张图（HTTP）
+  const url = `http://t0.tianditu.com/DataServer?T=vec_w&x=0&y=0&l=0&tk=${key}`
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
