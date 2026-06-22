@@ -93,16 +93,21 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
       class="empty-state"
       role="button"
       tabindex="0"
-      @click="$emit('open-import')"
-      @keydown.enter="$emit('open-import')"
-      @keydown.space.prevent="$emit('open-import')"
+      @click="emit('open-import')"
+      @keydown.enter="emit('open-import')"
+      @keydown.space.prevent="emit('open-import')"
     >
       <div class="empty-content">
-        <el-icon :size="48" color="var(--el-color-info-light-3)">
+        <el-icon :size="44" color="var(--el-color-info-light-3)">
           <upload-filled />
         </el-icon>
         <p class="empty-title">暂无数据</p>
-        <p class="empty-desc">拖拽文件到此处导入</p>
+        <p class="empty-desc">
+          <span class="empty-action">拖拽</span>
+          <span>文件到此，或者</span>
+          <span class="empty-action">点击</span>
+          <span>查看更多方式</span>
+        </p>
       </div>
     </div>
 
@@ -169,6 +174,14 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   font-size: 12px;
   color: var(--el-text-color-placeholder);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+}
+.empty-action {
+  color: var(--el-color-primary);
+  font-weight: 500;
 }
 
 .dataset-tabs {
