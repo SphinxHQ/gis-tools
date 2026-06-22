@@ -36,7 +36,12 @@ jobs:
         run: pnpm install
 
       - name: Build
+        # 支持两种 Secret 命名（向后兼容）：
+        #   1. TIANDITU_API_KEYS  — 多个 key 英文逗号分隔（推荐，配合运行时自动轮换降级）
+        #   2. TIANDITU_KEY       — 单个 key（兼容旧配置，会被映射到 VITE_TIANDITU_API_KEY）
+        # 同时也兼容环境变量名 VITE_TIANDITU_API_KEYS / VITE_TIANDITU_API_KEY
         env:
+          VITE_TIANDITU_API_KEYS: ${{ secrets.TIANDITU_API_KEYS || secrets.TIANDITU_KEY }}
           VITE_TIANDITU_API_KEY: ${{ secrets.TIANDITU_KEY }}
         run: pnpm build
 
