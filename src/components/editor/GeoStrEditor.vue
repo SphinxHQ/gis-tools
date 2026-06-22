@@ -94,7 +94,6 @@ async function ensureMonaco() {
     langs.register({ id: 'geojson' })
     // 复用 JSON 的括号 / 自动闭合 / 缩进规则，保证编辑体验与 JSON 一致
     langs.setLanguageConfiguration('geojson', {
-      comments: { lineComment: '//', blockComment: ['/*', '*/'] },
       brackets: [
         ['{', '}'],
         ['[', ']'],
@@ -105,41 +104,30 @@ async function ensureMonaco() {
         { open: '[', close: ']' },
         { open: '(', close: ')' },
         { open: '"', close: '"', notIn: ['string'] },
-        { open: "'", close: "'", notIn: ['string', 'comment'] },
       ],
       surroundingPairs: [
         { open: '{', close: '}' },
         { open: '[', close: ']' },
         { open: '(', close: ')' },
         { open: '"', close: '"' },
-        { open: "'", close: "'" },
       ],
       indentationRules: {
         increaseIndentPattern: /[{[(]\s*$/,
         decreaseIndentPattern: /^\s*[}\])]/,
       },
+      // 双击选中带引号的完整字段名/值
+      wordPattern: /"(?:[^"\\]|\\.)*"|-?\d+\.?\d*(?:[eE][+-]?\d+)?|[a-zA-Z_]\w*/,
     })
     langs.setMonarchTokensProvider('geojson', {
-      defaultToken: 'invalid',
-      keywords: [
-        'type', 'coordinates', 'geometry', 'properties', 'features',
-        'geometries', 'crs', 'bbox', 'name', 'link', 'href',
-      ],
-      geoTypes: [
-        'Feature', 'FeatureCollection',
-        'Point', 'MultiPoint', 'LineString', 'MultiLineString',
-        'Polygon', 'MultiPolygon', 'GeometryCollection',
-      ],
+      defaultToken: '',
       tokenizer: {
         root: [
-          // 关键字段名（带引号 + 后跟冒号）→ keyword
+          // 关键字段名（带引号 + 后跟冒号）→ keyword 高亮
           [/"(type|coordinates|geometry|properties|features|geometries|crs|bbox|name|link|href)"(?=\s*:)/, 'keyword'],
-          // 其他字段名（带引号 + 后跟冒号）→ 属性名
+          // 其他字段名（带引号 + 后跟冒号）→ 字符串属性名
           [/"([^"\\]|\\.)*"(?=\s*:)/, 'string.key'],
           // GeoJSON 几何类型字符串值 → type.identifier
           [/"(Feature|FeatureCollection|Point|MultiPoint|LineString|MultiLineString|Polygon|MultiPolygon|GeometryCollection)"/, 'type.identifier'],
-          // CRS 相关字符串值（name/link）也作为类型标识
-          [/"(EPSG|urn|ogc)":[^"]*"/, 'type.identifier'],
           // 普通字符串值
           [/"([^"\\]|\\.)*"/, 'string'],
           // 数字
@@ -152,6 +140,35 @@ async function ensureMonaco() {
           [/\s+/, 'white'],
         ]
       }
+    })
+
+    // 为 geojson 语言注册语义色：让 type.identifier / string.key 有明确颜色
+    // 在 vs-dark / vs 两个主题中分别定义
+    monacoEditor.defineTheme('gis-dark', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [
+        { token: 'keyword', foreground: '569cd6', fontStyle: 'bold' },            // 关键字段名：蓝色加粗
+        { token: 'string.key', foreground: '9cdcfe' },                             // 属性名：浅蓝
+        { token: 'type.identifier', foreground: '4ec9b0', fontStyle: 'bold' },    // 几何类型：青绿加粗
+        { token: 'string', foreground: 'ce9178' },                                  // 字符串值：橙色
+        { token: 'number', foreground: 'b5cea8' },                                  // 数字：浅绿
+        { token: 'delimiter', foreground: '808080' },                               // 标点：灰色
+      ],
+      colors: {},
+    })
+    monacoEditor.defineTheme('gis-light', {
+      base: 'vs',
+      inherit: true,
+      rules: [
+        { token: 'keyword', foreground: '0000ff', fontStyle: 'bold' },             // 关键字段名：蓝色加粗
+        { token: 'string.key', foreground: '001080' },                              // 属性名：深蓝
+        { token: 'type.identifier', foreground: '267f99', fontStyle: 'bold' },    // 几何类型：青色加粗
+        { token: 'string', foreground: 'a31515' },                                   // 字符串值：红色
+        { token: 'number', foreground: '098658' },                                   // 数字：绿色
+        { token: 'delimiter', foreground: '800000' },                                // 标点：深红
+      ],
+      colors: {},
     })
   }
 
@@ -166,7 +183,9 @@ onMounted(async () => {
   editor = me.create(editorContainer.value, {
     value: displayValue(),
     language: props.language,
-    theme: isActuallyDark.value ? 'vs-dark' : 'vs',
+    theme: props.language === 'geojson'
+      ? (isActuallyDark.value ? 'gis-dark' : 'gis-light')
+      : (isActuallyDark.value ? 'vs-dark' : 'vs'),
     readOnly: props.readOnly,
     minimap: { enabled: props.minimap },
     lineNumbers: 'on',
@@ -179,7 +198,7 @@ onMounted(async () => {
     height: '100%',
     fontSize: 12,
     renderLineHighlight: 'all',
-    folding: props.language === 'json',
+    folding: props.language === 'json' || props.language === 'geojson',
     foldingStrategy: 'auto',
     foldingHighlight: true,
     showFoldingControls: 'mouseover',
@@ -257,7 +276,8 @@ watch(() => props.language, (newLang) => {
 
 watch(isActuallyDark, (dark) => {
   if (!monacoEditor) return
-  monacoEditor.setTheme(dark ? 'vs-dark' : 'vs')
+  const isGeoJson = editor?.getModel()?.getLanguageId() === 'geojson'
+  monacoEditor.setTheme(isGeoJson ? (dark ? 'gis-dark' : 'gis-light') : (dark ? 'vs-dark' : 'vs'))
 })
 
 watch(() => props.readOnly, (ro) => {
