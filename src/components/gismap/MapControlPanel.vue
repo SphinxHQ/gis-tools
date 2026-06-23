@@ -10,9 +10,9 @@
           <gis-crs-selector
             :key="crsSelectorKey"
             mode="all"
-            :compact="true"
             :show-confirm="true"
             @change="handleCrsChange"
+            @cancel="handleCrsCancel"
           />
         </el-popover>
         <button type="button" class="gismap-btn" @click="handleDrawTool('Point')">点</button>
@@ -59,7 +59,10 @@ const handleCleanDraw = () => {
 const handleCrsChange = (crs: CrsInfo) => {
   crsCode.value = crs.epsgCode
   emit('crs-change', crs.epsgCode)
-  // 关闭坐标系选择弹出框
+  crsPopoverRef.value?.hide?.()
+}
+
+const handleCrsCancel = () => {
   crsPopoverRef.value?.hide?.()
 }
 

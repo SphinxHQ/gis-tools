@@ -62,14 +62,38 @@ async function ensureMonaco() {
 
     // WKT 语法高亮
     langs.register({ id: 'wkt' })
+    langs.setLanguageConfiguration('wkt', {
+      brackets: [
+        ['(', ')'],
+      ],
+      autoClosingPairs: [
+        { open: '(', close: ')' },
+      ],
+      surroundingPairs: [
+        { open: '(', close: ')' },
+      ],
+    })
     langs.setMonarchTokensProvider('wkt', {
+      defaultToken: '',
       tokenizer: {
         root: [
-          [/\b(GEOMETRYCOLLECTION|MULTIPOLYGON|MULTILINESTRING|MULTIPOINT|POLYGON|LINESTRING|POINT)\b/, 'keyword'],
-          [/\b(EMPTY|Z|M|ZM)\b/, 'type'],
+          // 几何类型关键字 → 按类型分别着色（与 GeoJSON 对齐）
+          [/\b(POINT|MULTIPOINT)\b/, 'geo.type.point'],
+          [/\b(LINESTRING|MULTILINESTRING)\b/, 'geo.type.line'],
+          [/\b(POLYGON|MULTIPOLYGON)\b/, 'geo.type.polygon'],
+          [/\b(GEOMETRYCOLLECTION)\b/, 'geo.type.collection'],
+          // EMPTY 关键字 → keyword
+          [/\bEMPTY\b/, 'keyword'],
+          // 维度标记 Z / M / ZM → tag
+          [/\b(ZM?|M)\b/, 'tag'],
+          // 坐标数字 → number.coord（独立着色）
+          [/-?\d+\.?\d*(?:[eE][+-]?\d+)?/, 'number.coord'],
+          // 括号 → delimiter.parenthesis
           [/\(|\)/, 'delimiter.parenthesis'],
+          // 逗号 → delimiter.comma
           [/,/, 'delimiter.comma'],
-          [/-?\d+\.?\d*(?:[eE][+-]?\d+)?/, 'number'],
+          // 空白
+          [/\s+/, 'white'],
         ]
       }
     })
@@ -126,8 +150,12 @@ async function ensureMonaco() {
           [/"(type|coordinates|geometry|properties|features|geometries|crs|bbox|name|link|href)"(?=\s*:)/, 'keyword'],
           // 其他字段名（带引号 + 后跟冒号）→ 字符串属性名
           [/"([^"\\]|\\.)*"(?=\s*:)/, 'string.key'],
-          // GeoJSON 几何类型字符串值 → type.identifier
-          [/"(Feature|FeatureCollection|Point|MultiPoint|LineString|MultiLineString|Polygon|MultiPolygon|GeometryCollection)"/, 'type.identifier'],
+          // 几何类型字符串值 → 按类型分别着色
+          [/"(Point|MultiPoint)"/, 'geo.type.point'],
+          [/"(LineString|MultiLineString)"/, 'geo.type.line'],
+          [/"(Polygon|MultiPolygon)"/, 'geo.type.polygon'],
+          [/"(Feature)"/, 'geo.type.feature'],
+          [/"(FeatureCollection|GeometryCollection)"/, 'geo.type.collection'],
           // 普通字符串值
           [/"([^"\\]|\\.)*"/, 'string'],
           // 数字
@@ -148,12 +176,22 @@ async function ensureMonaco() {
       base: 'vs-dark',
       inherit: true,
       rules: [
-        { token: 'keyword', foreground: '569cd6', fontStyle: 'bold' },            // 关键字段名：蓝色加粗
-        { token: 'string.key', foreground: '9cdcfe' },                             // 属性名：浅蓝
-        { token: 'type.identifier', foreground: '4ec9b0', fontStyle: 'bold' },    // 几何类型：青绿加粗
-        { token: 'string', foreground: 'ce9178' },                                  // 字符串值：橙色
-        { token: 'number', foreground: 'b5cea8' },                                  // 数字：浅绿
-        { token: 'delimiter', foreground: '808080' },                               // 标点：灰色
+        // 通用
+        { token: 'keyword', foreground: '569cd6', fontStyle: 'bold' },            // 关键字段名 / EMPTY
+        { token: 'string.key', foreground: '9cdcfe' },                             // 属性名
+        { token: 'string', foreground: 'ce9178' },                                  // 字符串值
+        { token: 'number', foreground: 'b5cea8' },                                  // 数字
+        { token: 'number.coord', foreground: 'dcdcaa' },                            // 坐标数字
+        { token: 'tag', foreground: 'c586c0' },                                     // 维度标记 Z/M
+        { token: 'delimiter', foreground: '808080' },                               // 标点
+        { token: 'delimiter.parenthesis', foreground: 'ffd700' },                   // 括号
+        { token: 'delimiter.comma', foreground: '6a9955' },                         // 逗号
+        // 几何类型按约定颜色（dark 模式提亮）
+        { token: 'geo.type.point', foreground: '6aafe6', fontStyle: 'bold' },       // 点 #4A90D9 → 提亮
+        { token: 'geo.type.line', foreground: '6fe89c', fontStyle: 'bold' },        // 线 #50C878 → 提亮
+        { token: 'geo.type.polygon', foreground: 'ffa85c', fontStyle: 'bold' },     // 面 #FF8C42 → 提亮
+        { token: 'geo.type.feature', foreground: 'f472b6', fontStyle: 'bold' },     // Feature 粉色
+        { token: 'geo.type.collection', foreground: 'd6a8f0', fontStyle: 'bold' },   // 集合类 淡紫
       ],
       colors: {},
     })
@@ -161,12 +199,22 @@ async function ensureMonaco() {
       base: 'vs',
       inherit: true,
       rules: [
-        { token: 'keyword', foreground: '0000ff', fontStyle: 'bold' },             // 关键字段名：蓝色加粗
-        { token: 'string.key', foreground: '001080' },                              // 属性名：深蓝
-        { token: 'type.identifier', foreground: '267f99', fontStyle: 'bold' },    // 几何类型：青色加粗
-        { token: 'string', foreground: 'a31515' },                                   // 字符串值：红色
-        { token: 'number', foreground: '098658' },                                   // 数字：绿色
-        { token: 'delimiter', foreground: '800000' },                                // 标点：深红
+        // 通用
+        { token: 'keyword', foreground: '0000ff', fontStyle: 'bold' },             // 关键字段名 / EMPTY
+        { token: 'string.key', foreground: '001080' },                              // 属性名
+        { token: 'string', foreground: 'a31515' },                                   // 字符串值
+        { token: 'number', foreground: '098658' },                                   // 数字
+        { token: 'number.coord', foreground: '795e26' },                            // 坐标数字
+        { token: 'tag', foreground: '9b2d9b' },                                     // 维度标记 Z/M
+        { token: 'delimiter', foreground: '800000' },                                // 标点
+        { token: 'delimiter.parenthesis', foreground: '000000' },                   // 括号
+        { token: 'delimiter.comma', foreground: '008000' },                          // 逗号
+        // 几何类型按约定颜色
+        { token: 'geo.type.point', foreground: '4A90D9', fontStyle: 'bold' },       // 点
+        { token: 'geo.type.line', foreground: '50C878', fontStyle: 'bold' },        // 线
+        { token: 'geo.type.polygon', foreground: 'FF8C42', fontStyle: 'bold' },     // 面
+        { token: 'geo.type.feature', foreground: 'c2185b', fontStyle: 'bold' },     // Feature 粉色
+        { token: 'geo.type.collection', foreground: '9b2d9b', fontStyle: 'bold' },   // 集合类 紫色
       ],
       colors: {},
     })
@@ -181,9 +229,9 @@ onMounted(async () => {
   const me = await ensureMonaco()
 
   editor = me.create(editorContainer.value, {
-    value: displayValue(),
+    value: '',
     language: props.language,
-    theme: props.language === 'geojson'
+    theme: (props.language === 'geojson' || props.language === 'wkt')
       ? (isActuallyDark.value ? 'gis-dark' : 'gis-light')
       : (isActuallyDark.value ? 'vs-dark' : 'vs'),
     readOnly: props.readOnly,
@@ -194,8 +242,6 @@ onMounted(async () => {
     // 开启自动布局：监听容器尺寸变化并重新排版，否则在弹窗/异步布局中会渲染成"一条线"
     automaticLayout: true,
     // 显式声明占满父容器
-    width: '100%',
-    height: '100%',
     fontSize: 12,
     renderLineHighlight: 'all',
     folding: props.language === 'json' || props.language === 'geojson',
@@ -233,6 +279,17 @@ onMounted(async () => {
   })
 
   loading.value = false
+
+  // 延迟设置初始内容，确保自定义语言/主题已完全生效
+  requestAnimationFrame(() => {
+    if (editor) {
+      const initial = displayValue()
+      if (initial) {
+        ignoreNextChange = true
+        editor.setValue(initial)
+      }
+    }
+  })
 
   editor.onDidChangeModelContent(() => {
     if (ignoreNextChange) {
@@ -277,7 +334,9 @@ watch(() => props.language, (newLang) => {
 watch(isActuallyDark, (dark) => {
   if (!monacoEditor) return
   const isGeoJson = editor?.getModel()?.getLanguageId() === 'geojson'
-  monacoEditor.setTheme(isGeoJson ? (dark ? 'gis-dark' : 'gis-light') : (dark ? 'vs-dark' : 'vs'))
+  const isWkt = editor?.getModel()?.getLanguageId() === 'wkt'
+  const useGisTheme = isGeoJson || isWkt
+  monacoEditor.setTheme(useGisTheme ? (dark ? 'gis-dark' : 'gis-light') : (dark ? 'vs-dark' : 'vs'))
 })
 
 watch(() => props.readOnly, (ro) => {

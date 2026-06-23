@@ -11,9 +11,9 @@ import GisDataInfo from "~/components/data/GisDataInfo";
 import {GisFileData} from "~/components/data/LocalDb";
 import MapDrawer from "~/components/data/MapDrawer.vue";
 import {TipLog, TipLogger} from "~/components/data/TipLogger";
-import VertexCountBadge from "~/components/data/VertexCountBadge.vue";
-import GeoTypeIcon from "~/components/icons/GeoTypeIcon.vue";
-import GeoTypeTag from "~/components/icons/GeoTypeTag.vue";
+import VertexCountRender from "~/components/renders/VertexCountRender.vue";
+import GeoTypeIconRender from "~/components/renders/GeoTypeIconRender.vue";
+import GeoTypeRender from "~/components/renders/GeoTypeRender.vue";
 import {localDb} from "~/composables/localDb";
 
 const emitHandler = defineEmits(['read','error'])
@@ -268,7 +268,7 @@ defineExpose({
           <el-table-column label="要素类型" min-width="120">
             <template #default="{ row }">
               <div class="geo-types-cell">
-                <GeoTypeTag
+                <GeoTypeRender
                   v-for="t in (row.types || '').split(', ').filter(Boolean)"
                   :key="t"
                   :type="t"
@@ -280,7 +280,7 @@ defineExpose({
           <el-table-column prop="featureCount" label="要素数" width="70" align="center" />
           <el-table-column label="顶点数" width="90" align="center">
             <template #default="{ row }">
-              <VertexCountBadge :count="row.vertexCount ?? 0" />
+              <VertexCountRender :count="row.vertexCount ?? 0" />
             </template>
           </el-table-column>
         </el-table>

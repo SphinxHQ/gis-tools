@@ -75,6 +75,8 @@ const handles: Record<string, (...args: unknown[]) => unknown> = {
   [MapTypes.CLEAR_EDIT_SHADOW]: async () => map.clearEditShadow(),
   [MapTypes.SET_LAYER_VISIBILITY]: async (_options: unknown, layerName: unknown, visible: unknown) => map.setLayerVisibility(layerName as string, visible as boolean),
   [MapTypes.CLEAN_LAYER]: async (_options: unknown, layerName: unknown) => map.cleanLayer(layerName as string),
+  [MapTypes.REMOVE_DRAW_FEATURE]: async (_options: unknown, featureId: unknown) => map.removeDrawFeature(featureId as string),
+  [MapTypes.TOGGLE_DRAW_FEATURE_VISIBLE]: async (_options: unknown, featureId: unknown, visible: unknown) => map.toggleDrawFeatureVisible(featureId as string, visible as boolean),
 }
 
 /**
@@ -283,6 +285,8 @@ onMounted(async () => {
   eventBus.on(mapName, MapTypes.CLEAR_EDIT_SHADOW, handles[MapTypes.CLEAR_EDIT_SHADOW])
   eventBus.on(mapName, MapTypes.SET_LAYER_VISIBILITY, handles[MapTypes.SET_LAYER_VISIBILITY])
   eventBus.on(mapName, MapTypes.CLEAN_LAYER, handles[MapTypes.CLEAN_LAYER])
+  eventBus.on(mapName, MapTypes.REMOVE_DRAW_FEATURE, handles[MapTypes.REMOVE_DRAW_FEATURE])
+  eventBus.on(mapName, MapTypes.TOGGLE_DRAW_FEATURE_VISIBLE, handles[MapTypes.TOGGLE_DRAW_FEATURE_VISIBLE])
 
   // 通知父组件地图已准备好，可以发送事件
   const mapReadyEvent = new GisEvent('map-ready', null);

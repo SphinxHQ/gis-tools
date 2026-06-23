@@ -24,7 +24,7 @@ import GisDataInfo from "~/components/data/GisDataInfo";
 import GisFeatureEditor from "~/components/data/GisFeatureEditor.vue";
 import GisMapTianditu from "~/components/gismap/GisMapTianditu.vue";
 import {GisMapAddFeaturesEvent, GisMapflashFeaturesEvent, GisMapStopModifyEvent} from "~/components/gismap/events/GisMapEvents";
-import GeoTypeIcon from "~/components/icons/GeoTypeIcon.vue";
+import GeoTypeIconRender from "~/components/renders/GeoTypeIconRender.vue";
 import {eventBus} from "~/composables/eventBus";
 
 
@@ -904,7 +904,7 @@ watch(validResult, () => {
 >
               <template #default="{ data: nodeData }">
                 <span v-if="nodeData" :class="`custom-tree-node ${nodeData.disabled?'disabled':''}`">
-                  <GeoTypeIcon v-if="nodeData.geoType" :type="nodeData.geoType" :size="13" />
+                  <GeoTypeIconRender v-if="nodeData.geoType" :type="nodeData.geoType" :size="13" />
                   <span class="key">{{ splitLabel(nodeData.label).name }}</span>
                   <el-tag v-if="nodeData.label2" size="small" :type="label2TagType(nodeData)" effect="plain" round class="label2">
                     {{ nodeData.label2 }}
@@ -927,7 +927,7 @@ watch(validResult, () => {
 >
                 <template #default="{ data: nodeData }">
                   <span v-if="nodeData" :class="`custom-tree-node error ${nodeData.disabled?'disabled':''}`">
-                  <GeoTypeIcon v-if="nodeData.geoType" :type="nodeData.geoType" :size="13" />
+                  <GeoTypeIconRender v-if="nodeData.geoType" :type="nodeData.geoType" :size="13" />
                     <span class="key">{{ splitLabel(nodeData.label).name }}</span>
                     <el-tag v-if="nodeData.label2" size="small" type="danger" effect="plain" round class="label2">
                       {{ nodeData.label2 }}

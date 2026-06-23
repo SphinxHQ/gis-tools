@@ -616,6 +616,31 @@ export class GisMap extends EventBase {
         this.cleanLayer(DefaultLayerNames.SYS_DRAW_TOOL_DISPLAY);
     }
 
+    removeDrawFeature(featureId: string) {
+        const displayLayer = this.getLayerByName(DefaultLayerNames.SYS_DRAW_TOOL_DISPLAY) as SysGisMapLayer;
+        if (displayLayer) {
+            displayLayer.removeFeatureById?.(featureId);
+        }
+    }
+
+    toggleDrawFeatureVisible(featureId: string, visible: boolean) {
+        const displayLayer = this.getLayerByName(DefaultLayerNames.SYS_DRAW_TOOL_DISPLAY) as SysGisMapLayer;
+        if (!displayLayer?.source) return;
+        const olFeature = displayLayer.source.getFeatureById(featureId) as Feature | null;
+        if (!olFeature) return;
+        if (visible) {
+            // 恢复原始样式
+            const originalStyle = olFeature.get('_originalStyle');
+            olFeature.setStyle(originalStyle ?? undefined);
+            olFeature.set('_hidden', false);
+        } else {
+            // 保存当前样式并隐藏
+            olFeature.set('_originalStyle', olFeature.getStyle());
+            olFeature.setStyle(new Style({}));
+            olFeature.set('_hidden', true);
+        }
+    }
+
     /**
      * 启动要素编辑：
      * 1. 隐藏输入数据源(VECTOR_INPUT)，完全隔离

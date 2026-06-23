@@ -8,6 +8,7 @@ import { logger } from '~/common/logger'
 import GisCrs from '~/components/data/GisCrs'
 import GisDataInfo from '~/components/data/GisDataInfo'
 import { CrsInfo } from '~/components/data/GisProjectedBounds'
+import { CrsCategory } from '~/enums'
 
 const props = defineProps({
   data: {
@@ -63,8 +64,8 @@ const transformData = (data: GisDataInfo, toCrs: CrsInfo | undefined) => {
         else if (simpleName.includes('80')) crsLabel = '西安80坐标系';
         data.descriptions['坐标系'] = crsLabel
         data.descriptions['几度分带'] = (toCrs.zoneDegree ?? 0) > 0 ? toCrs.zoneDegree : ''
-        data.descriptions['投影类型'] = toCrs.projected ? '高斯克吕格' : ''
-        data.descriptions['计量单位'] = toCrs.projected ? '米' : '度'
+        data.descriptions['投影类型'] = CrsCategory.fromProjected(toCrs.projected) === CrsCategory.Projected ? '高斯克吕格' : ''
+        data.descriptions['计量单位'] = CrsCategory.fromProjected(toCrs.projected) === CrsCategory.Projected ? '米' : '度'
         data.descriptions['带号'] = (toCrs.zoneNumber ?? 0) > 0 ? String(toCrs.zoneNumber) : ''
       }
     }
@@ -229,8 +230,8 @@ const handleResetCrs = (crs: CrsInfo) => {
       else if (simpleName.includes('80')) crsLabel = '西安80坐标系';
       activeTab.value.data.descriptions['坐标系'] = crsLabel
       activeTab.value.data.descriptions['几度分带'] = (crs.zoneDegree ?? 0) > 0 ? crs.zoneDegree : ''
-      activeTab.value.data.descriptions['投影类型'] = crs.projected ? '高斯克吕格' : ''
-      activeTab.value.data.descriptions['计量单位'] = crs.projected ? '米' : '度'
+      activeTab.value.data.descriptions['投影类型'] = CrsCategory.fromProjected(crs.projected) === CrsCategory.Projected ? '高斯克吕格' : ''
+      activeTab.value.data.descriptions['计量单位'] = CrsCategory.fromProjected(crs.projected) === CrsCategory.Projected ? '米' : '度'
       activeTab.value.data.descriptions['带号'] = (crs.zoneNumber ?? 0) > 0 ? String(crs.zoneNumber) : ''
     }
     // 如果是原始Tab，同步到 originData 并清除所有转换Tab

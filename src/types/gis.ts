@@ -88,14 +88,7 @@ export type Coordinate = number[];
 
 export type Extent = [number, number, number, number];
 
-export type GeometryType = 
-    | 'Point' 
-    | 'LineString' 
-    | 'Polygon' 
-    | 'MultiPoint' 
-    | 'MultiLineString' 
-    | 'MultiPolygon' 
-    | 'GeometryCollection';
+export type { GeometryTypeValue as GeometryType } from '~/enums'
 
 export interface GisValidationError {
     code: string;

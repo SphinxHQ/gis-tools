@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /**
- * 几何类型图标组件
+ * 几何类型图标渲染组件
  * 使用 src/assets/geo-icons/ 下的纯色 SVG 作为固定资产
- * 语义色：点=蓝 线=绿 面=橙 集合=灰
+ * 语义色：点=蓝 线=绿 面=橙  集合=灰
  */
 import { computed } from 'vue'
 
@@ -31,15 +31,14 @@ const ICON_MAP: Record<string, string> = {
   GeometryCollection: collectionIcon,
 }
 
-const src = computed(() => props.type ? (ICON_MAP[props.type] ?? collectionIcon) : collectionIcon)
+ const src = computed(() => props.type ? (ICON_MAP[props.type] ?? collectionIcon) : collectionIcon)
 </script>
 
 <template>
-  <img :src="src" :width="size" :height="size" class="geo-type-icon" alt="" />
+  <img :src="src" :width="size" :height="size" class="geo-type-icon-render" alt="" />
 </template>
-
 <style scoped>
-.geo-type-icon {
+.geo-type-icon-render {
   display: inline-block;
   vertical-align: middle;
   flex-shrink: 0;

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import {ElMessageBox} from "element-plus";
 import {getCurrentInstance, onBeforeUnmount, onMounted, ref} from "vue";
+import {View, Hide, Delete} from '@element-plus/icons-vue'
 
 import GeomUtils from "~/common/GeomUtils";
-import {Types} from "~/components/gismap/events/GisMapEvents";
+import {GisMapRemoveDrawFeatureEvent, GisMapToggleDrawFeatureVisibleEvent, Types} from "~/components/gismap/events/GisMapEvents";
 import {GisMapLayer} from "~/components/gismap/layer/GisLayer";
 import {eventBus} from "~/composables/eventBus";
 
@@ -12,7 +13,7 @@ const emit = defineEmits<{
   'change': []
   'submit': [features: Record<string, unknown>[], crsEpsg: number]
 }>()
-const featureList = ref<Array<{id: string; type: string; feature: Record<string, unknown>}>>([])
+const featureList = ref<Array<{id: string; type: string; feature: Record<string, unknown>; hidden?: boolean}>>([])
 const elHeight = ref(0)
 const mapProjection = ref<number>(4490)
 const mapKey = ref(0) // 用于强制重建地图组件
@@ -37,7 +38,8 @@ const handle  =(option: any, name: string, layer?: GisMapLayer) => {
       featureList.value.push(...(allFeatures as Record<string, unknown>[]).map((x) => ({
         id: x.id as string,
         type: GeomUtils.getTypeName((x.geometry as Record<string, string>)?.type),
-        feature: x
+        feature: x,
+        hidden: false,
       })));
     }
   }
@@ -46,6 +48,20 @@ eventBus.on(mapName, Types.NOTIFY, handle )
 onBeforeUnmount(()=>{
   eventBus.off(mapName, Types.NOTIFY, handle )
 })
+
+// 移除绘制要素
+const handleRemove = (id: string) => {
+  featureList.value = featureList.value.filter(x => x.id !== id)
+  eventBus.emit(mapName, new GisMapRemoveDrawFeatureEvent(id))
+}
+
+// 隐藏/显示绘制要素
+const handleToggleVisible = (id: string) => {
+  const item = featureList.value.find(x => x.id === id)
+  if (!item) return
+  item.hidden = !item.hidden
+  eventBus.emit(mapName, new GisMapToggleDrawFeatureVisibleEvent(id, !item.hidden))
+}
 
 const handleCrsChange = async (epsgCode: number) => {
   if (featureList.value.length > 0) {
@@ -72,7 +88,16 @@ const handleCrsChange = async (epsgCode: number) => {
         <el-table :height="elHeight - 40" :data="featureList">
           <el-table-column type="index" label="序号" width="50" />
           <el-table-column prop="type" label="类型" width="50" />
-          <el-table-column label="操作" />
+          <el-table-column label="操作" min-width="80">
+            <template #default="{ row }">
+              <el-button text size="small" @click="handleToggleVisible(row.id)" :title="row.hidden ? '显示' : '隐藏'">
+                <el-icon><View v-if="row.hidden" /><Hide v-else /></el-icon>
+              </el-button>
+              <el-button text size="small" type="danger" @click="handleRemove(row.id)" title="移除">
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </template>
+          </el-table-column>
         </el-table>
       </div>
       <div class="md-left-bottom">

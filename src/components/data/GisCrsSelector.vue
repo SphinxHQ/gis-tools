@@ -4,7 +4,9 @@ import { computed, ref } from 'vue'
 
 import GisCrs from '~/components/data/GisCrs'
 import { CrsBounds, CrsInfo } from '~/components/data/GisProjectedBounds'
+import { CrsCategory } from '~/enums'
 import { registerProj4Def } from '~/components/gismap/proj4Defs'
+import CrsInfoRender from '~/components/renders/CrsInfoRender.vue'
 
 const props = defineProps({
   /** 禁用的 EPSG 代码列表 */
@@ -32,13 +34,28 @@ const props = defineProps({
     type: Boolean,
     default: true
   },
+  /** 确认按钮文字 */
+  confirmText: {
+    type: String,
+    default: '确定'
+  },
+  /** 是否在顶部展示源坐标系信息（转换场景） */
+  showSourceInfo: {
+    type: Boolean,
+    default: false
+  },
 })
 
 const emit = defineEmits<{
   change: [value: CrsInfo]
+  cancel: []
 }>()
 
-// === 根据模式过滤 CRS 列表 ===
+// === 类型筛选 ===
+type CategoryFilter = 'all' | 'geographic' | 'projected'
+const categoryFilter = ref<CategoryFilter>('all')
+
+// === 根据模式 + 类型筛选过滤 CRS 列表 ===
 const baseCrsList = computed(() => {
   let list = Object.values(CrsBounds).sort((a, b) => a.epsgCode - b.epsgCode)
   switch (props.mode) {
@@ -56,99 +73,48 @@ const baseCrsList = computed(() => {
   }
 })
 
+const categoryFilteredList = computed(() => {
+  switch (categoryFilter.value) {
+    case 'geographic':
+      return baseCrsList.value.filter(c => !c.projected)
+    case 'projected':
+      return baseCrsList.value.filter(c => c.projected)
+    default:
+      return baseCrsList.value
+  }
+})
+
 // === 搜索功能 ===
 const searchText = ref('')
 const filteredCrsList = computed(() => {
   const keyword = searchText.value.trim().toLowerCase()
-  if (!keyword) return baseCrsList.value
-  return baseCrsList.value.filter(c =>
+  if (!keyword) return categoryFilteredList.value
+  return categoryFilteredList.value.filter(c =>
     c.name.toLowerCase().includes(keyword) ||
     String(c.epsgCode).includes(keyword) ||
     c.name.split('/')[0].trim().toLowerCase().includes(keyword)
   )
 })
-const selectedCrsFromSearch = ref<CrsInfo | null>(null)
-const handleSearchSelect = (crs: CrsInfo) => {
-  selectedCrsFromSearch.value = crs
-  curCrsInfo.value = crs
-  // 同步到 cascader
-  const family = crs.name.split('/')[0].trim()
-  const projected = crs.projected
-  const cascaderValues: (string | number)[] = []
-  cascaderValues.push(projected ? 0 : 2)
-  cascaderValues.push(family)
-  cascaderValues.push(crs.epsgCode)
-  cascader.value = cascaderValues
+
+// 按族名分组
+const groupedCrsList = computed(() => {
+  const groups: Record<string, CrsInfo[]> = {}
+  for (const crs of filteredCrsList.value) {
+    const family = crs.name.split('/')[0].trim()
+    if (!groups[family]) groups[family] = []
+    groups[family].push(crs)
+  }
+  return groups
+})
+
+const selectedCrs = ref<CrsInfo | null>(null)
+const isDisabled = (crs: CrsInfo) => props.disableValues.includes(crs.epsgCode)
+
+const handleSelect = (crs: CrsInfo) => {
+  if (isDisabled(crs)) return
+  selectedCrs.value = crs
   if (!props.showConfirm) {
     emit('change', crs)
-  }
-}
-const isSearchActive = computed(() => searchText.value.trim().length > 0)
-
-// === Cascader 浏览 ===
-type CascaderOptions = {
-  key: any,
-  label: string,
-  disabled: boolean,
-  value?: any,
-  isLeaf?: boolean,
-  children?: CascaderOptions[]
-}
-
-const generateData = () => {
-  const optPrj: CascaderOptions = {
-    key: 0,
-    label: '投影',
-    disabled: false,
-    value: { name: '投影' },
-    children: []
-  };
-  const optGra: CascaderOptions = {
-    key: 2,
-    label: '地理',
-    disabled: false,
-    value: { name: '地理' },
-    children: []
-  }
-  baseCrsList.value.forEach(item => {
-    const projected = item.projected;
-    const groupName = item.name.split("/")[0].trim();
-    let _opt = projected ? optPrj : optGra;
-    if (!_opt.children?.some((item: any) => item.label === groupName)) {
-      _opt.children?.push({
-        key: groupName,
-        label: groupName,
-        disabled: false,
-        children: []
-      })
-    }
-    const find = _opt?.children?.find(item => item.label === groupName);
-    // 叶子节点标签：去掉分组前缀，只保留后半部分
-    const shortName = item.name.split("/").slice(1).join("/").trim() || item.name;
-    find?.children?.push({
-      key: item.epsgCode,
-      label: `EPSG:${item.epsgCode} ${shortName}`,
-      value: item,
-      isLeaf: true,
-      disabled: props.disableValues.includes(item.epsgCode)
-    })
-  });
-  const result = []
-  if (optPrj.children && optPrj.children.length > 0) result.push(optPrj)
-  if (optGra.children && optGra.children.length > 0) result.push(optGra)
-  return result
-}
-
-const cascaderOptions = computed(() => generateData())
-const cascader = ref()
-const curCrsInfo = ref<CrsInfo>({} as CrsInfo)
-const handleChange = (value: any[]) => {
-  if (value && value[2]) {
-    curCrsInfo.value = value[2]
-    selectedCrsFromSearch.value = value[2]
-    if (!props.showConfirm) {
-      emit('change', value[2])
-    }
   }
 }
 
@@ -188,8 +154,10 @@ const handleCustomRegister = () => {
       name: `Custom EPSG:${code}`,
       centralMeridian: 0,
     }
-    curCrsInfo.value = customCrsInfo
-    selectedCrsFromSearch.value = customCrsInfo
+    selectedCrs.value = customCrsInfo
+    if (!props.showConfirm) {
+      emit('change', customCrsInfo)
+    }
   } catch (e: unknown) {
     customError.value = e instanceof Error ? e.message : '注册失败'
   }
@@ -197,101 +165,102 @@ const handleCustomRegister = () => {
 
 // 确认选择
 const handleConfirm = () => {
-  if (curCrsInfo.value?.epsgCode) {
-    emit('change', curCrsInfo.value)
+  if (selectedCrs.value?.epsgCode) {
+    emit('change', selectedCrs.value)
   }
 }
 </script>
 
 <template>
   <div class="crs-selector" :class="{ 'crs-selector--compact': compact }">
-    <!-- 搜索区域 -->
-    <el-input
-      v-model="searchText"
-      placeholder="搜索坐标系（名称或EPSG代码）"
-      clearable
-      class="crs-search"
-    >
-      <template #prefix>
-        <el-icon><search /></el-icon>
-      </template>
-    </el-input>
-
-    <!-- 搜索结果 -->
-    <div v-if="isSearchActive" class="crs-search-results">
-      <el-scrollbar :height="compact ? '200px' : '300px'">
-        <div
-          v-for="crs in filteredCrsList"
-          :key="crs.epsgCode"
-          class="crs-search-item"
-          :class="{
-            'is-selected': selectedCrsFromSearch?.epsgCode === crs.epsgCode,
-            'is-disabled': disableValues.includes(crs.epsgCode)
-          }"
-          @click="!disableValues.includes(crs.epsgCode) && handleSearchSelect(crs)"
-        >
-          <span class="crs-search-item-code">EPSG:{{ crs.epsgCode }}</span>
-          <span class="crs-search-item-name">{{ crs.name }}</span>
-          <el-tag size="small" :type="crs.projected ? 'warning' : 'success'">
-            {{ crs.projected ? '投影' : '地理' }}
-          </el-tag>
-        </div>
-        <div v-if="filteredCrsList.length === 0" class="crs-search-empty">
-          未找到匹配的坐标系
-        </div>
-      </el-scrollbar>
+    <!-- 源坐标系信息（转换场景） -->
+    <div v-if="showSourceInfo && sourceCrs" class="source-info">
+      <span class="source-label">当前坐标系：</span>
+      <CrsInfoRender :crs-info="sourceCrs" display="epsgCode" />
+      <CrsInfoRender :crs-info="sourceCrs" display="projected" />
     </div>
 
-    <!-- Cascader 浏览 -->
-    <div v-else>
-      <el-cascader-panel
-        v-model="cascader"
-        filterable
-        class="w-full"
-        :options="cascaderOptions"
-        @change="handleChange"
+    <!-- 搜索 + 类型筛选 -->
+    <div class="crs-search-bar">
+      <el-input
+        v-model="searchText"
+        placeholder="搜索坐标系（名称或EPSG代码）"
+        clearable
+        class="crs-search-input"
       >
-        <template #default="{ data }">
-          <span>{{ data.label }}</span>
-          <span v-if="data.children"> ({{ data.children.length }}) </span>
+        <template #prefix>
+          <el-icon><search /></el-icon>
         </template>
-      </el-cascader-panel>
+      </el-input>
+      <el-select v-model="categoryFilter" class="crs-category-select" v-if="mode === 'all' || mode === 'compatible'">
+        <el-option label="全部" value="all" />
+        <el-option label="地理" value="geographic" />
+        <el-option label="投影" value="projected" />
+      </el-select>
     </div>
 
-    <!-- 选中信息（非紧凑模式） -->
-    <el-descriptions v-if="!compact && curCrsInfo?.epsgCode" border :column="2" class="crs-detail">
+    <!-- 坐标系列表 -->
+    <el-scrollbar :height="compact ? '200px' : '300px'" class="crs-list">
+      <div v-for="(crsList, family) in groupedCrsList" :key="family" class="crs-group">
+        <div class="crs-group-title">{{ family }}</div>
+        <div
+          v-for="crs in crsList"
+          :key="crs.epsgCode"
+          class="crs-item"
+          :class="{
+            'is-selected': selectedCrs?.epsgCode === crs.epsgCode,
+            'is-disabled': isDisabled(crs)
+          }"
+          @click="handleSelect(crs)"
+        >
+          <CrsInfoRender :crs-info="crs" display="projected" />
+          <span class="crs-item-code">EPSG:{{ crs.epsgCode }}</span>
+          <span class="crs-item-name">{{ crs.name }}</span>
+        </div>
+      </div>
+      <div v-if="filteredCrsList.length === 0" class="crs-list-empty">
+        未找到匹配的坐标系
+      </div>
+    </el-scrollbar>
+
+    <!-- 选中详情（非紧凑模式） -->
+    <el-descriptions v-if="!compact && selectedCrs?.epsgCode" border :column="2" class="crs-detail">
       <el-descriptions-item label-class-name="w-80px" label="坐标系名称">
-        <span class="c-value">{{ curCrsInfo.name }}</span>
+        <CrsInfoRender :crs-info="selectedCrs" display="name" />
       </el-descriptions-item>
       <el-descriptions-item label-class-name="w-80px" label="坐标系代码">
-        <span class="c-value">{{ curCrsInfo.epsgCode }}</span>
+        <CrsInfoRender :crs-info="selectedCrs" display="epsgCode" />
       </el-descriptions-item>
       <el-descriptions-item label-class-name="w-80px" label="坐标系类型">
-        <span class="c-value">{{ curCrsInfo.projected ? '投影坐标系' : '地理坐标系' }}</span>
+        <CrsInfoRender :crs-info="selectedCrs" display="projected" />
       </el-descriptions-item>
       <el-descriptions-item label-class-name="w-80px" label="带号">
-        <span class="c-value">{{ curCrsInfo.withZone ? curCrsInfo.zoneNumber : '无' }}</span>
+        <CrsInfoRender :crs-info="selectedCrs" display="withZone" />
       </el-descriptions-item>
       <el-descriptions-item label-class-name="w-80px" label="中央经线">
-        <span class="c-value">{{ curCrsInfo.centralMeridian }}</span>
+        <CrsInfoRender :crs-info="selectedCrs" display="centralMeridian" />
       </el-descriptions-item>
       <el-descriptions-item label-class-name="w-80px" label="经度范围">
-        <span class="c-value">{{ curCrsInfo.minLon }} ~ {{ curCrsInfo.maxLon }}</span>
+        <CrsInfoRender :crs-info="selectedCrs" display="minLon" /> ~ <CrsInfoRender :crs-info="selectedCrs" display="maxLon" />
       </el-descriptions-item>
     </el-descriptions>
 
-    <!-- 操作栏 -->
-    <div v-if="showConfirm || !compact" class="c-button">
-      <el-button v-if="!compact" size="small" @click="showCustomInput = !showCustomInput">
-        自定义proj4
+    <!-- 操作栏：左下 注册自定义坐标系，右下 按钮组 -->
+    <div class="crs-footer">
+      <el-button size="small" @click="showCustomInput = !showCustomInput">
+        注册自定义坐标系
       </el-button>
-      <el-button v-if="showConfirm" type="primary" :disabled="!curCrsInfo?.epsgCode" @click="handleConfirm">
-        确定
-      </el-button>
+      <div class="crs-footer-right">
+        <slot name="footer-extra" />
+        <el-button @click="emit('cancel')">取消</el-button>
+        <el-button v-if="showConfirm" type="primary" :disabled="!selectedCrs?.epsgCode" @click="handleConfirm">
+          {{ confirmText }}
+        </el-button>
+      </div>
     </div>
 
-    <!-- 自定义 proj4 输入（非紧凑模式） -->
-    <div v-if="!compact && showCustomInput" class="custom-proj4">
+    <!-- 自定义 proj4 输入 -->
+    <div v-if="showCustomInput" class="custom-proj4">
       <el-input v-model="customEpsg" placeholder="EPSG代码，如 32650" size="small" />
       <el-input
         v-model="customDef"
@@ -317,16 +286,53 @@ const handleConfirm = () => {
   gap: 6px;
 }
 
-.crs-search {
+.source-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--el-fill-color-lighter);
+  border-radius: 6px;
+}
+
+.source-label {
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
+
+.crs-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.crs-search-input {
+  flex: 1;
+}
+
+.crs-category-select {
+  width: 100px;
   flex-shrink: 0;
 }
 
-.crs-search-results {
+.crs-list {
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 6px;
 }
 
-.crs-search-item {
+.crs-group-title {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--el-text-color-secondary);
+  background: var(--el-fill-color-light);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  letter-spacing: 0.3px;
+}
+
+.crs-item {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -335,27 +341,27 @@ const handleConfirm = () => {
   transition: background 0.15s;
 }
 
-.crs-search-item:hover {
+.crs-item:hover:not(.is-disabled) {
   background: var(--el-fill-color-light);
 }
 
-.crs-search-item.is-selected {
+.crs-item.is-selected {
   background: var(--el-color-primary-light-9);
 }
 
-.crs-search-item.is-disabled {
+.crs-item.is-disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.crs-search-item-code {
+.crs-item-code {
   font-family: monospace;
   font-size: 13px;
   color: var(--el-color-primary);
   min-width: 90px;
 }
 
-.crs-search-item-name {
+.crs-item-name {
   flex: 1;
   font-size: 13px;
   overflow: hidden;
@@ -363,7 +369,7 @@ const handleConfirm = () => {
   white-space: nowrap;
 }
 
-.crs-search-empty {
+.crs-list-empty {
   padding: 20px;
   text-align: center;
   color: var(--el-text-color-secondary);
@@ -373,18 +379,16 @@ const handleConfirm = () => {
   flex-shrink: 0;
 }
 
-.c-value {
-  display: inline-block;
-  width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  vertical-align: middle;
-}
-
-.c-button {
+.crs-footer {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.crs-footer-right {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -400,26 +404,5 @@ const handleConfirm = () => {
 .custom-error {
   color: var(--el-color-danger);
   font-size: 12px;
-}
-
-/**
- * 级联面板：3列横排，每列 200px，总宽 600px 适配 640px popover
- */
-:deep(.el-cascader-panel) {
-  width: 600px;
-  background: var(--el-bg-color);
-  border: 1px solid var(--el-border-color-lighter);
-}
-
-:deep(.el-cascader-panel .el-cascader-menu) {
-  min-width: 200px;
-  max-width: 200px;
-}
-
-:deep(.el-cascader-panel .el-cascader-menu .el-cascader-node__label) {
-  font-size: 13px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 </style>

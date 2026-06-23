@@ -21,7 +21,7 @@ import Common from '~/common/Common'
 import GeomUtils from '~/common/GeomUtils'
 import { logger } from '~/common/logger'
 import GisDataInfo from '~/components/data/GisDataInfo'
-import GeoTypeIcon from '~/components/icons/GeoTypeIcon.vue'
+import GeoTypeIconRender from '~/components/renders/GeoTypeIconRender.vue'
 import {
   GisMapStartModifyEvent, GisMapStopModifyEvent,
   GisMapUpdateEditFeatureEvent, GisMapflashFeaturesEvent,
@@ -571,7 +571,7 @@ defineExpose({ hasEdits, workingFeatures, activate, deactivate })
         <div v-for="item in featureList" :key="item.idx" class="feature-item" :class="{ selected: item.selected }" @click="clickFeatureRow(item.idx)">
           <el-checkbox :model-value="item.selected" @change="toggleFeatureSelect(item.idx)" class="feature-check" @click.stop />
           <div class="feature-item-body">
-            <GeoTypeIcon :type="item.type" :size="14" />
+            <GeoTypeIconRender :type="item.type" :size="14" />
             <span class="feature-label">{{ item.label }}</span>
             <el-tag size="small" effect="plain" round>{{ geoTypeName(item.type) }}</el-tag>
           </div>

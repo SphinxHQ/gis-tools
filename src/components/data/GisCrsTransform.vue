@@ -237,7 +237,13 @@ const handleSample = (type: string) => {
       <gis-crs-selector @change="(crs: CrsInfo) => { handleSourceCrsChange(crs); ($refs.sourceDialog as any).visible = false }" />
     </el-dialog>
     <el-dialog ref="targetDialog" title="选择目标坐标系" width="700" :append-to-body="true">
-      <gis-crs-selector @change="(crs: CrsInfo) => { handleTargetCrsChange(crs); ($refs.targetDialog as any).visible = false }" />
+      <gis-crs-selector
+        mode="compatible"
+        :source-crs="sourceCrsInfo"
+        :show-source-info="true"
+        confirm-text="选择"
+        @change="(crs: CrsInfo) => { handleTargetCrsChange(crs); ($refs.targetDialog as any).visible = false }"
+      />
     </el-dialog>
   </div>
 </template>

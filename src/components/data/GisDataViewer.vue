@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import {ShapefileParser, GeoJSONFeatureCollection} from "@sphinx_hq/shapefile-parser";
-import {ElMessage} from "element-plus";
-import {computed, Ref, ref, watch} from "vue";
+import { ShapefileParser, GeoJSONFeatureCollection } from "@sphinx_hq/shapefile-parser";
+import { ElMessage } from "element-plus";
+import { computed, Ref, ref, watch } from "vue";
 
-import {ExchangeDataFormat} from "~/components/data/ExchangeDataFormat";
+import { ExchangeDataFormat } from "~/components/data/ExchangeDataFormat";
+import CrsInfoRender from "~/components/renders/CrsInfoRender.vue";
 import GisDataInfo from "~/components/data/GisDataInfo";
-import VertexCountBadge from "~/components/data/VertexCountBadge.vue";
-import GeoTypeIcon from "~/components/icons/GeoTypeIcon.vue";
-import GeoTypeTag from "~/components/icons/GeoTypeTag.vue";
-import {WktDataFormat} from "~/components/data/WktDataFormat";
+import VertexCountRender from "~/components/renders/VertexCountRender.vue";
+import GeoTypeIconRender from "~/components/renders/GeoTypeIconRender.vue";
+import GeoTypeRender from "~/components/renders/GeoTypeRender.vue";
+import { WktDataFormat } from "~/components/data/WktDataFormat";
 
 const props = defineProps({
   data: {
@@ -73,7 +74,7 @@ watch(() => props.data, (newData) => {
     ElMessage.error(e.message)
   })
 
-},{deep:true,immediate:true})
+}, { deep: true, immediate: true })
 const geoJsonType = ref("FeatureCollection");
 const includeCrs = ref(false);
 const jsonFormat = ref("pretty");
@@ -124,7 +125,7 @@ watch(() => [props.data, geoJsonType.value, includeCrs.value, jsonFormat.value],
     default:
       dataStr_Geojson.value = undefined;
   }
-}, {deep: true, immediate: true})
+}, { deep: true, immediate: true })
 
 const handleDownloadJson = () => {
   let downloadContent: string;
@@ -136,7 +137,7 @@ const handleDownloadJson = () => {
     downloadContent = dataStr_Geojson.value ?? '';
   }
   let fileName = geoJsonType.value + new Date().getTime();
-  const blob = new Blob([downloadContent], {type: "application/json"});
+  const blob = new Blob([downloadContent], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -176,7 +177,7 @@ const handleDownloadShp = async () => {
 const handleDownloadExchange = () => {
   let downloadContent: string = dataStr_exchange.value.join("\r\n");
   let fileName = "电子报盘" + new Date().getTime();
-  const blob = new Blob([downloadContent], {type: "application/text"});
+  const blob = new Blob([downloadContent], { type: "application/text" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -386,6 +387,11 @@ const previewSvgTooManyVertices = computed(() => {
   return featureVertexCount(previewFeature.value) > 2000
 })
 
+const previewIsLine = computed(() => {
+  const t = previewFeature.value?.geometry?.type
+  return t === 'LineString' || t === 'MultiLineString'
+})
+
 </script>
 <template>
   <div class="gis-data-viewer-container">
@@ -397,31 +403,42 @@ const previewSvgTooManyVertices = computed(() => {
             <el-descriptions-item label="要素数量">{{ props.data?.features?.length ?? 0 }}</el-descriptions-item>
             <el-descriptions-item label="几何类型">
               <div v-if="geometryTypes.length" class="geo-types-cell">
-                <GeoTypeTag v-for="t in geometryTypes" :key="t" :type="t" />
+                <GeoTypeRender v-for="t in geometryTypes" :key="t" :type="t" />
               </div>
               <span v-else>无</span>
             </el-descriptions-item>
-            <el-descriptions-item label="总顶点数"><VertexCountBadge :count="totalVertexCount" /></el-descriptions-item>
-            <el-descriptions-item label="坐标系">
-              <span v-if="hasValidCrs">EPSG:{{ props.data?.crs?.epsgCode }}</span>
-              <span v-else class="text-muted">未设置</span>
+            <el-descriptions-item label="总顶点数">
+              <VertexCountRender :count="totalVertexCount" />
             </el-descriptions-item>
+
             <template v-if="crsInfo">
-              <el-descriptions-item label="坐标系名称">{{ crsInfo.name }}</el-descriptions-item>
-              <el-descriptions-item label="坐标系类型">
-                <el-tag
-                  size="small"
-                  effect="light"
-                  :class="crsInfo.projected ? 'crs-tag-projected' : 'crs-tag-geographic'"
-                  round
-                >
-                  {{ crsInfo.projected ? '投影坐标系' : '地理坐标系' }}
-                </el-tag>
+              <el-descriptions-item label="坐标系">
+                <CrsInfoRender :crs-info="crsInfo" display="epsgCode" type="info" />
               </el-descriptions-item>
-              <el-descriptions-item label="中央经线">{{ crsInfo.centralMeridian }}</el-descriptions-item>
-              <el-descriptions-item label="带号">{{ crsInfo.withZone ? crsInfo.zoneNumber : '无' }}</el-descriptions-item>
-              <el-descriptions-item label="经度范围">{{ crsInfo.minLon }} ~ {{ crsInfo.maxLon }}</el-descriptions-item>
-              <el-descriptions-item label="是否带号">{{ crsInfo.withZone ? '是' : '否' }}</el-descriptions-item>
+              <el-descriptions-item label="坐标系名称">
+                <CrsInfoRender :crs-info="crsInfo" display="name" type="info" />
+              </el-descriptions-item>
+              <el-descriptions-item label="坐标系类型">
+                <CrsInfoRender :crs-info="crsInfo" display="projected" />
+              </el-descriptions-item>
+              <el-descriptions-item label="中央经线">
+                <CrsInfoRender :crs-info="crsInfo" display="centralMeridian" />
+              </el-descriptions-item>
+              <el-descriptions-item label="带号">
+                <CrsInfoRender :crs-info="crsInfo" display="zoneNumber" />
+              </el-descriptions-item>
+              <el-descriptions-item label="经度范围">
+                <CrsInfoRender :crs-info="crsInfo" display="minLon" /> ~
+                <CrsInfoRender :crs-info="crsInfo" display="maxLon" />
+              </el-descriptions-item>
+              <el-descriptions-item label="是否带号">
+                <CrsInfoRender :crs-info="crsInfo" display="withZone" />
+              </el-descriptions-item>
+            </template>
+            <template v-else>
+              <el-descriptions-item label="坐标系">
+                <span class="text-muted">未设置</span>
+              </el-descriptions-item>
             </template>
           </el-descriptions>
 
@@ -429,11 +446,8 @@ const previewSvgTooManyVertices = computed(() => {
           <div v-if="transformChain.length > 1" class="transform-chain">
             <span class="chain-label">转换历程：</span>
             <template v-for="(epsg, idx) in transformChain" :key="epsg">
-              <span
-                class="chain-node"
-                :class="{ 'is-current': idx === transformChain.length - 1 }"
-                @click="idx < transformChain.length - 1 && emit('navigate-chain', epsg)"
-              >
+              <span class="chain-node" :class="{ 'is-current': idx === transformChain.length - 1 }"
+                @click="idx < transformChain.length - 1 && emit('navigate-chain', epsg)">
                 EPSG:{{ epsg }}
               </span>
               <span v-if="idx < transformChain.length - 1" class="chain-arrow">→</span>
@@ -441,18 +455,10 @@ const previewSvgTooManyVertices = computed(() => {
           </div>
 
           <div class="data-info-actions">
-            <el-button
-              size="small"
-              type="primary"
-              :disabled="!hasValidCrs"
-              @click="emit('transform-crs')"
-            >
+            <el-button size="small" type="primary" :disabled="!hasValidCrs" @click="emit('transform-crs')">
               坐标转换
             </el-button>
-            <el-button
-              size="small"
-              @click="emit('reset-crs')"
-            >
+            <el-button size="small" @click="emit('reset-crs')">
               重设坐标系
             </el-button>
           </div>
@@ -463,8 +469,7 @@ const previewSvgTooManyVertices = computed(() => {
       </el-tab-pane>
       <el-tab-pane :disabled="!hasFeatures" label="GeoJson">
         <div class="h-40px"
-             style="display: flex;flex-direction: row;align-items: center;justify-content: space-between; "
->
+          style="display: flex;flex-direction: row;align-items: center;justify-content: space-between; ">
           <div style="display: flex; align-items: center; gap: 8px;">
             <el-radio-group v-model="geoJsonType" size="small">
               <el-radio-button value="FeatureCollection">FeatureCollection</el-radio-button>
@@ -483,38 +488,29 @@ const previewSvgTooManyVertices = computed(() => {
           </div>
         </div>
         <div class="h-[calc(100%-40px)] overflow-auto">
-          <div v-if="geoJsonType === 'FeatureSplit'"
-               class="feature-split-layout">
+          <div v-if="geoJsonType === 'FeatureSplit'" class="feature-split-layout">
             <div class="feature-split-sidebar">
               <div class="sidebar-header">
                 <span class="sidebar-count">{{ props.data?.features?.length ?? 0 }} 个要素</span>
-                <el-select
-                  v-model="titleField"
-                  size="small"
-                  placeholder="标题字段"
-                  clearable
-                  class="title-field-select"
-                >
+                <el-select v-model="titleField" size="small" placeholder="标题字段" clearable class="title-field-select">
                   <el-option label="默认" value="" />
                   <el-option v-for="k in allPropertyKeys" :key="k" :label="k" :value="k" />
                 </el-select>
               </div>
               <div class="sidebar-cards">
-                <div
-                  v-for="(f, idx) in props.data?.features ?? []"
-                  :key="idx"
-                  class="feature-card"
-                  :class="{ active: splitFeatureIdx === idx }"
-                  @click="splitFeatureIdx = idx"
-                >
+                <div v-for="(f, idx) in props.data?.features ?? []" :key="idx" class="feature-card"
+                  :class="{ active: splitFeatureIdx === idx }" @click="splitFeatureIdx = idx">
                   <div class="card-header">
                     <div class="card-title">{{ featureCardTitle(f, idx) }}</div>
-                    <svg class="card-preview-btn" viewBox="0 0 24 24" width="16" height="16" title="预览" @click="openPreview(f, $event)">
-                      <path d="M12 5C5.636 5 2 12 2 12s3.636 7 10 7 10-7 10-7-3.636-7-10-7zm0 11a4 4 0 110-8 4 4 0 010 8zm0-6a2 2 0 100 4 2 2 0 000-4z" fill="currentColor"/>
+                    <svg class="card-preview-btn" viewBox="0 0 24 24" width="16" height="16" title="预览"
+                      @click="openPreview(f, $event)">
+                      <path
+                        d="M12 5C5.636 5 2 12 2 12s3.636 7 10 7 10-7 10-7-3.636-7-10-7zm0 11a4 4 0 110-8 4 4 0 010 8zm0-6a2 2 0 100 4 2 2 0 000-4z"
+                        fill="currentColor" />
                     </svg>
                   </div>
                   <div class="card-meta">
-                    <GeoTypeIcon v-if="f.geometry?.type" :type="f.geometry.type" :size="12" />
+                    <GeoTypeIconRender v-if="f.geometry?.type" :type="f.geometry.type" :size="12" />
                     <span v-if="f.geometry?.type" class="card-type">{{ f.geometry.type }}</span>
                     <span class="card-vertices">{{ featureVertexCount(f) }} 顶点</span>
                   </div>
@@ -530,8 +526,7 @@ const previewSvgTooManyVertices = computed(() => {
       </el-tab-pane>
       <el-tab-pane :disabled="!hasFeatures" label="Wkt">
         <div class="h-40px"
-             style="display: flex;flex-direction: row;align-items: center;justify-content: space-between; "
->
+          style="display: flex;flex-direction: row;align-items: center;justify-content: space-between; ">
           <el-radio-group v-model="wktType">
             <el-radio-button value="GeometryCollection">GeometryCollection</el-radio-button>
             <el-radio-button value="GeometrySplit">Geometry Split</el-radio-button>
@@ -539,15 +534,13 @@ const previewSvgTooManyVertices = computed(() => {
         </div>
         <div class="h-[calc(100%-40px)]">
           <geo-str-editor
-              :value="wktType === 'GeometrySplit'? dataStr_wkt.join(`\r\n\r\n\r\n`) :`GEOMETRYCOLLECTION(${ dataStr_wkt.join(`,`)})`"
-              language="wkt"
-          />
+            :value="wktType === 'GeometrySplit' ? dataStr_wkt.join(`\r\n\r\n\r\n`) : `GEOMETRYCOLLECTION(${dataStr_wkt.join(`,`)})`"
+            language="wkt" />
         </div>
       </el-tab-pane>
       <el-tab-pane :disabled="!hasFeatures" label="电子报盘">
         <div class="h-40px"
-             style="display: flex;flex-direction: row;align-items: center;justify-content: space-between; "
->
+          style="display: flex;flex-direction: row;align-items: center;justify-content: space-between; ">
           <el-radio-group v-model="exchangeDataType">
             <el-radio-button value="HasProperties">HasProperties</el-radio-button>
             <el-radio-button value="NoProperties">NoProperties</el-radio-button>
@@ -561,28 +554,23 @@ const previewSvgTooManyVertices = computed(() => {
     </el-tabs>
 
     <!-- 要素预览弹窗 -->
-    <el-dialog
-      v-model="previewVisible"
-      title="要素预览"
-      width="560px"
-      :close-on-click-modal="true"
-      align-center
-      class="feature-preview-dialog"
-    >
+    <el-dialog v-model="previewVisible" title="要素预览" width="560px" :close-on-click-modal="true" align-center
+      class="feature-preview-dialog">
       <template v-if="previewFeature">
         <div class="preview-layout">
           <div class="preview-left">
             <el-descriptions :column="1" border size="small" class="preview-desc">
               <el-descriptions-item label="类型">
                 <div v-if="previewFeature.geometry?.type" style="display:inline-flex;align-items:center;gap:4px;">
-                  <GeoTypeIcon :type="previewFeature.geometry.type" :size="14" />
+                  <GeoTypeIconRender :type="previewFeature.geometry.type" :size="14" />
                   {{ previewFeature.geometry.type }}
                 </div>
                 <span v-else>无几何</span>
               </el-descriptions-item>
               <el-descriptions-item label="顶点">{{ featureVertexCount(previewFeature) }}</el-descriptions-item>
             </el-descriptions>
-            <div v-if="previewFeature.properties && Object.keys(previewFeature.properties).length" class="preview-props">
+            <div v-if="previewFeature.properties && Object.keys(previewFeature.properties).length"
+              class="preview-props">
               <div class="preview-props-title">属性 ({{ Object.keys(previewFeature.properties).length }})</div>
               <el-descriptions :column="1" border size="small">
                 <el-descriptions-item v-for="(val, key) in previewFeature.properties" :key="key" :label="String(key)">
@@ -596,7 +584,10 @@ const previewSvgTooManyVertices = computed(() => {
               <span>顶点过多，不提供轮廓预览</span>
             </div>
             <svg v-else-if="previewSvgPath" class="preview-svg" viewBox="0 0 200 200">
-              <path :d="previewSvgPath" fill="rgba(234,88,12,0.15)" stroke="#ea580c" stroke-width="1.5" stroke-linejoin="round" />
+              <path :d="previewSvgPath"
+                :fill="previewIsLine ? 'none' : 'rgba(234,88,12,0.15)'"
+                stroke="#ea580c" stroke-width="1.5"
+                stroke-linejoin="round" />
             </svg>
             <div v-else class="preview-svg-placeholder">
               <span>无几何图形</span>
@@ -727,17 +718,20 @@ const previewSvgTooManyVertices = computed(() => {
   --el-tag-border-color: var(--gis-crs-projected-bg);
   --el-tag-text-color: var(--gis-crs-projected);
 }
+
 :deep(.crs-tag-geographic.el-tag) {
   --el-tag-bg-color: var(--gis-crs-geographic-bg);
   --el-tag-border-color: var(--gis-crs-geographic-bg);
   --el-tag-text-color: var(--gis-crs-geographic);
 }
+
 .geo-types-cell {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
 }
+
 .geo-types-text {
   font-size: 13px;
   color: var(--gis-text-secondary);
@@ -749,6 +743,7 @@ const previewSvgTooManyVertices = computed(() => {
   flex-direction: row;
   height: 100%;
 }
+
 .feature-split-sidebar {
   width: 220px;
   min-width: 180px;
@@ -758,6 +753,7 @@ const previewSvgTooManyVertices = computed(() => {
   border-right: 1px solid var(--el-border-color-lighter);
   background: var(--el-fill-color-lighter);
 }
+
 .sidebar-header {
   display: flex;
   align-items: center;
@@ -767,22 +763,27 @@ const previewSvgTooManyVertices = computed(() => {
   border-bottom: 1px solid var(--el-border-color-lighter);
   flex-shrink: 0;
 }
+
 .sidebar-count {
   font-size: 11px;
   color: var(--el-text-color-secondary);
   flex-shrink: 0;
 }
+
 .title-field-select {
   width: 100px;
 }
+
 .title-field-select :deep(.el-input__inner) {
   font-size: 11px;
 }
+
 .sidebar-cards {
   flex: 1 1 auto;
   overflow-y: auto;
   padding: 4px;
 }
+
 .feature-card {
   padding: 6px 8px;
   margin-bottom: 2px;
@@ -791,14 +792,17 @@ const previewSvgTooManyVertices = computed(() => {
   border: 1px solid transparent;
   transition: all 0.15s;
 }
+
 .feature-card:hover {
   background: var(--el-fill-color);
   border-color: var(--el-border-color-lighter);
 }
+
 .feature-card.active {
   background: var(--el-color-primary-light-9);
   border-color: var(--el-color-primary-light-5);
 }
+
 .card-title {
   font-size: 12px;
   font-weight: 500;
@@ -808,9 +812,11 @@ const previewSvgTooManyVertices = computed(() => {
   text-overflow: ellipsis;
   max-width: 100%;
 }
+
 .feature-card.active .card-title {
   color: var(--el-color-primary-dark-2);
 }
+
 .card-meta {
   display: flex;
   align-items: center;
@@ -819,12 +825,15 @@ const previewSvgTooManyVertices = computed(() => {
   font-size: 11px;
   color: var(--el-text-color-secondary);
 }
+
 .card-type {
   color: var(--el-text-color-regular);
 }
+
 .card-vertices {
   color: var(--el-text-color-placeholder);
 }
+
 .feature-split-editor {
   flex: 1 1 auto;
   height: 100%;
@@ -837,6 +846,7 @@ const previewSvgTooManyVertices = computed(() => {
   justify-content: space-between;
   gap: 4px;
 }
+
 .card-preview-btn {
   flex-shrink: 0;
   color: var(--el-text-color-placeholder);
@@ -844,9 +854,11 @@ const previewSvgTooManyVertices = computed(() => {
   transition: color 0.15s;
   margin-top: 1px;
 }
+
 .card-preview-btn:hover {
   color: var(--el-color-primary);
 }
+
 .card-preview-btn.disabled {
   color: var(--el-text-color-disabled);
   cursor: not-allowed;
@@ -855,16 +867,19 @@ const previewSvgTooManyVertices = computed(() => {
 .preview-desc {
   margin-bottom: 10px;
 }
+
 .preview-props {
   max-height: 260px;
   overflow-y: auto;
 }
+
 .preview-props-title {
   font-size: 12px;
   font-weight: 500;
   color: var(--el-text-color-secondary);
   margin-bottom: 4px;
 }
+
 .preview-prop-val {
   font-size: 12px;
   word-break: break-all;
@@ -874,12 +889,14 @@ const previewSvgTooManyVertices = computed(() => {
   display: flex;
   gap: 12px;
 }
+
 .preview-left {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
 }
+
 .preview-right {
   flex: 0 0 200px;
   display: flex;
@@ -887,6 +904,7 @@ const previewSvgTooManyVertices = computed(() => {
   align-items: center;
   justify-content: center;
 }
+
 .preview-svg {
   width: 200px;
   height: 200px;
@@ -894,6 +912,7 @@ const previewSvgTooManyVertices = computed(() => {
   border-radius: 4px;
   border: 1px solid var(--el-border-color-lighter);
 }
+
 .preview-svg-placeholder {
   width: 200px;
   height: 200px;
@@ -906,6 +925,7 @@ const previewSvgTooManyVertices = computed(() => {
   font-size: 12px;
   color: var(--el-text-color-placeholder);
 }
+
 .preview-bbox-bar {
   margin-top: 8px;
   padding: 4px 8px;
@@ -916,11 +936,13 @@ const previewSvgTooManyVertices = computed(() => {
   gap: 6px;
   font-size: 11px;
 }
+
 .bbox-label {
   color: var(--el-text-color-secondary);
   font-weight: 500;
   flex-shrink: 0;
 }
+
 .bbox-value {
   color: var(--el-text-color-regular);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 /**
- * 顶点数分级徽标
+ * 顶点数分级渲染
  * 从绿色(0)到红色(max)线性插值，用于直观展示顶点数量级别
  * 默认 max=20000，即 20000 顶点为纯红
  */
@@ -31,13 +31,13 @@ const formatted = computed(() => {
 </script>
 
 <template>
-  <span class="vertex-badge" :style="{ color, backgroundColor: bgColor }">
+  <span class="vertex-count-render" :style="{ color, backgroundColor: bgColor }">
     {{ formatted }}
   </span>
 </template>
 
 <style scoped>
-.vertex-badge {
+.vertex-count-render {
   display: inline-flex;
   align-items: center;
   padding: 1px 8px;

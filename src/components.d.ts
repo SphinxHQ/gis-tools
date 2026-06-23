@@ -10,6 +10,7 @@ declare module 'vue' {
     BaseMain: typeof import('./components/layouts/BaseMain.vue')['default']
     BasemapSwitcher: typeof import('./components/gismap/BasemapSwitcher.vue')['default']
     BottomPanel: typeof import('./components/BottomPanel.vue')['default']
+    CrsInfoRender: typeof import('./components/renders/CrsInfoRender.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCascader: typeof import('element-plus/es')['ElCascader']
     ElCascaderPanel: typeof import('element-plus/es')['ElCascaderPanel']
@@ -41,6 +42,8 @@ declare module 'vue' {
     GeoJSONParser: typeof import('./components/parser/GeoJSONParser.vue')['default']
     GeoStrEditor: typeof import('./components/editor/GeoStrEditor.vue')['default']
     GeoTypeIcon: typeof import('./components/icons/GeoTypeIcon.vue')['default']
+    GeoTypeIconRender: typeof import('./components/renders/GeoTypeIconRender.vue')['default']
+    GeoTypeRender: typeof import('./components/renders/GeoTypeRender.vue')['default']
     GeoTypeTag: typeof import('./components/icons/GeoTypeTag.vue')['default']
     GisCard: typeof import('./components/layouts/GisCard.vue')['default']
     GisCrsSelector: typeof import('./components/data/GisCrsSelector.vue')['default']
@@ -71,6 +74,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SplitPanel: typeof import('./components/layouts/SplitPanel.vue')['default']
     VertexCountBadge: typeof import('./components/data/VertexCountBadge.vue')['default']
+    VertexCountRender: typeof import('./components/renders/VertexCountRender.vue')['default']
     WktParser: typeof import('./components/parser/WktParser.vue')['default']
   }
   export interface ComponentCustomProperties {

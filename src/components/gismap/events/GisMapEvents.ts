@@ -19,6 +19,8 @@ export const Types = {
     CLEAR_EDIT_SHADOW: "map-event:clear-edit-shadow",
     SET_LAYER_VISIBILITY: "map-event:set-layer-visibility",
     CLEAN_LAYER: "map-event:clean-layer",
+    REMOVE_DRAW_FEATURE: "map-event:remove-draw-feature",
+    TOGGLE_DRAW_FEATURE_VISIBLE: "map-event:toggle-draw-feature-visible",
 }
 
 
@@ -98,6 +100,18 @@ export class GisMapModifyChangeEvent extends GisEvent {
 export class GisMapUpdateEditFeatureEvent extends GisEvent {
     constructor(feature: GeoJSON.Feature) {
         super(Types.UPDATE_EDIT_FEATURE, {}, feature);
+    }
+}
+
+export class GisMapRemoveDrawFeatureEvent extends GisEvent {
+    constructor(featureId: string) {
+        super(Types.REMOVE_DRAW_FEATURE, {}, featureId);
+    }
+}
+
+export class GisMapToggleDrawFeatureVisibleEvent extends GisEvent {
+    constructor(featureId: string, visible: boolean) {
+        super(Types.TOGGLE_DRAW_FEATURE_VISIBLE, {}, featureId, visible);
     }
 }
 
