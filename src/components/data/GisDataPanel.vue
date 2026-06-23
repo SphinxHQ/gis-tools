@@ -34,7 +34,7 @@ const emit = defineEmits<{
 }>()
 
 // 数据集 store（用于数据源 Tab 树形结构）
-const { datasets, activeId, setActive, removeDataset } = useGisDataStore()
+const { datasets, dataSources, activeId, setActive, removeDataset } = useGisDataStore()
 
 const activeTab = ref('source')
 
@@ -74,27 +74,29 @@ const handleOpenImport = () => {
   emit('open-import')
 }
 
-// 数据源树形数据：数据源(1) → 数据集(N)
+// 数据源树形数据：数据源(N) → 数据集(N)，真实两级层级
 interface SourceTreeNode {
   id: string
   label: string
   type: 'source' | 'dataset'
   raw?: GisDataInfo
+  appendedFrom?: { name: string; count: number }[]
   children?: SourceTreeNode[]
 }
 
 const sourceTreeData = computed<SourceTreeNode[]>(() => {
-  return [{
-    id: 'source-root',
-    label: `数据源 (${datasets.value.length})`,
-    type: 'source',
-    children: datasets.value.map(entry => ({
+  return dataSources.value.map(source => ({
+    id: source.id,
+    label: `${source.name} (${source.datasets.length})`,
+    type: 'source' as const,
+    children: source.datasets.map(entry => ({
       id: entry.id,
       label: entry.name,
       type: 'dataset' as const,
-      raw: entry.data
-    }))
-  }]
+      raw: entry.data,
+      appendedFrom: entry.appendedFrom,
+    })),
+  }))
 })
 
 // 树节点点击：仅数据集节点可激活
@@ -160,6 +162,13 @@ const hasActiveData = computed(() => !!activeData.value?.features?.length)
                 <template v-if="data.type === 'dataset'">
                   <el-tag size="small" type="info" effect="plain" class="tree-node-tag">{{ getDatasetCrs(data.raw) }}</el-tag>
                   <span class="tree-node-stat">{{ data.raw?.features?.length ?? 0 }} 要素</span>
+                  <el-tooltip
+                    v-if="data.appendedFrom && data.appendedFrom.length > 0"
+                    :content="data.appendedFrom.map(a => `从「${a.name}」追加了 ${a.count} 个要素`).join('；')"
+                    placement="top"
+                  >
+                    <el-tag size="small" type="warning" effect="dark" class="tree-node-tag">已追加</el-tag>
+                  </el-tooltip>
                   <el-icon class="tree-node-delete" title="删除" @click.stop="handleDatasetRemove(data.id, $event)"><Delete /></el-icon>
                 </template>
               </div>

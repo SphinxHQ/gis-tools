@@ -12,8 +12,9 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
 
-const { addDataset, appendToDataset, activeId } = useGisDataStore()
+const { addDataSource, appendToDataset, datasets, dataSources } = useGisDataStore()
 const appendMode = ref(false)
+const appendTargetId = ref<string | null>(null)
 const readerRef = ref<InstanceType<typeof import('~/components/data/GisDataReader.vue').default> | null>(null)
 
 const dialogVisible = computed({
@@ -22,10 +23,10 @@ const dialogVisible = computed({
 })
 
 const handleRead = (data: GisDataInfo) => {
-  if (appendMode.value && activeId.value) {
-    appendToDataset(activeId.value, data)
+  if (appendMode.value && appendTargetId.value) {
+    appendToDataset(appendTargetId.value, data)
   } else {
-    addDataset(data)
+    addDataSource(data)
   }
   dialogVisible.value = false
 }
@@ -48,7 +49,31 @@ const showTextConfirm = computed(() => {
     <gis-data-reader ref="readerRef" @read="handleRead" />
     <template #footer>
       <div class="dialog-footer">
-        <el-switch v-model="appendMode" active-text="追加模式" />
+        <div class="dialog-footer-left">
+          <el-switch v-model="appendMode" active-text="追加模式" />
+          <template v-if="appendMode">
+            <el-select
+              v-model="appendTargetId"
+              placeholder="选择目标数据集"
+              size="small"
+              style="width: 240px"
+              :disabled="datasets.length === 0"
+            >
+              <el-option-group
+                v-for="source in dataSources"
+                :key="source.id"
+                :label="source.name"
+              >
+                <el-option
+                  v-for="ds in source.datasets"
+                  :key="ds.id"
+                  :label="`${ds.name} (${ds.data?.features?.length ?? 0} 要素)`"
+                  :value="ds.id"
+                />
+              </el-option-group>
+            </el-select>
+          </template>
+        </div>
         <div class="dialog-footer-right">
           <el-button
             v-if="showTextConfirm"
@@ -68,6 +93,12 @@ const showTextConfirm = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.dialog-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .dialog-footer-right {

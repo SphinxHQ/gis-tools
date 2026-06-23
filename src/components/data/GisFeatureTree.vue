@@ -22,6 +22,7 @@ import GisFeatureEditor from "~/components/data/GisFeatureEditor.vue";
 import {GisMapflashFeaturesEvent, GisMapStopModifyEvent} from "~/components/gismap/events/GisMapEvents";
 import GeoTypeIconRender from "~/components/renders/GeoTypeIconRender.vue";
 import {eventBus} from "~/composables/eventBus";
+import {useGisDataStore} from "~/composables/gisDataStore";
 
 const props = defineProps({
   data: {
@@ -42,6 +43,41 @@ const emit = defineEmits<{
   'enter-edit-mode': []
   'exit-edit-mode': []
 }>()
+
+const { updateDataset, addDataset, activeId, activeSourceId } = useGisDataStore()
+
+// 编辑变更跟踪
+const hasUnsavedChanges = ref(false)
+
+// 变更操作后提示：更新当前数据集 or 另存为新数据集（同源）
+const promptUpdateOrSaveAs = async () => {
+  if (!hasUnsavedChanges.value) return
+  try {
+    await ElMessageBox.confirm(
+      '要素编辑完成。请选择：更新当前数据集，或另存为新数据集（同一数据源下）。',
+      '变更确认',
+      {
+        confirmButtonText: '另存为新数据集',
+        cancelButtonText: '更新当前数据',
+        distinguishCancelAndClose: true,
+        type: 'info',
+      }
+    )
+    // 另存为新数据集
+    if (activeId.value && props.data) {
+      const clone = GisDataInfo.clone(props.data)
+      addDataset(clone, activeSourceId.value ?? undefined)
+    }
+  } catch (action: unknown) {
+    if (action === 'cancel') {
+      // 更新当前数据
+      if (activeId.value && props.data) {
+        updateDataset(activeId.value, props.data)
+      }
+    }
+  }
+  hasUnsavedChanges.value = false
+}
 
 const treeHeight = ref(0)
 const conpomentVisiblity = ref(false)
@@ -414,6 +450,8 @@ const handleViewChange = (view: 'tree' | 'editor') => {
         eventBus.emit(`${props.instanceId}`, new GisMapStopModifyEvent())
         eventBus.emit(`${props.instanceId}`, { event_type: 'map-event:clear-edit-shadow', options: {}, params: [] })
       }
+      // 编辑退出时提示更新/另存
+      promptUpdateOrSaveAs()
     }
   }
 }
@@ -422,14 +460,18 @@ const handleEditorExit = () => {
   isInEditMode.value = false
   activeView.value = 'tree'
   emit('exit-edit-mode')
+  // 编辑退出时提示更新/另存
+  promptUpdateOrSaveAs()
 }
 
 const handleEditorModifyChange = (_feature: GeoJSON.Feature) => {
   logger.info('[FeatureTree] Feature modified in editor')
+  hasUnsavedChanges.value = true
 }
 
 const handleEditorDataChanged = () => {
   buildGeoJsonTree()
+  hasUnsavedChanges.value = true
 }
 
 const handleCreateArchive = (payload: { name: string; features: GeoJSON.Feature[]; sourceIdx: number }) => {

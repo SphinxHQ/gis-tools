@@ -22,7 +22,33 @@ const emit = defineEmits<{
   'active-data-change': [data: GisDataInfo, transformChain: number[]]
 }>()
 
-const { addDataset } = useGisDataStore()
+const { addDataset, updateDataset, activeId, activeSourceId } = useGisDataStore()
+
+// 变更操作后提示：更新当前数据集 or 另存为新数据集（同源）
+const promptUpdateOrSaveAs = async (transformedData: GisDataInfo) => {
+  try {
+    await ElMessageBox.confirm(
+      '变更完成。请选择：更新当前数据集，或另存为新数据集（同一数据源下）。',
+      '变更确认',
+      {
+        confirmButtonText: '另存为新数据集',
+        cancelButtonText: '更新当前数据',
+        distinguishCancelAndClose: true,
+        type: 'info',
+      }
+    )
+    // 用户点击"另存为新数据集"
+    addDataset(transformedData, activeSourceId.value ?? undefined)
+  } catch (action: unknown) {
+    if (action === 'cancel') {
+      // 用户点击"更新当前数据"
+      if (activeId.value) {
+        updateDataset(activeId.value, transformedData)
+      }
+    }
+    // action === 'close' 则什么都不做（用户关闭弹窗）
+  }
+}
 
 const originData = ref<GisDataInfo>(new GisDataInfo())
 
@@ -203,11 +229,11 @@ const addTransformVersion = (targetCrs: CrsInfo, sourceVer: CrsVersion) => {
   reloadVersionsData()
   emitActiveDataChange()
 
-  // 生成新数据集并加入数据源 store，使数据源树出现新节点
+  // 变更操作后提示：更新当前 or 另存为新数据集（同源）
   const sourceName = originData.value?.name || '未命名'
   const transformedClone = GisDataInfo.clone(activeVersion.value.data)
   transformedClone.name = `${sourceName} → EPSG:${targetCrs.epsgCode}`
-  addDataset(transformedClone)
+  promptUpdateOrSaveAs(transformedClone)
 }
 
 const removeVersion = (verName: string) => {
@@ -262,11 +288,11 @@ const handleResetCrs = (crs: CrsInfo) => {
     }
     emitActiveDataChange()
 
-    // 生成新数据集并加入数据源 store，使数据源树出现新节点
+    // 变更操作后提示：更新当前 or 另存为新数据集（同源）
     const sourceName = originData.value?.name || '未命名'
     const resetClone = GisDataInfo.clone(activeVersion.value.data)
     resetClone.name = `${sourceName} (重设 EPSG:${crs.epsgCode})`
-    addDataset(resetClone)
+    promptUpdateOrSaveAs(resetClone)
   }
 }
 

@@ -17,7 +17,7 @@ import { useBreakpoint } from '~/composables/useBreakpoint'
 import { useGisDataStore } from '~/composables/gisDataStore'
 import { useMapController } from '~/composables/useMapController'
 
-const { datasets, activeId, activeDataset, setActive, removeDataset, addDataset } = useGisDataStore()
+const { datasets, activeId, activeDataset, setActive, removeDataset, addDataSource } = useGisDataStore()
 const { isMobile, panelWidth, panelCollapsedWidth, showLeftPanel, showMobileNav } = useBreakpoint()
 
 const importDialogVisible = ref(false)
@@ -98,7 +98,7 @@ const handleActiveDataChange = (data: GisDataInfo, transformChain: number[]) => 
 // 处理数据读取
 const handleRead = (data: unknown) => {
   const dataInfo = data as GisDataInfo
-  addDataset(dataInfo)
+  addDataSource(dataInfo)
 }
 
 const handleError = (err: Error) => {
@@ -135,7 +135,7 @@ const handleDrop = async (e: DragEvent) => {
       const simpleDataFormat = new SimpleDataFormat()
       const data = await simpleDataFormat.read(buffer)
       data.name = file.name
-      addDataset(data)
+      addDataSource(data)
     } catch (err: unknown) {
       let msg = createUserMessage(err)
       if (err instanceof GisError) {
