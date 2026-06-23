@@ -24,10 +24,46 @@ const importDialogVisible = ref(false)
 
 // 左面板折叠状态
 const panelCollapsed = ref(false)
+
+// 用户拖拽调整的面板宽度（覆盖断点默认值）
+const userPanelWidth = ref<number | null>(null)
+const isResizing = ref(false)
+
 const currentPanelWidth = computed(() => {
   if (!showLeftPanel.value) return 0
-  return panelCollapsed.value ? panelCollapsedWidth.value : panelWidth.value
+  if (panelCollapsed.value) return panelCollapsedWidth.value
+  return userPanelWidth.value ?? panelWidth.value
 })
+
+// 面板拖拽调整
+const MIN_PANEL_WIDTH = 220
+const MAX_PANEL_WIDTH = 600
+
+const startResize = (e: MouseEvent) => {
+  e.preventDefault()
+  isResizing.value = true
+  const startX = e.clientX
+  const startWidth = currentPanelWidth.value
+
+  const onMouseMove = (ev: MouseEvent) => {
+    const delta = ev.clientX - startX
+    const newWidth = Math.min(MAX_PANEL_WIDTH, Math.max(MIN_PANEL_WIDTH, startWidth + delta))
+    userPanelWidth.value = newWidth
+  }
+
+  const onMouseUp = () => {
+    isResizing.value = false
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+    document.body.style.cursor = ''
+    document.body.style.userSelect = ''
+  }
+
+  document.body.style.cursor = 'col-resize'
+  document.body.style.userSelect = 'none'
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
+}
 
 // 地图实例管理
 const mapInstanceId = ref<number>(0)
@@ -230,7 +266,7 @@ initMapInstance()
 
       <!-- 有数据时的布局 -->
       <template v-else>
-        <!-- 桌面端：左面板 + 主内容区 -->
+        <!-- 桌面端：左面板 + 拖拽手柄 + 主内容区 -->
         <div v-if="showLeftPanel" class="desktop-layout">
           <!-- 左面板 -->
           <div class="left-panel" :class="{ collapsed: panelCollapsed }" :style="{ width: currentPanelWidth + 'px' }">
@@ -255,13 +291,16 @@ initMapInstance()
             </div>
           </div>
 
+          <!-- 拖拽手柄 -->
+          <div
+            v-if="!panelCollapsed"
+            class="panel-resize-handle"
+            :class="{ dragging: isResizing }"
+            @mousedown="startResize"
+          ></div>
+
           <!-- 主内容区 -->
-          <div class="content-area" :style="{ width: `calc(100% - ${currentPanelWidth}px)` }">
-            <!-- 数据概览 -->
-            <gis-data-overview
-              :data="activeData"
-              :transform-chain="activeTransformChain"
-            />
+          <div class="content-area" :style="{ width: `calc(100% - ${currentPanelWidth}px - ${panelCollapsed ? 0 : 4}px)` }">
             <!-- 地图 -->
             <div class="map-container">
               <gis-map-tianditu
@@ -270,16 +309,17 @@ initMapInstance()
                 :options="{ projection: epsgCode }"
               />
             </div>
+            <!-- 底部状态栏 -->
+            <gis-data-overview
+              :data="activeData"
+              :transform-chain="activeTransformChain"
+              mode="full"
+            />
           </div>
         </div>
 
-        <!-- 移动端：地图优先 + 底部导航 -->
+        <!-- 移动端：地图优先 + 底部状态栏 + 底部导航 -->
         <div v-else class="mobile-layout">
-          <!-- 数据概览（顶部紧凑） -->
-          <gis-data-overview
-            :data="activeData"
-            :transform-chain="activeTransformChain"
-          />
           <!-- 地图（全屏） -->
           <div class="map-container mobile-map">
             <gis-map-tianditu
@@ -288,6 +328,12 @@ initMapInstance()
               :options="{ projection: epsgCode }"
             />
           </div>
+          <!-- 底部简略状态栏 -->
+          <gis-data-overview
+            :data="activeData"
+            :transform-chain="activeTransformChain"
+            mode="compact"
+          />
           <!-- 底部导航 -->
           <gis-mobile-nav
             :data="activeDataset?.data"
@@ -444,12 +490,26 @@ initMapInstance()
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  transition: width 0.2s ease;
   overflow: hidden;
 }
 
 .left-panel.collapsed {
   background: var(--el-fill-color-lighter);
+}
+
+.panel-resize-handle {
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  background: var(--el-border-color-lighter);
+  flex-shrink: 0;
+  transition: background 0.2s;
+  z-index: 5;
+}
+
+.panel-resize-handle:hover,
+.panel-resize-handle.dragging {
+  background: var(--el-color-primary);
 }
 
 .panel-header {
@@ -483,7 +543,7 @@ initMapInstance()
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: width 0.2s ease;
+  flex: 1;
 }
 
 .map-container {

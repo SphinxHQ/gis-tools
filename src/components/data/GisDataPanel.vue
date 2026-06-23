@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
+import { Compass, MapLocation, CircleCheck, Download, Delete, UploadFilled, FolderOpened } from '@element-plus/icons-vue'
 
 import GisDataInfo from '~/components/data/GisDataInfo'
-import GisDataReader from '~/components/data/GisDataReader.vue'
 import GisDataExport from '~/components/data/GisDataExport.vue'
 import GisDataTransformer from '~/components/data/GisDataTransformer.vue'
 import GisDataValidator from '~/components/data/GisDataValidator.vue'
 import GisFeatureTree from '~/components/data/GisFeatureTree.vue'
+import { useGisDataStore } from '~/composables/gisDataStore'
 
 const props = defineProps({
   data: {
@@ -32,7 +33,18 @@ const emit = defineEmits<{
   'error': [err: Error]
 }>()
 
+// 数据集 store（用于数据源 Tab 树形结构）
+const { datasets, activeId, setActive, removeDataset } = useGisDataStore()
+
 const activeTab = ref('source')
+
+const tabOptions = [
+  { value: 'source', label: '数据源' },
+  { value: 'crs', label: '坐标系' },
+  { value: 'feature', label: '要素' },
+  { value: 'validate', label: '校验' },
+  { value: 'export', label: '导出' },
+]
 
 // 当前活跃数据（经过 CRS 转换后的）
 const activeData = ref<GisDataInfo>(props.data)
@@ -49,14 +61,6 @@ const handleActiveDataChange = (data: GisDataInfo, transformChain: number[]) => 
   emit('active-data-change', data, transformChain)
 }
 
-const handleRead = (data: unknown) => {
-  emit('read', data)
-}
-
-const handleError = (err: Error) => {
-  emit('error', err)
-}
-
 const handleEnterEditMode = () => {
   emit('enter-edit-mode')
 }
@@ -64,59 +68,168 @@ const handleEnterEditMode = () => {
 const handleExitEditMode = () => {
   emit('exit-edit-mode')
 }
+
+// 打开导入弹窗（由父组件 GisData.vue 处理）
+const handleOpenImport = () => {
+  emit('open-import')
+}
+
+// 数据源树形数据：数据源(1) → 数据集(N)
+interface SourceTreeNode {
+  id: string
+  label: string
+  type: 'source' | 'dataset'
+  raw?: GisDataInfo
+  children?: SourceTreeNode[]
+}
+
+const sourceTreeData = computed<SourceTreeNode[]>(() => {
+  return [{
+    id: 'source-root',
+    label: `数据源 (${datasets.value.length})`,
+    type: 'source',
+    children: datasets.value.map(entry => ({
+      id: entry.id,
+      label: entry.name,
+      type: 'dataset' as const,
+      raw: entry.data
+    }))
+  }]
+})
+
+// 树节点点击：仅数据集节点可激活
+const handleNodeClick = (nodeData: SourceTreeNode) => {
+  if (nodeData.type === 'dataset' && nodeData.id) {
+    setActive(nodeData.id)
+  }
+}
+
+// 数据集删除
+const handleDatasetRemove = (id: string, e: Event) => {
+  e.stopPropagation()
+  removeDataset(id)
+}
+
+// 数据集信息辅助
+const getDatasetCrs = (data?: GisDataInfo) => {
+  return data?.crs?.epsgCode ? `EPSG:${data.crs.epsgCode}` : '未设置'
+}
+
+// 是否有数据
+const hasData = computed(() => !!props.data?.features?.length)
+const hasActiveData = computed(() => !!activeData.value?.features?.length)
 </script>
 
 <template>
   <div class="gis-data-panel">
-    <el-tabs v-model="activeTab" class="panel-tabs" tab-position="top">
-      <!-- Tab1: 数据源 -->
-      <el-tab-pane label="数据源" name="source">
-        <gis-data-reader
-          v-if="activeTab === 'source'"
-          @read="handleRead"
-          @error="handleError"
-        />
-      </el-tab-pane>
+    <!-- Tab 切换器（el-segmented 替代 el-tabs，消除嵌套冲突） -->
+    <div class="panel-switcher">
+      <el-segmented v-model="activeTab" :options="tabOptions" block size="small" />
+    </div>
+
+    <!-- Tab 内容区 -->
+    <div class="panel-content">
+      <!-- Tab1: 数据源（树形结构：数据源 → 数据集 1:N） -->
+      <div v-show="activeTab === 'source'" class="tab-pane-content source-tab">
+        <!-- 工具栏 -->
+        <div class="source-toolbar">
+          <span class="source-toolbar-title">数据源</span>
+          <el-button size="small" type="primary" plain @click="handleOpenImport">
+            <el-icon><UploadFilled /></el-icon>
+            <span>导入数据</span>
+          </el-button>
+        </div>
+
+        <!-- 树形数据源 -->
+        <div class="source-tree-body">
+          <el-tree
+            v-if="datasets.length > 0"
+            :data="sourceTreeData"
+            node-key="id"
+            :default-expand-all="true"
+            :expand-on-click-node="false"
+            :highlight-current="true"
+            :current-node-key="activeId"
+            @node-click="handleNodeClick"
+          >
+            <template #default="{ node, data }">
+              <div class="tree-node" :class="{ 'is-dataset': data.type === 'dataset', 'is-active': data.id === activeId }">
+                <el-icon v-if="data.type === 'source'" class="tree-node-icon"><FolderOpened /></el-icon>
+                <el-icon v-else class="tree-node-icon"><MapLocation /></el-icon>
+                <span class="tree-node-label">{{ node.label }}</span>
+                <template v-if="data.type === 'dataset'">
+                  <el-tag size="small" type="info" effect="plain" class="tree-node-tag">{{ getDatasetCrs(data.raw) }}</el-tag>
+                  <span class="tree-node-stat">{{ data.raw?.features?.length ?? 0 }} 要素</span>
+                  <el-icon class="tree-node-delete" title="删除" @click.stop="handleDatasetRemove(data.id, $event)"><Delete /></el-icon>
+                </template>
+              </div>
+            </template>
+          </el-tree>
+
+          <!-- 空状态 -->
+          <div v-else class="source-empty">
+            <el-icon :size="32" color="var(--el-text-color-placeholder)"><UploadFilled /></el-icon>
+            <p>暂无数据集</p>
+            <p class="source-empty-hint">点击上方「导入数据」添加数据</p>
+          </div>
+        </div>
+      </div>
 
       <!-- Tab2: 坐标系 -->
-      <el-tab-pane label="坐标系" name="crs" :disabled="!data?.features?.length">
+      <div v-show="activeTab === 'crs'" class="tab-pane-content">
         <gis-data-transformer
-          v-if="activeTab === 'crs' && data?.features?.length"
+          v-if="hasData"
           :data="data"
           @active-data-change="handleActiveDataChange"
         />
-      </el-tab-pane>
+        <div v-else class="tab-empty">
+          <el-icon :size="32" color="var(--el-text-color-placeholder)"><Compass /></el-icon>
+          <p>请先导入数据</p>
+        </div>
+      </div>
 
       <!-- Tab3: 要素 -->
-      <el-tab-pane label="要素" name="feature" :disabled="!activeData?.features?.length">
+      <div v-show="activeTab === 'feature'" class="tab-pane-content">
         <gis-feature-tree
-          v-if="activeTab === 'feature' && activeData?.features?.length"
+          v-if="hasActiveData"
           :data="activeData"
           :instance-id="instanceId"
           :map-ready="mapReady"
           @enter-edit-mode="handleEnterEditMode"
           @exit-edit-mode="handleExitEditMode"
         />
-      </el-tab-pane>
+        <div v-else class="tab-empty">
+          <el-icon :size="32" color="var(--el-text-color-placeholder)"><MapLocation /></el-icon>
+          <p>请先导入数据</p>
+        </div>
+      </div>
 
       <!-- Tab4: 校验 -->
-      <el-tab-pane label="校验" name="validate" :disabled="!activeData?.features?.length">
+      <div v-show="activeTab === 'validate'" class="tab-pane-content">
         <gis-data-validator
-          v-if="activeTab === 'validate' && activeData?.features?.length"
+          v-if="hasActiveData"
           :data="activeData"
           :instance-id="instanceId"
           :tree-height="400"
         />
-      </el-tab-pane>
+        <div v-else class="tab-empty">
+          <el-icon :size="32" color="var(--el-text-color-placeholder)"><CircleCheck /></el-icon>
+          <p>请先导入数据</p>
+        </div>
+      </div>
 
       <!-- Tab5: 导出 -->
-      <el-tab-pane label="导出" name="export" :disabled="!activeData?.features?.length">
+      <div v-show="activeTab === 'export'" class="tab-pane-content">
         <gis-data-export
-          v-if="activeTab === 'export' && activeData?.features?.length"
+          v-if="hasActiveData"
           :data="activeData"
         />
-      </el-tab-pane>
-    </el-tabs>
+        <div v-else class="tab-empty">
+          <el-icon :size="32" color="var(--el-text-color-placeholder)"><Download /></el-icon>
+          <p>请先导入数据</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -131,38 +244,156 @@ const handleExitEditMode = () => {
   overflow: hidden;
 }
 
-.panel-tabs {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.panel-tabs :deep(.el-tabs__header) {
-  margin: 0;
+/* Tab 切换器 */
+.panel-switcher {
   flex-shrink: 0;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
-.panel-tabs :deep(.el-tabs__content) {
+.panel-switcher :deep(.el-segmented) {
+  width: 100%;
+}
+
+.panel-switcher :deep(.el-segmented__item-label) {
+  font-size: 12px;
+  padding: 0 4px;
+}
+
+/* Tab 内容区 */
+.panel-content {
   flex: 1;
   overflow: hidden;
-  padding: 0;
+  position: relative;
 }
 
-.panel-tabs :deep(.el-tab-pane) {
+.tab-pane-content {
+  width: 100%;
   height: 100%;
   overflow: hidden;
 }
 
-.panel-tabs :deep(.el-tabs__nav) {
-  width: 100%;
+/* 数据源 Tab 树形结构 */
+.source-tab {
   display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-.panel-tabs :deep(.el-tabs__item) {
+.source-toolbar {
+  flex-shrink: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  background: var(--el-fill-color-lighter);
+}
+
+.source-toolbar-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.source-tree-body {
   flex: 1;
-  text-align: center;
-  padding: 0 4px;
-  font-size: 12px;
+  overflow: auto;
+  padding: 4px;
+}
+
+/* 树节点 */
+.source-tree-body :deep(.el-tree) {
+  background: transparent;
+}
+
+.source-tree-body :deep(.el-tree-node__content) {
+  height: 32px;
+}
+
+.tree-node {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.tree-node.is-dataset {
+  cursor: pointer;
+}
+
+.tree-node.is-active {
+  background: var(--el-color-primary-light-9);
+}
+
+.tree-node-icon {
+  color: var(--el-text-color-secondary);
+  flex-shrink: 0;
+}
+
+.tree-node-label {
+  font-size: 13px;
+  color: var(--el-text-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.tree-node-tag {
+  flex-shrink: 0;
+}
+
+.tree-node-stat {
+  font-size: 11px;
+  color: var(--el-text-color-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tree-node-delete {
+  color: var(--el-text-color-placeholder);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.tree-node-delete:hover {
+  color: var(--el-color-danger);
+}
+
+/* 数据源空状态 */
+.source-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 40px 0;
+  color: var(--el-text-color-placeholder);
+  font-size: 13px;
+}
+
+.source-empty-hint {
+  font-size: 11px;
+  color: var(--el-text-color-placeholder);
+}
+
+/* 其他 Tab 空状态 */
+.tab-empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--el-text-color-placeholder);
+  font-size: 13px;
 }
 </style>

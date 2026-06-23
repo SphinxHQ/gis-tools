@@ -112,6 +112,40 @@ body,
 #app {
   height: 100%;
 }
+
+/* 移动端弹窗铺满 + 减少留白 */
+@media (max-width: 767px) {
+  .el-overlay-dialog .el-dialog {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .el-overlay-dialog .el-dialog__header {
+    padding: 8px 12px !important;
+    margin-right: 0 !important;
+  }
+
+  .el-overlay-dialog .el-dialog__body {
+    padding: 8px 12px !important;
+    flex: 1;
+    overflow: auto;
+  }
+
+  .el-overlay-dialog .el-dialog__footer {
+    padding: 8px 12px !important;
+  }
+
+  .el-overlay-dialog .el-dialog__title {
+    font-size: 14px !important;
+  }
+
+  .el-message-box {
+    width: 90% !important;
+  }
+}
 </style>
 <style scoped>
 #app {

@@ -243,23 +243,20 @@ const handleDownloadExchange = () => {
 
     <!-- GeoJson 导出 -->
     <div v-if="exportType === 'geojson'" class="export-panel">
-      <div class="export-options">
-        <el-radio-group v-model="geoJsonType" size="small">
-          <el-radio-button value="FeatureCollection">FeatureCollection</el-radio-button>
-          <el-radio-button value="FeatureListArray">FeatureList Array</el-radio-button>
-          <el-radio-button value="FeatureSplit">Feature Split</el-radio-button>
-        </el-radio-group>
-      </div>
-      <div class="export-options">
-        <el-checkbox v-model="includeCrs" :disabled="!data?.crs?.isValid" size="small">包含 CRS</el-checkbox>
-        <el-select v-model="jsonFormat" size="small" style="width: 100px;">
-          <el-option label="格式化" value="pretty" />
-          <el-option label="压缩" value="compact" />
-        </el-select>
-      </div>
-      <div class="export-actions">
-        <el-button type="primary" size="small" @click="handleDownloadJson">下载 JSON</el-button>
-        <el-button type="success" size="small" :loading="shpLoading" @click="handleDownloadShp">下载 Shapefile</el-button>
+      <!-- 编辑器预览（顶部，占据主要空间） -->
+      <div class="export-editor">
+        <geo-str-editor
+          v-if="geoJsonType !== 'FeatureSplit'"
+          :value="dataStr_Geojson"
+          language="geojson"
+          :read-only="true"
+        />
+        <geo-str-editor
+          v-else
+          :value="curGeo"
+          language="geojson"
+          :read-only="true"
+        />
       </div>
 
       <!-- FeatureSplit 要素列表 -->
@@ -288,31 +285,27 @@ const handleDownloadExchange = () => {
         </div>
       </div>
 
-      <!-- 编辑器预览 -->
-      <div class="export-editor">
-        <geo-str-editor
-          v-if="geoJsonType !== 'FeatureSplit'"
-          :value="dataStr_Geojson"
-          language="geojson"
-          :read-only="true"
-        />
-        <geo-str-editor
-          v-else
-          :value="curGeo"
-          language="geojson"
-          :read-only="true"
-        />
+      <!-- 选项和操作区域（底部） -->
+      <div class="export-bottom-bar">
+        <el-radio-group v-model="geoJsonType" size="small">
+          <el-radio-button value="FeatureCollection">Collection</el-radio-button>
+          <el-radio-button value="FeatureListArray">Array</el-radio-button>
+          <el-radio-button value="FeatureSplit">Split</el-radio-button>
+        </el-radio-group>
+        <div class="export-bottom-right">
+          <el-checkbox v-model="includeCrs" :disabled="!data?.crs?.isValid" size="small">CRS</el-checkbox>
+          <el-select v-model="jsonFormat" size="small" style="width: 80px;">
+            <el-option label="格式化" value="pretty" />
+            <el-option label="压缩" value="compact" />
+          </el-select>
+          <el-button type="primary" size="small" @click="handleDownloadJson">JSON</el-button>
+          <el-button type="success" size="small" :loading="shpLoading" @click="handleDownloadShp">SHP</el-button>
+        </div>
       </div>
     </div>
 
     <!-- Wkt 导出 -->
     <div v-else-if="exportType === 'wkt'" class="export-panel">
-      <div class="export-options">
-        <el-radio-group v-model="wktType" size="small">
-          <el-radio-button value="GeometryCollection">GeometryCollection</el-radio-button>
-          <el-radio-button value="GeometrySplit">Geometry Split</el-radio-button>
-        </el-radio-group>
-      </div>
       <div class="export-editor">
         <geo-str-editor
           :value="wktType === 'GeometrySplit' ? dataStr_wkt.join(`\r\n\r\n\r\n`) : `GEOMETRYCOLLECTION(${dataStr_wkt.join(`,`)})`"
@@ -320,19 +313,25 @@ const handleDownloadExchange = () => {
           :read-only="true"
         />
       </div>
+      <div class="export-bottom-bar">
+        <el-radio-group v-model="wktType" size="small">
+          <el-radio-button value="GeometryCollection">Collection</el-radio-button>
+          <el-radio-button value="GeometrySplit">Split</el-radio-button>
+        </el-radio-group>
+      </div>
     </div>
 
     <!-- 电子报盘导出 -->
     <div v-else class="export-panel">
-      <div class="export-options">
-        <el-radio-group v-model="exchangeDataType" size="small">
-          <el-radio-button value="HasProperties">HasProperties</el-radio-button>
-          <el-radio-button value="NoProperties">NoProperties</el-radio-button>
-        </el-radio-group>
-        <el-button type="primary" size="small" @click="handleDownloadExchange">下载 TXT</el-button>
-      </div>
       <div class="export-editor">
         <geo-str-editor :value="display_exchange" language="exchange" :read-only="true" />
+      </div>
+      <div class="export-bottom-bar">
+        <el-radio-group v-model="exchangeDataType" size="small">
+          <el-radio-button value="HasProperties">Has Props</el-radio-button>
+          <el-radio-button value="NoProperties">No Props</el-radio-button>
+        </el-radio-group>
+        <el-button type="primary" size="small" @click="handleDownloadExchange">下载 TXT</el-button>
       </div>
     </div>
   </div>
@@ -363,24 +362,28 @@ const handleDownloadExchange = () => {
   overflow: hidden;
 }
 
-.export-options {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  flex-shrink: 0;
-}
-
-.export-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
 .export-editor {
   flex: 1;
   overflow: hidden;
-  min-height: 200px;
+  min-height: 120px;
+}
+
+.export-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  padding: 6px 4px;
+  border-top: 1px solid var(--el-border-color-lighter);
+}
+
+.export-bottom-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 .feature-split-view {

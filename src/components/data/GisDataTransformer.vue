@@ -9,6 +9,7 @@ import GisCrs from '~/components/data/GisCrs'
 import GisDataInfo from '~/components/data/GisDataInfo'
 import { CrsInfo } from '~/components/data/GisProjectedBounds'
 import { CrsCategory } from '~/enums'
+import { useGisDataStore } from '~/composables/gisDataStore'
 
 const props = defineProps({
   data: {
@@ -20,6 +21,8 @@ const props = defineProps({
 const emit = defineEmits<{
   'active-data-change': [data: GisDataInfo, transformChain: number[]]
 }>()
+
+const { addDataset } = useGisDataStore()
 
 const originData = ref<GisDataInfo>(new GisDataInfo())
 
@@ -134,6 +137,11 @@ const existingEpsgCodes = computed(() =>
 const findVersionByEpsg = (epsgCode: number): CrsVersion | undefined =>
   crsVersions.value.find(t => t.data?.crs?.epsgCode === epsgCode)
 
+// 活跃数据变化时通知父组件（必须在 watch 之前定义，避免 TDZ）
+const emitActiveDataChange = () => {
+  emit('active-data-change', activeData.value, activeTransformChain.value)
+}
+
 const navigateToChainStep = (epsgCode: number) => {
   const ver = findVersionByEpsg(epsgCode)
   if (ver) activeVersionName.value = ver.name
@@ -172,11 +180,6 @@ watch(originDataCrsTitle, (title) => {
   }
 })
 
-// 活跃数据变化时通知父组件
-const emitActiveDataChange = () => {
-  emit('active-data-change', activeData.value, activeTransformChain.value)
-}
-
 watch(activeVersionName, () => {
   emitActiveDataChange()
 })
@@ -199,6 +202,12 @@ const addTransformVersion = (targetCrs: CrsInfo, sourceVer: CrsVersion) => {
   activeVersionName.value = verName
   reloadVersionsData()
   emitActiveDataChange()
+
+  // 生成新数据集并加入数据源 store，使数据源树出现新节点
+  const sourceName = originData.value?.name || '未命名'
+  const transformedClone = GisDataInfo.clone(activeVersion.value.data)
+  transformedClone.name = `${sourceName} → EPSG:${targetCrs.epsgCode}`
+  addDataset(transformedClone)
 }
 
 const removeVersion = (verName: string) => {
@@ -252,6 +261,12 @@ const handleResetCrs = (crs: CrsInfo) => {
       activeVersionName.value = 'origin'
     }
     emitActiveDataChange()
+
+    // 生成新数据集并加入数据源 store，使数据源树出现新节点
+    const sourceName = originData.value?.name || '未命名'
+    const resetClone = GisDataInfo.clone(activeVersion.value.data)
+    resetClone.name = `${sourceName} (重设 EPSG:${crs.epsgCode})`
+    addDataset(resetClone)
   }
 }
 
