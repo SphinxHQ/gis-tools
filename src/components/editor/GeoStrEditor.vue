@@ -280,9 +280,13 @@ onMounted(async () => {
 
   loading.value = false
 
-  // 延迟设置初始内容，确保自定义语言/主题已完全生效
+  // 延迟设置初始内容并强制刷新主题，确保自定义语言/主题完全生效
   requestAnimationFrame(() => {
-    if (editor) {
+    if (editor && monacoEditor) {
+      // 强制重设主题，避免 create 时 defineTheme 还未生效的问题
+      const langId = editor.getModel()?.getLanguageId()
+      const useGisTheme = langId === 'geojson' || langId === 'wkt'
+      monacoEditor.setTheme(useGisTheme ? (isActuallyDark.value ? 'gis-dark' : 'gis-light') : (isActuallyDark.value ? 'vs-dark' : 'vs'))
       const initial = displayValue()
       if (initial) {
         ignoreNextChange = true
