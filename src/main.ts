@@ -2,6 +2,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import { createApp } from 'vue';
 
 import Common from '~/common/Common';
+import { setupMonaco } from '~/components/editor/monacoSetup';
 import router from '~/router';
 
 import App from './App.vue';
@@ -18,6 +19,9 @@ import '~/styles/index.scss';
 // 启动主入口 loading 假进度（在地图初始化完成前一直显示）
 // 见 entryLoader.ts 与 index.html 中的 #entry-loader-mask
 showEntryLoader();
+
+// 预加载 Monaco 编辑器并注册自定义语言/主题，确保任何编辑器实例创建前一切就绪
+setupMonaco();
 
 const app = createApp(App);
 app.use(router).mount('#app');
