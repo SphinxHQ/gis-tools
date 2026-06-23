@@ -1,41 +1,28 @@
 /**
- * 主入口 loading 屏控制
+ * 主入口 loading 屏控制（构建时清单 + 平滑推进）
  *
- * 背景：地图初始化涉及 proj4 注册、瓦片探测、底图加载等，
- *       整个过程可能持续数秒。Vite 在 ESM 模式下不会阻塞 HTML 解析，
- *       但 `<div id="app">` 在挂载完成前是空的，会出现"白屏"。
+ * 进度算法：
+ *   目标值 ≠ 100%：每帧 displayPercent += (targetPercent - displayPercent) * 0.05
+ *     → 指数衰减，永远在靠近目标值，不会停滞
+ *   目标值 = 100%（finishing 阶段）：200ms 线性推进到 100%
  *
- * 方案：
- *   1. 在 index.html 中直接渲染一个纯 HTML+CSS 的 loading 屏（不依赖任何 JS）
- *   2. main.ts 启动时调用 showEntryLoader() 启动假进度
- *   3. GisMapBase 初始化完成后调用 hideEntryLoader() 移除遮罩
+ * build 模式（有清单）：
+ *   - 0-95%：清单内 JS/CSS 资源加载比例（PerformanceObserver 匹配清单条目）
+ *   - 95-100%：hideEntryLoader() 后 200ms 线性冲刺到 100%
  *
- * 进度策略（用户要求）：
- *   - 强制播放至少 5 秒
- *   - 5 秒跑完卡在 98%
- *   - 等真实加载完成才到 100% 然后淡出
- *
- * 提示语策略：绑定到进度节点触发
- *   - 0%   → 正在加载地图核心模块
- *   - 18%  → 正在注册投影坐标系
- *   - 36%  → 正在构建地图视图
- *   - 54%  → 正在加载底图服务
- *   - 72%  → 正在绑定交互事件
- *   - 90%+ → 即将完成，请稍后
+ * dev 模式（无清单）：
+ *   - 0-60%：假进度，6s 到 60%（easeOutCubic）
+ *   - 60-95%：模块初始化里程碑回调（updateLoaderProgress）
+ *   - 95-100%：hideEntryLoader() 后 200ms 线性冲刺到 100%
  */
 
-let fakeStartTs = 0
-let fakeRafId: number | null = null
 let hideStarted = false
-let lastTipIdx = -1
+let displayPercent = 0
+let targetPercent = 0
 
-const FAKE_DURATION_MS = 5000
-const FAKE_TARGET = 98
+type LoaderPhase = 'loading' | 'waiting' | 'finishing'
+let phase: LoaderPhase = 'loading'
 
-/**
- * 提示语节点：进度跨过 at% 阈值时切换到对应文案
- * 区间采用左闭右开（at 升序），最后一个节点从 at% 一直保持到加载完成
- */
 const TIPS: { at: number; text: string }[] = [
   { at: 0, text: '正在加载地图核心模块' },
   { at: 18, text: '正在注册投影坐标系' },
@@ -45,10 +32,6 @@ const TIPS: { at: number; text: string }[] = [
   { at: 90, text: '即将完成，请稍后' },
 ]
 
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3)
-}
-
 function pickTipIndex(percent: number): number {
   let idx = 0
   for (let i = 0; i < TIPS.length; i++) {
@@ -57,14 +40,15 @@ function pickTipIndex(percent: number): number {
   return idx
 }
 
-/**
- * 文字通道：所有文字（包括百分比与提示语）都通过 Canvas 2D 绘制。
- * 我们只更新 window.__loaderText 这个数据通道，Canvas 帧循环读取后绘制，
- * 不再触碰 DOM 文本节点，避免主进程 reflow 卡顿。
- */
 declare global {
   interface Window {
     __loaderText?: { percent: string; tip: string }
+    __startEnding?: () => void
+    __loaderCycleRemaining?: number
+    __loaderResourceLoaded?: number
+    __loaderResourceTotal?: number
+    __loaderManifestReady?: boolean
+    __entryLoaderManifest?: string[] | null
   }
 }
 
@@ -73,75 +57,171 @@ function pushLoaderText(percent: string, tip: string): void {
   window.__loaderText = { percent, tip }
 }
 
-function tickFakeLoading(ts: number): void {
-  if (!fakeStartTs) fakeStartTs = ts
-  const elapsed = ts - fakeStartTs
-  const t = Math.min(elapsed / FAKE_DURATION_MS, 1)
-  const value = Math.floor(easeOutCubic(t) * FAKE_TARGET)
-  // 按进度阈值切换提示语
-  const tipIdx = pickTipIndex(value)
-  const tipText = TIPS[tipIdx].text
-  if (tipIdx !== lastTipIdx) {
-    lastTipIdx = tipIdx
-  }
-  pushLoaderText(value + '%', tipText)
-  if (t >= 1) {
-    pushLoaderText(FAKE_TARGET + '%', tipText)
-    fakeRafId = null
-    return
-  }
-  fakeRafId = requestAnimationFrame(tickFakeLoading)
+let fakeRafId: number | null = null
+let finishStartTs = 0
+const FINISH_DURATION = 200
+
+/** build 模式：清单资源加载比例映射到 0-95%
+ *  给 2% 初始进度，避免 PerformanceObserver 回调前一直显示 0%
+ */
+function getManifestPercent(): number {
+  if (!window.__loaderManifestReady) return -1
+  const loaded = window.__loaderResourceLoaded || 0
+  const total = window.__loaderResourceTotal || 1
+  if (total <= 0) return 0
+  if (loaded === 0) return 2 // 初始进度，避免一直 0%
+  return Math.min(95, Math.floor((loaded / total) * 95))
 }
 
-/**
- * 启动假进度动画（由 main.ts 在挂载时触发）
- */
+// ---- dev 模式假进度 ----
+let fakeStartTs = 0
+const FAKE_DURATION_MS = 6000
+const FAKE_TARGET = 60
+
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3)
+}
+
+const CHASE_RATIO = 0.05    // 每帧按差值的 5% 追赶
+
+function tick(ts: number): void {
+  if (phase === 'loading') {
+    tickLoading(ts)
+  } else if (phase === 'waiting') {
+    tickWaiting(ts)
+  } else if (phase === 'finishing') {
+    tickFinishing(ts)
+  }
+}
+
+function tickLoading(ts: number): void {
+  const manifestPercent = getManifestPercent()
+
+  if (manifestPercent >= 0) {
+    // build 模式：用清单资源比例
+    targetPercent = Math.max(manifestPercent, targetPercent)
+  } else {
+    // dev 模式：假进度 + 里程碑
+    if (!fakeStartTs) fakeStartTs = ts
+    const elapsed = ts - fakeStartTs
+    const t = Math.min(elapsed / FAKE_DURATION_MS, 1)
+    const fakeVal = Math.floor(easeOutCubic(t) * FAKE_TARGET)
+    targetPercent = Math.max(fakeVal, targetPercent)
+  }
+
+  // 每帧按差值的 CHASE_RATIO 追赶目标值，永远在推进，不会停滞
+  const diff = targetPercent - displayPercent
+  if (Math.abs(diff) < 0.5) {
+    displayPercent = targetPercent
+  } else {
+    displayPercent += diff * CHASE_RATIO
+  }
+  displayPercent = Math.min(displayPercent, 95)
+
+  const displayValue = Math.floor(displayPercent)
+  const tipIdx = pickTipIndex(displayValue)
+  pushLoaderText(displayValue + '%', TIPS[tipIdx].text)
+
+  // 检查是否可以进入 finishing
+  if (hideStarted && (window.__loaderCycleRemaining || 0) <= 50) {
+    phase = 'finishing'
+    finishStartTs = 0
+  }
+
+  fakeRafId = requestAnimationFrame(tick)
+}
+
+function tickWaiting(ts: number): void {
+  const cycleRemaining = window.__loaderCycleRemaining || 0
+  if (cycleRemaining <= 50) {
+    phase = 'finishing'
+    finishStartTs = 0
+  }
+  fakeRafId = requestAnimationFrame(tick)
+}
+
+function tickFinishing(ts: number): void {
+  if (!finishStartTs) finishStartTs = ts
+  const elapsed = ts - finishStartTs
+  const t = Math.min(elapsed / FINISH_DURATION, 1)
+  const startVal = displayPercent
+  const finishPercent = startVal + (100 - startVal) * t
+  const displayValue = Math.floor(finishPercent)
+  pushLoaderText(displayValue + '%', '欢迎使用 GIS Tools')
+
+  if (t >= 1) {
+    pushLoaderText('100%', '欢迎使用 GIS Tools')
+    fakeRafId = null
+    if (typeof window.__startEnding === 'function') {
+      window.__startEnding()
+    }
+    return
+  }
+  fakeRafId = requestAnimationFrame(tick)
+}
+
 export function showEntryLoader(): void {
   if (typeof window === 'undefined') return
   if (hideStarted) return
   const mask = document.getElementById('entry-loader-mask')
   if (!mask) return
-  mask.classList.remove('entry-loader-hide')
-  fakeStartTs = 0
-  lastTipIdx = -1
+  displayPercent = 0
+  targetPercent = 0
+  phase = 'loading'
   if (fakeRafId) cancelAnimationFrame(fakeRafId)
-  // 重置文字通道（Canvas 会自动读取最新值）
-  pushLoaderText('0%', TIPS[0].text)
-  fakeRafId = requestAnimationFrame(tickFakeLoading)
+  // build 模式：给 2% 初始进度，避免 PerformanceObserver 回调前一直显示 0%
+  if (window.__loaderManifestReady) {
+    displayPercent = 2
+    targetPercent = 2
+  }
+  pushLoaderText(Math.floor(displayPercent) + '%', TIPS[0].text)
+  fakeRafId = requestAnimationFrame(tick)
 }
 
 /**
- * 隐藏入口 loading 屏：先到 100% 短暂停留，再淡出
+ * 更新模块初始化进度（dev 模式 60-95%，build 模式作为兜底）
+ */
+export function updateLoaderProgress(percent: number, tip?: string): void {
+  const clamped = Math.max(0, Math.min(95, percent))
+  if (clamped > targetPercent) {
+    targetPercent = clamped
+  }
+  if (tip) {
+    const tipIdx = pickTipIndex(clamped)
+    TIPS[tipIdx] = { at: TIPS[tipIdx].at, text: tip }
+  }
+}
+
+/**
+ * 检查清单内资源是否已全部加载完成
+ * build 模式：清单只包含初始加载必需的资源，必须 100% 完成
+ * dev 模式：始终返回 true
+ */
+function isManifestComplete(): boolean {
+  if (!window.__loaderManifestReady) return true // dev 模式不检查
+  const loaded = window.__loaderResourceLoaded || 0
+  const total = window.__loaderResourceTotal || 0
+  if (total <= 0) return true
+  return loaded >= total // 100% 阈值：清单只含初始必需资源
+}
+
+/**
+ * 隐藏入口 loading 屏
+ * App.vue 调用前应确保清单内资源已加载完成（build 模式）
  */
 export function hideEntryLoader(): void {
   if (typeof window === 'undefined') return
+  if (hideStarted) return
   hideStarted = true
-  const mask = document.getElementById('entry-loader-mask')
-  if (!mask) return
-  // 调试日志：确认 hide 流程被触发
   // eslint-disable-next-line no-console
-  console.info('[entryLoader] hide start')
-  if (fakeRafId) {
-    cancelAnimationFrame(fakeRafId)
-    fakeRafId = null
-  }
-  const tipText = '欢迎使用 GIS Tools'
-  pushLoaderText('100%', tipText)
-  // 立即停止 SVG 内部 SMIL 动画
-  mask.querySelectorAll<SVGElement>('svg').forEach((svg) => {
-    try { svg.pauseAnimations?.() } catch { /* noop */ }
-  })
-  // 350ms 后开始淡出
-  window.setTimeout(() => {
-    mask.classList.add('entry-loader-hide')
-    // 600ms 后强制 display:none 并从 DOM 移除（兜底）
-    window.setTimeout(() => {
-      if (mask.parentElement) {
-        mask.style.display = 'none'
-        mask.parentElement.removeChild(mask)
-        // eslint-disable-next-line no-console
-        console.info('[entryLoader] mask removed')
-      }
-    }, 600)
-  }, 350)
+  console.info('[entryLoader] hide requested, phase=' + phase + ', manifest complete=' + isManifestComplete())
+}
+
+/**
+ * 查询是否可以安全隐藏 loading 屏
+ * build 模式：清单内所有资源必须加载完成
+ * dev 模式：始终返回 true
+ */
+export function canHideLoader(): boolean {
+  return isManifestComplete()
 }

@@ -48,7 +48,7 @@ onMounted(async () => {
   editor = me.create(editorContainer.value, {
     value: '',
     language: props.language,
-    theme: (props.language === 'geojson' || props.language === 'wkt')
+    theme: (props.language === 'geojson' || props.language === 'wkt' || props.language === 'exchange')
       ? (isActuallyDark.value ? 'gis-dark' : 'gis-light')
       : (isActuallyDark.value ? 'vs-dark' : 'vs'),
     readOnly: props.readOnly,
@@ -102,7 +102,7 @@ onMounted(async () => {
     if (editor) {
       const me = getMonacoEditor()
       const langId = editor.getModel()?.getLanguageId()
-      const useGisTheme = langId === 'geojson' || langId === 'wkt'
+      const useGisTheme = langId === 'geojson' || langId === 'wkt' || langId === 'exchange'
       me.setTheme(useGisTheme ? (isActuallyDark.value ? 'gis-dark' : 'gis-light') : (isActuallyDark.value ? 'vs-dark' : 'vs'))
       const initial = displayValue()
       if (initial) {
@@ -157,7 +157,8 @@ watch(isActuallyDark, (dark) => {
   const me = getMonacoEditor()
   const isGeoJson = editor?.getModel()?.getLanguageId() === 'geojson'
   const isWkt = editor?.getModel()?.getLanguageId() === 'wkt'
-  const useGisTheme = isGeoJson || isWkt
+  const isExchange = editor?.getModel()?.getLanguageId() === 'exchange'
+  const useGisTheme = isGeoJson || isWkt || isExchange
   me.setTheme(useGisTheme ? (dark ? 'gis-dark' : 'gis-light') : (dark ? 'vs-dark' : 'vs'))
 })
 

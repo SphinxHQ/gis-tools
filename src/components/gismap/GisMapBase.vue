@@ -32,7 +32,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref} from 'vue';
 
 import {logger} from '~/common/logger';
 import {CrsBounds} from '~/components/data/GisProjectedBounds';
-import {hideEntryLoader} from '~/composables/entryLoader';
+import {hideEntryLoader, updateLoaderProgress} from '~/composables/entryLoader';
 import {eventBus, GisEvent} from '~/composables/eventBus';
 import {setMainMap} from '~/composables/gisMap';
 
@@ -263,6 +263,8 @@ onMounted(async () => {
     });
   }
   setMainMap(map);
+  // 通知进度：地图视图已构建
+  updateLoaderProgress(80, '正在加载底图服务');
   // 通知主入口的 loading 屏：地图初始化已完成
   hideEntryLoader();
   mapReady.value = true;

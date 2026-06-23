@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import {reactive, onMounted, onBeforeUnmount} from "vue";
 
-import {hideEntryLoader} from "~/composables/entryLoader";
+import {hideEntryLoader, updateLoaderProgress, canHideLoader} from "~/composables/entryLoader";
 
 const font = reactive({
   color: 'rgba(0, 0, 0, .05)',
@@ -12,17 +12,47 @@ const font = reactive({
  *  1) MutationObserver 监听 #app 子树的所有 DOM 变化
  *  2) 当连续 QUIET_MS（默认 1200ms）没有任何 mutation，判定 app 初始化完毕
  *  3) 初始化完毕后再等 MIN_HOLD_MS（默认 1000ms），让首帧资源先到位
- *  4) 同时设置 HARD_TIMEOUT_MS（默认 30s）兜底，防止异常时永远卡住
+ *  4) 检查清单内所有资源是否加载完成（build 模式），未完成则轮询等待
+ *  5) 同时设置 HARD_TIMEOUT_MS（默认 30s）兜底，防止异常时永远卡住
  * 满足任一可隐藏条件即调用 hideEntryLoader（内部幂等）
  */
 const QUIET_MS = 1200        // 连续无 DOM 变化的"安静期"
 const MIN_HOLD_MS = 1000     // 安静期后再等 1s
-const HARD_TIMEOUT_MS = 30000 // 兜底
+const HARD_TIMEOUT_MS = 60000 // 兜底（60s，给 Monaco/GisData 等大 chunk 足够时间）
+const MANIFEST_POLL_MS = 200  // 清单完成轮询间隔
+const MANIFEST_TIMEOUT_MS = 60000 // 清单完成超时兜底（等所有初始必需资源加载完）
 
 let quietTimer: number | null = null
 let holdTimer: number | null = null
 let hardTimer: number | null = null
+let manifestTimer: number | null = null
 let observer: MutationObserver | null = null
+
+function tryHide(): void {
+  if (canHideLoader()) {
+    updateLoaderProgress(90, '即将完成，请稍后')
+    hideEntryLoader()
+    cleanup()
+  } else {
+    // 清单内资源还没加载完，轮询等待
+    // eslint-disable-next-line no-console
+    console.info('[entryLoader] waiting for manifest resources to complete...')
+    const startTime = Date.now()
+    manifestTimer = window.setInterval(() => {
+      if (canHideLoader() || Date.now() - startTime > MANIFEST_TIMEOUT_MS) {
+        if (manifestTimer) window.clearInterval(manifestTimer)
+        manifestTimer = null
+        if (!canHideLoader()) {
+          // eslint-disable-next-line no-console
+          console.warn('[entryLoader] manifest timeout, force hide')
+        }
+        updateLoaderProgress(90, '即将完成，请稍后')
+        hideEntryLoader()
+        cleanup()
+      }
+    }, MANIFEST_POLL_MS)
+  }
+}
 
 function resetQuietTimer(): void {
   if (quietTimer !== null) window.clearTimeout(quietTimer)
@@ -30,8 +60,7 @@ function resetQuietTimer(): void {
     // 进入安静期：再额外等 MIN_HOLD_MS 再 hide
     if (holdTimer !== null) window.clearTimeout(holdTimer)
     holdTimer = window.setTimeout(() => {
-      hideEntryLoader()
-      cleanup()
+      tryHide()
     }, MIN_HOLD_MS)
   }, QUIET_MS)
 }
@@ -41,13 +70,17 @@ function cleanup(): void {
   if (quietTimer) { window.clearTimeout(quietTimer); quietTimer = null }
   if (holdTimer) { window.clearTimeout(holdTimer); holdTimer = null }
   if (hardTimer) { window.clearTimeout(hardTimer); hardTimer = null }
+  if (manifestTimer) { window.clearInterval(manifestTimer); manifestTimer = null }
 }
 
 onMounted(() => {
+  // Vue app 挂载完成
+  updateLoaderProgress(65, '正在初始化应用')
   // 硬超时兜底
   hardTimer = window.setTimeout(() => {
     // eslint-disable-next-line no-console
     console.warn('[entryLoader] hard timeout reached, force hide')
+    updateLoaderProgress(90, '即将完成，请稍后')
     hideEntryLoader()
     cleanup()
   }, HARD_TIMEOUT_MS)

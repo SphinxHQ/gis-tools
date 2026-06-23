@@ -45,11 +45,13 @@
     "happy-dom": "^14.12.3",
     "mlly": "^1.8.2",
     "sass": "1.77.8",
+    "sharp": "^0.35.2",
     "typescript": "5.5.4",
     "unocss": "0.58.9",
     "unplugin-vue-components": "0.26.0",
     "vite": "5.4.2",
     "vite-plugin-node-polyfills": "0.22.0",
+    "vite-plugin-pwa": "^1.3.0",
     "vite-ssg": "0.23.8",
     "vitest": "^1.6.0",
     "vue-tsc": "2.0.29"
