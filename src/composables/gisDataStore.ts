@@ -9,6 +9,21 @@ export interface GisDataSetEntry {
   data: GisDataInfo
   sourceId: string
   appendedFrom?: { name: string; count: number }[]
+  /** 转换路径版本数据（持久化，切换数据集时保留） */
+  transformVersions?: CrsVersionSnapshot[]
+  /** 当前活跃版本名 */
+  activeVersionName?: string
+}
+
+/** 转换路径版本快照（可序列化存储） */
+export interface CrsVersionSnapshot {
+  name: string
+  label: string
+  crsEpsg?: number
+  sourceEpsg?: number
+  sourceVersionName?: string
+  datasetId?: string
+  transformChain: number[]
 }
 
 export interface GisDataSource {
@@ -89,6 +104,10 @@ function removeDataset(id: string): void {
   if (activeId.value === id) {
     const next = datasets.value[idx] || datasets.value[idx - 1]
     activeId.value = next?.id ?? null
+    // 同步 activeSourceId 到新的活跃数据集所属源
+    if (next) {
+      activeSourceId.value = next.sourceId
+    }
   }
 }
 

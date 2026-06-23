@@ -242,6 +242,13 @@ onMounted(async () => {
   // 鼠标位置坐标显示
   const olMap = map.getMap();
   if (olMap) {
+    // 监听 window resize，更新地图尺寸
+    const handleResize = () => {
+      olMap.updateSize()
+    }
+    window.addEventListener('resize', handleResize)
+    // 保存引用以便清理
+    ;(map as any)._resizeHandler = handleResize
     let coordRafId = 0;
     olMap.on('pointermove', (evt: any) => {
       // RAF 节流 + 像素去重，避免拖动时每像素触发响应式更新
@@ -297,6 +304,11 @@ onMounted(async () => {
 });
 onBeforeUnmount(() => {
   const mapName = props.mapName || '';
+  // 清理 resize 监听
+  if (map && (map as any)._resizeHandler) {
+    window.removeEventListener('resize', (map as any)._resizeHandler)
+    delete (map as any)._resizeHandler
+  }
   eventBus.off(mapName, MapTypes.DRAWTOOL, handles[MapTypes.DRAWTOOL])
   eventBus.off(mapName, MapTypes.CLEANDRAW, handles[MapTypes.CLEANDRAW])
   eventBus.off(mapName, MapTypes.ADD_FEATURES, handles[MapTypes.ADD_FEATURES])
@@ -310,7 +322,7 @@ onBeforeUnmount(() => {
   eventBus.off(mapName, MapTypes.CLEAR_EDIT_SHADOW, handles[MapTypes.CLEAR_EDIT_SHADOW])
   eventBus.off(mapName, MapTypes.SET_LAYER_VISIBILITY, handles[MapTypes.SET_LAYER_VISIBILITY])
   eventBus.off(mapName, MapTypes.CLEAN_LAYER, handles[MapTypes.CLEAN_LAYER])
-  map.dispose();
+  map?.dispose();
   setMainMap(null as any);
 })
 </script>

@@ -43,6 +43,7 @@ const showTextConfirm = computed(() => {
     width="96%"
     top="2vh"
     :close-on-click-modal="false"
+    :show-close="false"
     destroy-on-close
     class="import-dialog"
   >
@@ -93,6 +94,7 @@ const showTextConfirm = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: nowrap;
 }
 
 .dialog-footer-left {
@@ -105,6 +107,7 @@ const showTextConfirm = computed(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
 </style>
 
@@ -113,5 +116,50 @@ const showTextConfirm = computed(() => {
   height: calc(96vh - 120px);
   overflow: hidden;
   padding: 0 20px;
+}
+
+/* 移动端导入弹窗：隐藏 header，完全铺满，所有 padding 清零 */
+@media (max-width: 767px) {
+  .el-overlay-dialog .import-dialog.el-dialog {
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+  }
+
+  /* 隐藏顶部 header */
+  .el-overlay-dialog .import-dialog .el-dialog__header {
+    display: none !important;
+  }
+
+  /* body 完全铺满，padding 清零 */
+  .el-overlay-dialog .import-dialog .el-dialog__body {
+    flex: 1 !important;
+    height: auto !important;
+    min-height: 0;
+    padding: 0 !important;
+  }
+
+  /* footer padding */
+  .el-overlay-dialog .import-dialog .el-dialog__footer {
+    padding: 10px !important;
+    flex-shrink: 0;
+  }
+
+  .import-dialog .dialog-footer {
+    gap: 6px;
+    padding: 6px 8px;
+  }
+
+  .import-dialog .dialog-footer-left {
+    gap: 6px;
+  }
+
+  .import-dialog .dialog-footer-left .el-select {
+    width: 160px !important;
+  }
+
+  .import-dialog .dialog-footer-right {
+    margin-left: auto;
+  }
 }
 </style>

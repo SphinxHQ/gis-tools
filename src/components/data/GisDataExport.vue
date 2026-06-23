@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ShapefileParser, GeoJSONFeatureCollection } from "@sphinx_hq/shapefile-parser";
 import { ElMessage } from "element-plus";
+import { Download } from "@element-plus/icons-vue";
 import { computed, Ref, ref, watch } from "vue";
 
 import { ExchangeDataFormat } from "~/components/data/ExchangeDataFormat";
@@ -298,8 +299,8 @@ const handleDownloadExchange = () => {
             <el-option label="格式化" value="pretty" />
             <el-option label="压缩" value="compact" />
           </el-select>
-          <el-button type="primary" size="small" @click="handleDownloadJson">JSON</el-button>
-          <el-button type="success" size="small" :loading="shpLoading" @click="handleDownloadShp">SHP</el-button>
+          <el-button type="success" size="small" :icon="Download" @click="handleDownloadJson">JSON</el-button>
+          <el-button type="success" size="small" :icon="Download" :loading="shpLoading" @click="handleDownloadShp">SHP</el-button>
         </div>
       </div>
     </div>
@@ -331,7 +332,7 @@ const handleDownloadExchange = () => {
           <el-radio-button value="HasProperties">Has Props</el-radio-button>
           <el-radio-button value="NoProperties">No Props</el-radio-button>
         </el-radio-group>
-        <el-button type="primary" size="small" @click="handleDownloadExchange">下载 TXT</el-button>
+        <el-button type="success" size="small" :icon="Download" @click="handleDownloadExchange">下载 TXT</el-button>
       </div>
     </div>
   </div>

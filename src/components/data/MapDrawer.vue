@@ -130,12 +130,11 @@ const handleSubmit = () => {
       </div>
     </div>
 
-    <!-- 移动端：抽屉按钮 -->
+    <!-- 移动端：抽屉按钮（图标按钮，位于城市下拉框左侧） -->
     <div v-else class="md-mobile-trigger">
       <el-badge :value="featureList.length" :hidden="featureList.length === 0" class="md-mobile-badge">
-        <el-button type="primary" size="small" @click="drawerVisible = true">
+        <el-button type="primary" size="small" circle @click="drawerVisible = true" title="要素列表">
           <el-icon><Fold /></el-icon>
-          <span>要素列表</span>
         </el-button>
       </el-badge>
     </div>
@@ -254,8 +253,8 @@ const handleSubmit = () => {
 
 .md-mobile-trigger {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 6px;
+  left: 4px;
   z-index: 3;
 }
 

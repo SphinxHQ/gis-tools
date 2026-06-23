@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ElMessageBox } from 'element-plus'
 import proj4 from 'proj4'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 
 import { GisError, GisErrorCode, createUserMessage } from '~/common/GisError'
 import { logger } from '~/common/logger'
@@ -9,7 +9,7 @@ import GisCrs from '~/components/data/GisCrs'
 import GisDataInfo from '~/components/data/GisDataInfo'
 import { CrsInfo } from '~/components/data/GisProjectedBounds'
 import { CrsCategory } from '~/enums'
-import { useGisDataStore } from '~/composables/gisDataStore'
+import { useGisDataStore, CrsVersionSnapshot } from '~/composables/gisDataStore'
 
 const props = defineProps({
   data: {
@@ -22,33 +22,7 @@ const emit = defineEmits<{
   'active-data-change': [data: GisDataInfo, transformChain: number[]]
 }>()
 
-const { addDataset, updateDataset, activeId, activeSourceId } = useGisDataStore()
-
-// 变更操作后提示：更新当前数据集 or 另存为新数据集（同源）
-const promptUpdateOrSaveAs = async (transformedData: GisDataInfo) => {
-  try {
-    await ElMessageBox.confirm(
-      '变更完成。请选择：更新当前数据集，或另存为新数据集（同一数据源下）。',
-      '变更确认',
-      {
-        confirmButtonText: '另存为新数据集',
-        cancelButtonText: '更新当前数据',
-        distinguishCancelAndClose: true,
-        type: 'info',
-      }
-    )
-    // 用户点击"另存为新数据集"
-    addDataset(transformedData, activeSourceId.value ?? undefined)
-  } catch (action: unknown) {
-    if (action === 'cancel') {
-      // 用户点击"更新当前数据"
-      if (activeId.value) {
-        updateDataset(activeId.value, transformedData)
-      }
-    }
-    // action === 'close' 则什么都不做（用户关闭弹窗）
-  }
-}
+const { addDataset, updateDataset, activeId, activeSourceId, datasets } = useGisDataStore()
 
 const originData = ref<GisDataInfo>(new GisDataInfo())
 
@@ -79,8 +53,8 @@ const transformGeometry = (geoObj: unknown, fromCrs: CrsInfo, toCrs: CrsInfo) =>
   }
 }
 
-const transformData = (data: GisDataInfo, toCrs: CrsInfo | undefined) => {
-  if (!toCrs) return
+const transformData = (data: GisDataInfo, toCrs: CrsInfo | undefined): boolean => {
+  if (!toCrs) return false
   try {
     const fromCrs = data.crs?.crsInfo
     if (fromCrs && fromCrs.epsgCode !== toCrs.epsgCode) {
@@ -101,6 +75,7 @@ const transformData = (data: GisDataInfo, toCrs: CrsInfo | undefined) => {
         data.descriptions['带号'] = (toCrs.zoneNumber ?? 0) > 0 ? String(toCrs.zoneNumber) : ''
       }
     }
+    return true
   } catch (e) {
     let msg = createUserMessage(e)
     if (e instanceof GisError) {
@@ -121,21 +96,44 @@ const transformData = (data: GisDataInfo, toCrs: CrsInfo | undefined) => {
         if (failItem) removeVersion(failItem.name)
       }
     })
+    return false
   }
 }
 
-// === CRS 版本管理（替代原 tabs） ===
+// === CRS 版本管理（转换路径 DAG） ===
 interface CrsVersion {
   name: string
   label: string
   data: GisDataInfo
   crs?: CrsInfo
   sourceEpsg?: number
+  /** 父版本名（构成转换路径树） */
+  sourceVersionName?: string
+  /** 关联的数据集 id（转换后自动创建）；origin 版本关联当前 activeId */
+  datasetId?: string
   transformChain: number[]
 }
 
 const activeVersionName = ref('origin')
 const crsVersions = ref<CrsVersion[]>([])
+// 转换期间标志：防止 props.data 变化（因 addDataset/updateDataset 触发）重置转换路径
+const isTransforming = ref(false)
+
+/** 保存当前转换路径到当前活跃数据集 */
+function saveVersionsToDataset() {
+  const entry = activeId.value ? datasets.value.find(d => d.id === activeId.value) : undefined
+  if (!entry) return
+  entry.transformVersions = crsVersions.value.map(v => ({
+    name: v.name,
+    label: v.label,
+    crsEpsg: v.crs?.epsgCode,
+    sourceEpsg: v.sourceEpsg,
+    sourceVersionName: v.sourceVersionName,
+    datasetId: v.datasetId,
+    transformChain: v.transformChain,
+  }))
+  entry.activeVersionName = activeVersionName.value
+}
 
 const originDataCrsTitle = computed(() => {
   const crs = originData.value?.crs
@@ -173,29 +171,83 @@ const navigateToChainStep = (epsgCode: number) => {
   if (ver) activeVersionName.value = ver.name
 }
 
-const reloadVersionsData = () => {
+const reloadVersionsData = (): boolean => {
+  let lastSuccess = true
   crsVersions.value.forEach((item, idx) => {
     if (idx > 0) {
       item.data = GisDataInfo.clone(originData.value)
-      transformData(item.data, item.crs)
+      const success = transformData(item.data, item.crs)
+      // 记录最后一个版本（新添加的）的转换结果
+      if (idx === crsVersions.value.length - 1) {
+        lastSuccess = success
+      }
     }
   })
+  return lastSuccess
 }
 
-// 监听 props.data 变化
+// 监听 props.data 变化（转换期间跳过，防止 addDataset/updateDataset 触发重置）
+// 切换数据集时：保存旧版本到旧数据集，从新数据集恢复
+let lastActiveId: string | null = null
 watch(() => props.data, (newData) => {
+  if (isTransforming.value) return
+
+  // 保存当前转换路径到旧数据集
+  if (lastActiveId && crsVersions.value.length > 1) {
+    const oldEntry = datasets.value.find(d => d.id === lastActiveId)
+    if (oldEntry) {
+      oldEntry.transformVersions = crsVersions.value.map(v => ({
+        name: v.name,
+        label: v.label,
+        crsEpsg: v.crs?.epsgCode,
+        sourceEpsg: v.sourceEpsg,
+        sourceVersionName: v.sourceVersionName,
+        datasetId: v.datasetId,
+        transformChain: v.transformChain,
+      }))
+      oldEntry.activeVersionName = activeVersionName.value
+    }
+  }
+
   const data = newData as GisDataInfo
   originData.value = data
   const originEpsg = data?.crs?.epsgCode
-  crsVersions.value = [{
-    name: 'origin',
-    label: originDataCrsTitle.value,
-    data: data,
-    crs: undefined,
-    sourceEpsg: undefined,
-    transformChain: originEpsg ? [originEpsg] : [],
-  }]
-  activeVersionName.value = 'origin'
+  const currentId = activeId.value
+  lastActiveId = currentId
+
+  // 尝试从新数据集恢复转换路径
+  const newEntry = currentId ? datasets.value.find(d => d.id === currentId) : undefined
+  if (newEntry?.transformVersions && newEntry.transformVersions.length > 1) {
+    // 恢复转换路径：重建 crsVersions（data 字段需要重新计算）
+    crsVersions.value = newEntry.transformVersions.map(snap => ({
+      name: snap.name,
+      label: snap.label,
+      data: new GisDataInfo(),
+      crs: snap.crsEpsg ? new GisCrs(snap.crsEpsg).crsInfo : undefined,
+      sourceEpsg: snap.sourceEpsg,
+      sourceVersionName: snap.sourceVersionName,
+      datasetId: snap.datasetId,
+      transformChain: snap.transformChain,
+    }))
+    // origin 版本的 data 直接用当前数据
+    crsVersions.value[0].data = data
+    // 重新计算转换后版本的 data
+    reloadVersionsData()
+    activeVersionName.value = newEntry.activeVersionName || 'origin'
+  } else {
+    // 无保存的转换路径，重置为 origin
+    crsVersions.value = [{
+      name: 'origin',
+      label: originDataCrsTitle.value,
+      data: data,
+      crs: undefined,
+      sourceEpsg: undefined,
+      sourceVersionName: undefined,
+      datasetId: currentId ?? undefined,
+      transformChain: originEpsg ? [originEpsg] : [],
+    }]
+    activeVersionName.value = 'origin'
+  }
   emitActiveDataChange()
 }, { deep: true, immediate: true })
 
@@ -223,17 +275,30 @@ const addTransformVersion = (targetCrs: CrsInfo, sourceVer: CrsVersion) => {
     data: new GisDataInfo(),
     crs: targetCrs,
     sourceEpsg: sourceVer.data?.crs?.epsgCode,
+    sourceVersionName: sourceVer.name,
     transformChain: newChain,
   })
   activeVersionName.value = verName
-  reloadVersionsData()
+  const success = reloadVersionsData()
   emitActiveDataChange()
 
-  // 变更操作后提示：更新当前 or 另存为新数据集（同源）
-  const sourceName = originData.value?.name || '未命名'
-  const transformedClone = GisDataInfo.clone(activeVersion.value.data)
-  transformedClone.name = `${sourceName} → EPSG:${targetCrs.epsgCode}`
-  promptUpdateOrSaveAs(transformedClone)
+  // 转换成功后自动创建新数据集并记入转换路径
+  if (success) {
+    const ver = crsVersions.value.find(t => t.name === verName)
+    if (ver) {
+      const sourceName = originData.value?.name || '未命名'
+      const transformedClone = GisDataInfo.clone(ver.data)
+      transformedClone.name = `${sourceName} → EPSG:${targetCrs.epsgCode}`
+      // 标志位防止 addDataset 触发 props.data 变化重置转换路径
+      isTransforming.value = true
+      const newDatasetId = addDataset(transformedClone, activeSourceId.value ?? undefined)
+      ver.datasetId = newDatasetId
+      // 保存转换路径到当前数据集
+      saveVersionsToDataset()
+      // nextTick 后恢复，确保 watch 已跳过重置
+      nextTick(() => { isTransforming.value = false })
+    }
+  }
 }
 
 const removeVersion = (verName: string) => {
@@ -246,6 +311,7 @@ const removeVersion = (verName: string) => {
   }
   activeVersionName.value = activeName
   crsVersions.value = versions.filter(t => t.name !== verName)
+  saveVersionsToDataset()
   emitActiveDataChange()
 }
 
@@ -286,13 +352,17 @@ const handleResetCrs = (crs: CrsInfo) => {
       crsVersions.value = [crsVersions.value[0]]
       activeVersionName.value = 'origin'
     }
+    saveVersionsToDataset()
     emitActiveDataChange()
 
-    // 变更操作后提示：更新当前 or 另存为新数据集（同源）
-    const sourceName = originData.value?.name || '未命名'
-    const resetClone = GisDataInfo.clone(activeVersion.value.data)
-    resetClone.name = `${sourceName} (重设 EPSG:${crs.epsgCode})`
-    promptUpdateOrSaveAs(resetClone)
+    // 重设坐标系：直接更新当前数据集（标志位防止 updateDataset 触发重置）
+    if (activeId.value) {
+      const sourceName = originData.value?.name || '未命名'
+      activeVersion.value.data.name = `${sourceName} (重设 EPSG:${crs.epsgCode})`
+      isTransforming.value = true
+      updateDataset(activeId.value, activeVersion.value.data)
+      nextTick(() => { isTransforming.value = false })
+    }
   }
 }
 
@@ -302,6 +372,132 @@ const hasValidCrs = computed(() => {
   const crs = activeData.value?.crs
   return crs && crs.epsgCode > 0 && crs.isValid
 })
+
+// === 转换路径图布局计算 ===
+// 节点尺寸常量
+const NODE_W = 220
+const NODE_H = 48
+const GAP_X = 20  // 同层节点水平间距
+const GAP_Y = 40  // 层级垂直间距（含贝塞尔曲线空间）
+
+interface PathNode {
+  name: string
+  label: string
+  epsg: number
+  x: number
+  y: number
+  isActive: boolean
+  isAlive: boolean  // 数据集是否还存在
+  datasetId?: string
+}
+
+interface PathEdge {
+  from: PathNode
+  to: PathNode
+  // 贝塞尔曲线控制点
+  d: string
+}
+
+// 检查版本关联的数据集是否还存在
+const isVersionAlive = (ver: CrsVersion): boolean => {
+  if (!ver.datasetId) return ver.name === 'origin' // origin 默认存活
+  return datasets.value.some(d => d.id === ver.datasetId)
+}
+
+// 转换路径布局：竖向树形，根在上，子向下展开
+const pathLayout = computed(() => {
+  const versions = crsVersions.value
+  if (versions.length <= 1) return { nodes: [] as PathNode[], edges: [] as PathEdge[], width: 0, height: 0 }
+
+  // 构建父子关系
+  const childrenMap = new Map<string, CrsVersion[]>()
+  versions.forEach(ver => {
+    const parent = ver.sourceVersionName ?? 'origin'
+    if (!childrenMap.has(parent)) childrenMap.set(parent, [])
+    if (ver.name !== 'origin') childrenMap.get(parent)!.push(ver)
+  })
+
+  // 计算每个节点的层级（depth），depth = 纵向偏移
+  const depthMap = new Map<string, number>()
+  depthMap.set('origin', 0)
+  const queue = ['origin']
+  while (queue.length) {
+    const cur = queue.shift()!
+    const children = childrenMap.get(cur) ?? []
+    children.forEach(child => {
+      depthMap.set(child.name, (depthMap.get(cur) ?? 0) + 1)
+      queue.push(child.name)
+    })
+  }
+
+  // 按层级分组
+  const layerNodes = new Map<number, string[]>()
+  depthMap.forEach((depth, name) => {
+    if (!layerNodes.has(depth)) layerNodes.set(depth, [])
+    layerNodes.get(depth)!.push(name)
+  })
+
+  // 计算每个节点的 x 坐标（同层内水平居中分布）
+  const maxCount = Math.max(...Array.from(layerNodes.values()).map(arr => arr.length))
+  const totalWidth = maxCount * (NODE_W + GAP_X) - GAP_X
+  const xMap = new Map<string, number>()
+  layerNodes.forEach((names: string[]) => {
+    const count = names.length
+    const layerWidth = count * (NODE_W + GAP_X) - GAP_X
+    const startX = (totalWidth - layerWidth) / 2
+    names.forEach((name: string, idx: number) => {
+      xMap.set(name, startX + idx * (NODE_W + GAP_X))
+    })
+  })
+
+  // 生成节点（y = depth * 间距，x = 同层居中）
+  const nodes: PathNode[] = versions.map(ver => ({
+    name: ver.name,
+    label: ver.label,
+    epsg: ver.data?.crs?.epsgCode ?? 0,
+    x: xMap.get(ver.name) ?? 0,
+    y: (depthMap.get(ver.name) ?? 0) * (NODE_H + GAP_Y),
+    isActive: ver.name === activeVersionName.value,
+    isAlive: isVersionAlive(ver),
+    datasetId: ver.datasetId,
+  }))
+
+  // 生成连线（竖向贝塞尔曲线：从父底部中心到子顶部中心）
+  const nodeMap = new Map(nodes.map(n => [n.name, n]))
+  const edges: PathEdge[] = []
+  versions.forEach(ver => {
+    if (ver.sourceVersionName) {
+      const from = nodeMap.get(ver.sourceVersionName)
+      const to = nodeMap.get(ver.name)
+      if (from && to) {
+        // 父节点底部中心 → 子节点顶部中心
+        const x1 = from.x + NODE_W / 2
+        const y1 = from.y + NODE_H
+        const x2 = to.x + NODE_W / 2
+        const y2 = to.y
+        const cy1 = y1 + (y2 - y1) / 2
+        const cy2 = y1 + (y2 - y1) / 2
+        edges.push({
+          from,
+          to,
+          d: `M ${x1} ${y1} C ${x1} ${cy1}, ${x2} ${cy2}, ${x2} ${y2}`,
+        })
+      }
+    }
+  })
+
+  const maxDepth = Math.max(...depthMap.values())
+  const width = totalWidth
+  const height = (maxDepth + 1) * NODE_H + maxDepth * GAP_Y
+
+  return { nodes, edges, width, height }
+})
+
+// 点击路径节点：切换活跃版本（仅存活节点可点击）
+const handlePathNodeClick = (node: PathNode) => {
+  if (!node.isAlive) return
+  activeVersionName.value = node.name
+}
 </script>
 
 <template>
@@ -376,31 +572,47 @@ const hasValidCrs = computed(() => {
       </div>
     </div>
 
-    <!-- CRS 版本切换 -->
-    <div v-if="crsVersions.length > 1" class="crs-versions">
-      <div class="versions-title">坐标系版本</div>
-      <el-select
-        v-model="activeVersionName"
-        size="small"
-        class="version-select"
-        placeholder="选择坐标系版本"
-      >
-        <el-option
-          v-for="ver in crsVersions"
-          :key="ver.name"
-          :label="ver.label"
-          :value="ver.name"
+    <!-- 转换路径图（SVG 贝塞尔曲线 + HTML 卡片） -->
+    <div v-if="pathLayout.nodes.length > 0" class="transform-path">
+      <div class="path-title">转换路径</div>
+      <div class="path-canvas" :style="{ width: pathLayout.width + 'px', height: pathLayout.height + 'px' }">
+        <!-- SVG 连线层 -->
+        <svg class="path-edges" :width="pathLayout.width" :height="pathLayout.height">
+          <path
+            v-for="(edge, idx) in pathLayout.edges"
+            :key="idx"
+            :d="edge.d"
+            class="path-edge"
+            :class="{ 'is-dead': !edge.to.isAlive }"
+            fill="none"
+          />
+        </svg>
+        <!-- HTML 卡片层 -->
+        <div
+          v-for="node in pathLayout.nodes"
+          :key="node.name"
+          class="path-node"
+          :class="{
+            'is-active': node.isActive,
+            'is-dead': !node.isAlive,
+          }"
+          :style="{ left: node.x + 'px', top: node.y + 'px', width: NODE_W + 'px', height: NODE_H + 'px' }"
+          @click="handlePathNodeClick(node)"
         >
-          <span style="float: left">{{ ver.label }}</span>
+          <div class="path-node-label">{{ node.label }}</div>
+          <div class="path-node-meta">
+            <span v-if="node.isAlive" class="path-node-epsg">EPSG:{{ node.epsg }}</span>
+            <span v-else class="path-node-dead">已失效</span>
+          </div>
           <el-icon
-            v-if="ver.name !== 'origin'"
-            class="version-remove-icon"
-            @click.stop="handleVersionRemove(ver.name)"
+            v-if="node.name !== 'origin' && node.isAlive"
+            class="path-node-remove"
+            @click.stop="handleVersionRemove(node.name)"
           >
             <Close />
           </el-icon>
-        </el-option>
-      </el-select>
+        </div>
+      </div>
     </div>
 
     <!-- 操作按钮 -->
@@ -529,32 +741,130 @@ const hasValidCrs = computed(() => {
   color: var(--el-text-color-placeholder);
 }
 
-.crs-versions {
+/* 转换路径图 */
+.transform-path {
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 6px;
   padding: 8px 10px;
   background: var(--el-fill-color-lighter);
 }
 
-.versions-title {
+.path-title {
   font-size: 12px;
   font-weight: 600;
   color: var(--el-text-color-secondary);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
-.version-select {
-  width: 100%;
+/* 画布容器：相对定位，承载 SVG 连线和 HTML 卡片 */
+.path-canvas {
+  position: relative;
+  overflow: auto;
+  margin: 0 auto;
 }
 
-.version-remove-icon {
-  float: right;
-  color: var(--el-color-danger);
+/* SVG 连线层 */
+.path-edges {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.path-edge {
+  stroke: var(--el-color-primary-light-5);
+  stroke-width: 2;
+  transition: stroke 0.2s;
+}
+
+.path-edge.is-dead {
+  stroke: var(--el-text-color-placeholder);
+  stroke-dasharray: 4 3;
+  opacity: 0.5;
+}
+
+/* HTML 卡片层 */
+.path-node {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid var(--el-border-color);
+  border-radius: 6px;
+  background: var(--el-bg-color);
   cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  z-index: 2;
 }
 
-.version-remove-icon:hover {
-  color: var(--el-color-danger-light-3);
+.path-node:hover {
+  border-color: var(--el-color-primary-light-5);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.path-node.is-active {
+  border-color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+  box-shadow: 0 0 0 2px var(--el-color-primary-light-7);
+}
+
+/* 失效节点：灰显不可操作 */
+.path-node.is-dead {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: var(--el-fill-color);
+  border-style: dashed;
+}
+
+.path-node.is-dead:hover {
+  border-color: var(--el-border-color);
+  box-shadow: none;
+}
+
+.path-node-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.path-node.is-active .path-node-label {
+  color: var(--el-color-primary);
+}
+
+.path-node-meta {
+  font-size: 10px;
+  color: var(--el-text-color-secondary);
+  white-space: nowrap;
+}
+
+.path-node-epsg {
+  color: var(--el-color-primary);
+  font-weight: 500;
+}
+
+.path-node-dead {
+  color: var(--el-color-danger);
+}
+
+.path-node-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  color: var(--el-text-color-placeholder);
+  cursor: pointer;
+  font-size: 12px;
+  transition: color 0.2s;
+}
+
+.path-node-remove:hover {
+  color: var(--el-color-danger);
 }
 
 .crs-actions {

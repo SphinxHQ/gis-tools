@@ -19,8 +19,8 @@ const BREAKPOINTS: Record<Breakpoint, { min: number; max: number }> = {
 }
 
 const PANEL_WIDTH: Record<Breakpoint, number> = {
-  xl: 320,
-  lg: 280,
+  xl: 520,
+  lg: 520,
   md: 0,
   sm: 0,
 }

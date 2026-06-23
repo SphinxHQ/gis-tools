@@ -68,15 +68,17 @@ const promptUpdateOrSaveAs = async () => {
       const clone = GisDataInfo.clone(props.data)
       addDataset(clone, activeSourceId.value ?? undefined)
     }
+    hasUnsavedChanges.value = false
   } catch (action: unknown) {
     if (action === 'cancel') {
       // 更新当前数据
       if (activeId.value && props.data) {
         updateDataset(activeId.value, props.data)
       }
+      hasUnsavedChanges.value = false
     }
+    // action === 'close' 时保持 hasUnsavedChanges = true，下次退出时再次提示
   }
-  hasUnsavedChanges.value = false
 }
 
 const treeHeight = ref(0)
@@ -546,7 +548,6 @@ const handleClearShadow = () => {
         ref="featureEditorRef"
         :data="data"
         :instance-id="instanceId"
-        :style="{height: `${treeHeight + 40}px`}"
         @exit="handleEditorExit"
         @modify-change="handleEditorModifyChange"
         @data-changed="handleEditorDataChanged"
@@ -608,12 +609,14 @@ const handleClearShadow = () => {
   flex: 1;
   overflow: hidden;
   padding: 4px;
+  box-sizing: border-box;
 }
 
 .editor-view {
   flex: 1;
   overflow: hidden;
   padding: 4px;
+  box-sizing: border-box;
 }
 
 .custom-tree-node {
@@ -626,6 +629,11 @@ const handleClearShadow = () => {
 
 .custom-tree-node .key {
   color: var(--el-text-color-primary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .custom-tree-node .label2 {
@@ -641,6 +649,8 @@ const handleClearShadow = () => {
   color: var(--el-color-primary);
   opacity: 0.6;
   transition: opacity 0.2s;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .node-btn:hover {

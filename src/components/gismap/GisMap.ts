@@ -706,8 +706,8 @@ export class GisMap extends EventBase {
             // 修改结束后，将 OL Feature 转回 GeoJSON 并通过事件通知
             const modifiedOlFeature = source.getFeatures()[0];
             if (modifiedOlFeature) {
+                // 不设 featureProjection，保持数据原始投影坐标（避免投影坐标被转为4326）
                 const geoJsonStr = new GeoJSON().writeFeature(modifiedOlFeature, {
-                    featureProjection: this.olView?.getProjection().getCode(),
                     rightHanded: true,
                 });
                 const modifiedGeoJson = JSON.parse(geoJsonStr) as GeoJSON.Feature;

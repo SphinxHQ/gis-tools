@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { ElMessageBox } from 'element-plus'
-import { Fold, Expand, UploadFilled, Plus, Delete, Monitor, Sunny, Moon } from '@element-plus/icons-vue'
+import { Fold, Expand, UploadFilled, Plus, Monitor, Sunny, Moon, FolderOpened, MapLocation, Delete } from '@element-plus/icons-vue'
 
 import { GisError, createUserMessage } from '~/common/GisError'
 import { logger } from '~/common/logger'
@@ -11,16 +11,40 @@ import GisDataInfo from '~/components/data/GisDataInfo'
 import GisDataOverview from '~/components/data/GisDataOverview.vue'
 import GisDataPanel from '~/components/data/GisDataPanel.vue'
 import GisMobileNav from '~/components/data/GisMobileNav.vue'
-import GisMapTianditu from '~/components/gismap/GisMapTianditu.vue'
+import GisMapSlot from '~/components/gismap/GisMapSlot.vue'
 import { themeMode } from '~/composables/dark'
 import { useBreakpoint } from '~/composables/useBreakpoint'
 import { useGisDataStore } from '~/composables/gisDataStore'
-import { useMapController } from '~/composables/useMapController'
 
-const { datasets, activeId, activeDataset, setActive, removeDataset, addDataSource } = useGisDataStore()
+const { datasets, dataSources, activeId, activeDataset, setActive, addDataSource, removeDataset } = useGisDataStore()
 const { isMobile, panelWidth, panelCollapsedWidth, showLeftPanel, showMobileNav } = useBreakpoint()
 
 const importDialogVisible = ref(false)
+
+// 数据源抽屉（右侧）
+const sourceDrawerVisible = ref(false)
+
+// 数据集删除（带确认）
+const handleSourceDatasetRemove = async (id: string, e: Event) => {
+  e.stopPropagation()
+  const entry = datasets.value.find(d => d.id === id)
+  const name = entry?.name || '该数据集'
+  try {
+    await ElMessageBox.confirm(
+      `确定删除「${name}」吗？此操作不可撤销。`,
+      '删除确认',
+      { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' }
+    )
+    removeDataset(id)
+  } catch {
+    // 用户取消
+  }
+}
+
+// 数据集 CRS 信息辅助
+const getDatasetCrs = (data?: GisDataInfo) => {
+  return data?.crs?.epsgCode ? `EPSG:${data.crs.epsgCode}` : '未设置'
+}
 
 // 左面板折叠状态
 const panelCollapsed = ref(false)
@@ -65,18 +89,20 @@ const startResize = (e: MouseEvent) => {
   document.addEventListener('mouseup', onMouseUp)
 }
 
-// 地图实例管理
-const mapInstanceId = ref<number>(0)
-const mapKey = ref(0)
-
 // 当前活跃数据（经过 CRS 转换后的）
 const activeData = ref<GisDataInfo>(new GisDataInfo())
 const activeTransformChain = ref<number[]>([])
 
-const { mapReady, mapReloaded, epsgCode, renderMapFeatures, setupMapReadyListener, cleanupMapReadyListener, stopEditMode } = useMapController({
-  instanceId: mapInstanceId,
-  data: activeData,
-})
+// 每个数据集的活跃数据（转换后），用于多地图实例渲染
+const datasetActiveDataMap = ref<Map<string, GisDataInfo>>(new Map())
+
+// 地图实例引用（用于编辑模式等操作）
+const activeMapSlotRef = ref<InstanceType<typeof GisMapSlot> | null>(null)
+
+// 获取数据集的活跃数据（优先转换后，否则原始）
+const getDatasetActiveData = (entryId: string, entryData: GisDataInfo): GisDataInfo => {
+  return datasetActiveDataMap.value.get(entryId) ?? entryData
+}
 
 // 监听活跃数据集变化
 watch(activeDataset, (dataset) => {
@@ -93,6 +119,10 @@ watch(activeDataset, (dataset) => {
 const handleActiveDataChange = (data: GisDataInfo, transformChain: number[]) => {
   activeData.value = data
   activeTransformChain.value = transformChain
+  // 保存转换后数据到对应数据集的 map
+  if (activeId.value) {
+    datasetActiveDataMap.value.set(activeId.value, data)
+  }
 }
 
 // 处理数据读取
@@ -103,16 +133,6 @@ const handleRead = (data: unknown) => {
 
 const handleError = (err: Error) => {
   logger.error('数据读取失败:', err)
-}
-
-// 数据集切换
-const handleDatasetChange = (id: string) => {
-  setActive(id)
-}
-
-// 数据集删除
-const handleDatasetRemove = (id: string) => {
-  removeDataset(id)
 }
 
 // 拖拽导入
@@ -155,17 +175,8 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   })
 }
 
-// 地图初始化
-watch(mapInstanceId, (id) => {
-  if (id) {
-    setupMapReadyListener()
-  }
-}, { immediate: true })
-
-// 设置地图实例 ID（使用固定值便于调试）
-const initMapInstance = () => {
-  mapInstanceId.value = 1
-}
+// 当前活跃地图实例 ID（供 GisDataPanel 和 GisMobileNav 使用）
+const activeMapInstanceId = computed(() => activeId.value ? `map_${activeId.value}` : '')
 
 // 进入/退出编辑模式
 const handleEnterEditMode = () => {
@@ -173,11 +184,8 @@ const handleEnterEditMode = () => {
 }
 
 const handleExitEditMode = () => {
-  stopEditMode()
+  activeMapSlotRef.value?.stopEditMode()
 }
-
-// 组件挂载时初始化
-initMapInstance()
 </script>
 
 <template>
@@ -190,30 +198,6 @@ initMapInstance()
         </svg>
         <span class="top-bar-title">Gis Tools</span>
 
-        <!-- 数据集切换下拉 -->
-        <el-select
-          v-if="datasets.length > 0"
-          v-model="activeId"
-          size="small"
-          class="dataset-select"
-          placeholder="选择数据集"
-          @change="handleDatasetChange"
-        >
-          <el-option
-            v-for="entry in datasets"
-            :key="entry.id"
-            :label="entry.name"
-            :value="entry.id"
-          >
-            <span style="float: left">{{ entry.name }}</span>
-            <el-icon
-              class="dataset-remove-icon"
-              @click.stop="handleDatasetRemove(entry.id)"
-            >
-              <Delete />
-            </el-icon>
-          </el-option>
-        </el-select>
       </div>
 
       <div class="top-bar-right">
@@ -221,7 +205,15 @@ initMapInstance()
           <el-icon><Plus /></el-icon>
           <span>导入</span>
         </el-button>
-        <span v-if="datasets.length > 0" class="dataset-badge">{{ datasets.length }} 个数据集</span>
+        <el-button
+          v-if="datasets.length > 0"
+          size="small"
+          class="dataset-badge-btn"
+          @click="sourceDrawerVisible = true"
+        >
+          <el-icon><FolderOpened /></el-icon>
+          <span>{{ datasets.length }} 个数据集</span>
+        </el-button>
         <el-radio-group v-model="themeMode" size="small" class="theme-switch">
           <el-radio-button value="auto">
             <el-icon :size="14"><Monitor /></el-icon>
@@ -238,6 +230,60 @@ initMapInstance()
 
     <!-- 导入弹窗 -->
     <gis-data-import-dialog v-model="importDialogVisible" />
+
+    <!-- 数据源抽屉（右侧）：数据源分组 + 数据集卡片 -->
+    <el-drawer
+      v-model="sourceDrawerVisible"
+      title="数据源"
+      direction="rtl"
+      size="380px"
+      class="source-drawer"
+    >
+      <div class="source-drawer-body">
+        <!-- 数据源分组 -->
+        <div v-for="source in dataSources" :key="source.id" class="source-group">
+          <!-- 数据源标题 -->
+          <div class="source-group-header">
+            <el-icon class="source-group-icon"><FolderOpened /></el-icon>
+            <span class="source-group-title">{{ source.name }}</span>
+            <span class="source-group-count">{{ source.datasets.length }}</span>
+          </div>
+          <!-- 数据集卡片 -->
+          <div class="dataset-cards">
+            <div
+              v-for="entry in source.datasets"
+              :key="entry.id"
+              class="dataset-card"
+              :class="{ 'is-active': entry.id === activeId }"
+              @click="setActive(entry.id)"
+            >
+              <div class="dataset-card-header">
+                <el-icon class="dataset-card-icon"><MapLocation /></el-icon>
+                <span class="dataset-card-name">{{ entry.name }}</span>
+                <el-icon
+                  class="dataset-card-delete"
+                  title="删除"
+                  @click.stop="handleSourceDatasetRemove(entry.id, $event)"
+                >
+                  <Delete />
+                </el-icon>
+              </div>
+              <div class="dataset-card-meta">
+                <el-tag size="small" type="info" effect="plain">{{ getDatasetCrs(entry.data) }}</el-tag>
+                <span class="dataset-card-stat">{{ entry.data?.features?.length ?? 0 }} 要素</span>
+                <el-tooltip
+                  v-if="entry.appendedFrom && entry.appendedFrom.length > 0"
+                  :content="entry.appendedFrom.map(a => `从「${a.name}」追加了 ${a.count} 个要素`).join('；')"
+                  placement="top"
+                >
+                  <el-tag size="small" type="warning" effect="dark">已追加</el-tag>
+                </el-tooltip>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </el-drawer>
 
     <!-- 主体内容 -->
     <div class="main-content" @dragover="handleDragOver" @drop="handleDrop">
@@ -279,9 +325,8 @@ initMapInstance()
             <div v-if="!panelCollapsed" class="panel-body">
               <gis-data-panel
                 :data="activeDataset?.data"
-                :instance-id="mapInstanceId"
-                :map-ready="mapReady"
-                @open-import="importDialogVisible = true"
+                :instance-id="activeMapInstanceId"
+                :map-ready="true"
                 @active-data-change="handleActiveDataChange"
                 @read="handleRead"
                 @error="handleError"
@@ -301,12 +346,15 @@ initMapInstance()
 
           <!-- 主内容区 -->
           <div class="content-area" :style="{ width: `calc(100% - ${currentPanelWidth}px - ${panelCollapsed ? 0 : 4}px)` }">
-            <!-- 地图 -->
+            <!-- 地图（多实例，每个数据集一个，v-show 切换） -->
             <div class="map-container">
-              <gis-map-tianditu
-                :key="mapKey"
-                :map-name="`${mapInstanceId}`"
-                :options="{ projection: epsgCode }"
+              <gis-map-slot
+                v-for="entry in datasets"
+                :key="entry.id"
+                :ref="(el: any) => { if (entry.id === activeId) activeMapSlotRef = el as InstanceType<typeof GisMapSlot> }"
+                :dataset-id="entry.id"
+                :data="getDatasetActiveData(entry.id, entry.data)"
+                :visible="entry.id === activeId"
               />
             </div>
             <!-- 底部状态栏 -->
@@ -320,12 +368,15 @@ initMapInstance()
 
         <!-- 移动端：地图优先 + 底部状态栏 + 底部导航 -->
         <div v-else class="mobile-layout">
-          <!-- 地图（全屏） -->
+          <!-- 地图（全屏，多实例 v-show 切换） -->
           <div class="map-container mobile-map">
-            <gis-map-tianditu
-              :key="mapKey"
-              :map-name="`${mapInstanceId}`"
-              :options="{ projection: epsgCode }"
+            <gis-map-slot
+              v-for="entry in datasets"
+              :key="entry.id"
+              :ref="(el: any) => { if (entry.id === activeId) activeMapSlotRef = el as InstanceType<typeof GisMapSlot> }"
+              :dataset-id="entry.id"
+              :data="getDatasetActiveData(entry.id, entry.data)"
+              :visible="entry.id === activeId"
             />
           </div>
           <!-- 底部简略状态栏 -->
@@ -337,8 +388,8 @@ initMapInstance()
           <!-- 底部导航 -->
           <gis-mobile-nav
             :data="activeDataset?.data"
-            :instance-id="mapInstanceId"
-            :map-ready="mapReady"
+            :instance-id="activeMapInstanceId"
+            :map-ready="true"
             @open-import="importDialogVisible = true"
             @active-data-change="handleActiveDataChange"
             @read="handleRead"
@@ -393,16 +444,6 @@ initMapInstance()
   letter-spacing: 0.5px;
 }
 
-.dataset-select {
-  width: 200px;
-}
-
-.dataset-remove-icon {
-  float: right;
-  color: var(--el-color-danger);
-  cursor: pointer;
-}
-
 .top-bar-right {
   display: flex;
   align-items: center;
@@ -432,7 +473,7 @@ initMapInstance()
 /* 空状态 */
 .empty-state {
   width: 100%;
-  height: 100%;
+  height: calc(100% - 16px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -575,15 +616,134 @@ initMapInstance()
   display: none;
 }
 
-.gis-data-page.is-mobile .dataset-select {
-  width: 140px;
-}
-
-.gis-data-page.is-mobile .dataset-badge {
-  display: none;
-}
-
 .gis-data-page.is-mobile .top-bar-right .el-button span {
   display: none;
+}
+
+/* 数据源抽屉按钮 */
+.dataset-badge-btn {
+  font-size: 12px;
+}
+
+/* 数据源抽屉 */
+.source-drawer-body {
+  height: 100%;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+/* 数据源分组 */
+.source-group {
+  margin-bottom: 12px;
+}
+
+.source-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.source-group-icon {
+  color: var(--el-text-color-secondary);
+  flex-shrink: 0;
+}
+
+.source-group-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.source-group-count {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--el-text-color-placeholder);
+  background: var(--el-fill-color-light);
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+/* 数据集卡片 */
+.dataset-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dataset-card {
+  padding: 8px 10px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--el-bg-color);
+}
+
+.dataset-card:hover {
+  border-color: var(--el-color-primary-light-5);
+  background: var(--el-fill-color-light);
+}
+
+.dataset-card.is-active {
+  border-color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+}
+
+.dataset-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.dataset-card-icon {
+  color: var(--el-text-color-secondary);
+  flex-shrink: 0;
+}
+
+.dataset-card-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+}
+
+.dataset-card.is-active .dataset-card-name {
+  color: var(--el-color-primary);
+}
+
+.dataset-card-delete {
+  flex-shrink: 0;
+  color: var(--el-text-color-placeholder);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.2s;
+}
+
+.dataset-card-delete:hover {
+  color: var(--el-color-danger);
+  opacity: 1;
+}
+
+.dataset-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dataset-card-stat {
+  font-size: 11px;
+  color: var(--el-text-color-placeholder);
 }
 </style>

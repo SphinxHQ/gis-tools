@@ -97,6 +97,8 @@ interface VertexItem {
 }
 const vertices = ref<VertexItem[]>([])
 const hoveredVertexIdx = ref<number | null>(null)
+// 手风琴当前展开项：'vertex' 节点编辑 | 'props' 属性编辑
+const activeEditSection = ref<'vertex' | 'props'>('vertex')
 
 function extractVertices(feature: GeoJSON.Feature): VertexItem[] {
   const result: VertexItem[] = []
@@ -538,8 +540,15 @@ watch(() => props.instanceId, (newId, oldId) => {
 }, { immediate: true })
 
 // 进入时：无已编辑数据→重新复制双份；有已编辑数据→保留workingFeatures，刷新referenceFeatures
-watch(() => props.data, () => {
-  if (!hasEdits.value) {
+// CRS 变化时（坐标转换后）强制重新复制，因为不同坐标系下的旧编辑无意义
+let lastCrsEpsg: number | undefined = undefined
+watch(() => props.data, (newData) => {
+  const newEpsg = newData?.crs?.epsgCode
+  if (newEpsg !== lastCrsEpsg) {
+    // CRS 变化：强制重新复制双份，丢弃旧编辑
+    initBothCopies()
+    lastCrsEpsg = newEpsg
+  } else if (!hasEdits.value) {
     initBothCopies()
   } else {
     initReferenceOnly()
@@ -603,30 +612,34 @@ defineExpose({ hasEdits, workingFeatures, activate, deactivate })
         <el-divider direction="vertical" />
         <el-button text size="small" @click="handleConvexHull" title="凸包"><el-icon><Grid /></el-icon></el-button>
       </div>
-      <div class="section-label">节点编辑</div>
-      <div class="vertex-list-header">
-        <span class="col-idx">#</span><span class="col-ring">环</span><span class="col-x">X</span><span class="col-y">Y</span><span class="col-action">操作</span>
-      </div>
-      <div class="vertex-list">
-        <div v-for="(v, vi) in vertices" :key="v.id" class="vertex-row" :class="{ hover: hoveredVertexIdx === vi }" @mouseenter="hoveredVertexIdx = vi" @mouseleave="hoveredVertexIdx = null">
-          <span class="col-idx">{{ v.index + 1 }}</span><span class="col-ring">{{ v.ringIdx }}</span>
-          <span class="col-x"><el-input-number v-model="v.coordinates[0]" size="small" :controls="false" :precision="6" @change="updateVertex(vi, v.coordinates[0], v.coordinates[1])" /></span>
-          <span class="col-y"><el-input-number v-model="v.coordinates[1]" size="small" :controls="false" :precision="6" @change="updateVertex(vi, v.coordinates[0], v.coordinates[1])" /></span>
-          <span class="col-action">
-            <el-button text size="small" @click="locateVertex(v)" title="定位"><el-icon><IconPosition /></el-icon></el-button>
-            <el-button text size="small" @click="addVertex(vi)" title="插入"><el-icon><CopyDocument /></el-icon></el-button>
-            <el-button text size="small" type="danger" @click="deleteVertex(vi)" title="删除"><el-icon><Delete /></el-icon></el-button>
-          </span>
-        </div>
-      </div>
-      <div class="section-label">属性编辑</div>
-      <div class="props-editor">
-        <div v-for="([key, val], pi) in propEntries" :key="pi" class="prop-row">
-          <span class="prop-key">{{ key }}</span>
-          <el-input v-model="editingProps[key as string]" size="small" @change="applyPropertiesToFeature" />
-        </div>
-        <div v-if="propEntries.length === 0" class="empty-props">无属性</div>
-      </div>
+      <el-collapse v-model="activeEditSection" accordion class="edit-collapse">
+        <el-collapse-item name="vertex" title="节点编辑">
+          <div class="vertex-list-header">
+            <span class="col-idx">#</span><span class="col-ring">环</span><span class="col-x">X</span><span class="col-y">Y</span><span class="col-action">操作</span>
+          </div>
+          <div class="vertex-list">
+            <div v-for="(v, vi) in vertices" :key="v.id" class="vertex-row" :class="{ hover: hoveredVertexIdx === vi }" @mouseenter="hoveredVertexIdx = vi" @mouseleave="hoveredVertexIdx = null">
+              <span class="col-idx">{{ v.index + 1 }}</span><span class="col-ring">{{ v.ringIdx }}</span>
+              <span class="col-x"><el-input-number v-model="v.coordinates[0]" size="small" :controls="false" :precision="6" @change="updateVertex(vi, v.coordinates[0], v.coordinates[1])" /></span>
+              <span class="col-y"><el-input-number v-model="v.coordinates[1]" size="small" :controls="false" :precision="6" @change="updateVertex(vi, v.coordinates[0], v.coordinates[1])" /></span>
+              <span class="col-action">
+                <el-button text size="small" @click="locateVertex(v)" title="定位"><el-icon><IconPosition /></el-icon></el-button>
+                <el-button text size="small" @click="addVertex(vi)" title="插入"><el-icon><CopyDocument /></el-icon></el-button>
+                <el-button text size="small" type="danger" @click="deleteVertex(vi)" title="删除"><el-icon><Delete /></el-icon></el-button>
+              </span>
+            </div>
+          </div>
+        </el-collapse-item>
+        <el-collapse-item name="props" title="属性编辑">
+          <div class="props-editor">
+            <div v-for="([key, val], pi) in propEntries" :key="pi" class="prop-row">
+              <span class="prop-key">{{ key }}</span>
+              <el-input v-model="editingProps[key as string]" size="small" @change="applyPropertiesToFeature" />
+            </div>
+            <div v-if="propEntries.length === 0" class="empty-props">无属性</div>
+          </div>
+        </el-collapse-item>
+      </el-collapse>
       <div class="editor-footer">
         <el-button type="primary" size="small" @click="handleSave">保存</el-button>
         <el-button size="small" @click="handleCancel">取消</el-button>
@@ -653,6 +666,14 @@ defineExpose({ hasEdits, workingFeatures, activate, deactivate })
 .toolbar { display: flex; align-items: center; gap: 2px; padding: 4px 8px; border-bottom: 1px solid var(--el-border-color-lighter); flex-shrink: 0; flex-wrap: wrap; }
 .section-label { font-size: 11px; font-weight: 600; color: var(--el-text-color-secondary); padding: 4px 10px 2px; background: var(--el-fill-color-lighter); flex-shrink: 0; border-top: 1px solid var(--el-border-color-extra-light); }
 
+/* 手风琴：占满剩余空间，内容区可滚动 */
+.edit-collapse { flex: 1; overflow: hidden; display: flex; flex-direction: column; border-top: 1px solid var(--el-border-color-lighter); }
+.edit-collapse :deep(.el-collapse-item) { display: flex; flex-direction: column; min-height: 0; }
+.edit-collapse :deep(.el-collapse-item.is-active) { flex: 1; }
+.edit-collapse :deep(.el-collapse-item__header) { font-size: 12px; font-weight: 600; padding: 0 10px; background: var(--el-fill-color-lighter); flex-shrink: 0; }
+.edit-collapse :deep(.el-collapse-item__wrap) { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.edit-collapse :deep(.el-collapse-item__content) { flex: 1; overflow-y: auto; padding: 0; }
+
 .vertex-list-header { display: flex; align-items: center; padding: 4px 8px; font-size: 11px; color: var(--el-text-color-secondary); background: var(--el-fill-color-lighter); flex-shrink: 0; }
 .vertex-list { flex: 1; overflow-y: auto; min-height: 80px; }
 .vertex-row { display: flex; align-items: center; padding: 2px 8px; font-size: 12px; transition: background 0.1s; border-bottom: 1px solid var(--el-border-color-extra-light); }
@@ -665,7 +686,7 @@ defineExpose({ hasEdits, workingFeatures, activate, deactivate })
 .col-action { width: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; gap: 0; }
 .col-action .el-button { padding: 2px; }
 
-.props-editor { max-height: calc(4 * 34px + 4px); overflow-y: auto; flex-shrink: 0; border-top: 1px solid var(--el-border-color-extra-light); }
+.props-editor { flex: 1; overflow-y: auto; flex-shrink: 0; }
 .prop-row { display: flex; align-items: center; gap: 6px; padding: 2px 10px; border-bottom: 1px solid var(--el-border-color-extra-light); }
 .prop-key { width: 80px; flex-shrink: 0; font-size: 11px; font-family: monospace; color: var(--el-text-color-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .prop-row .el-input { flex: 1; }

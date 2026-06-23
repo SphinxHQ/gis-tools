@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { Upload, Compass, MapLocation, CircleCheck, Download } from '@element-plus/icons-vue'
+import { ref, watch, computed } from 'vue'
+import { Compass, MapLocation, CircleCheck, Download } from '@element-plus/icons-vue'
 
 import GisDataInfo from '~/components/data/GisDataInfo'
-import GisDataReader from '~/components/data/GisDataReader.vue'
 import GisDataExport from '~/components/data/GisDataExport.vue'
 import GisDataTransformer from '~/components/data/GisDataTransformer.vue'
 import GisDataValidator from '~/components/data/GisDataValidator.vue'
@@ -37,7 +36,6 @@ const activeTab = ref<string>('')
 const drawerVisible = ref(false)
 
 const tabs = [
-  { name: 'source', label: '数据源', icon: Upload },
   { name: 'crs', label: '坐标系', icon: Compass },
   { name: 'feature', label: '要素', icon: MapLocation },
   { name: 'validate', label: '校验', icon: CircleCheck },
@@ -46,7 +44,6 @@ const tabs = [
 
 const handleTabClick = (tabName: string) => {
   if (activeTab.value === tabName && drawerVisible.value) {
-    // 再次点击同一 Tab，关闭抽屉
     drawerVisible.value = false
     activeTab.value = ''
   } else {
@@ -78,6 +75,9 @@ const handleRead = (data: unknown) => emit('read', data)
 const handleError = (err: Error) => emit('error', err)
 const handleEnterEditMode = () => emit('enter-edit-mode')
 const handleExitEditMode = () => emit('exit-edit-mode')
+
+const hasData = computed(() => !!props.data?.features?.length)
+const hasActiveData = computed(() => !!activeData.value?.features?.length)
 </script>
 
 <template>
@@ -86,7 +86,7 @@ const handleExitEditMode = () => emit('exit-edit-mode')
     <el-drawer
       v-model="drawerVisible"
       direction="btt"
-      size="70%"
+      size="35%"
       :show-close="false"
       :with-header="false"
       class="mobile-drawer"
@@ -95,13 +95,8 @@ const handleExitEditMode = () => emit('exit-edit-mode')
       <div class="drawer-content">
         <div class="drawer-handle" />
         <div class="drawer-body">
-          <!-- 数据源 -->
-          <div v-if="activeTab === 'source'" class="tab-content">
-            <gis-data-reader @read="handleRead" @error="handleError" />
-          </div>
-
           <!-- 坐标系 -->
-          <div v-else-if="activeTab === 'crs' && data?.features?.length" class="tab-content">
+          <div v-if="activeTab === 'crs' && hasData" class="tab-content">
             <gis-data-transformer
               :data="data"
               @active-data-change="handleActiveDataChange"
@@ -109,7 +104,7 @@ const handleExitEditMode = () => emit('exit-edit-mode')
           </div>
 
           <!-- 要素 -->
-          <div v-else-if="activeTab === 'feature' && activeData?.features?.length" class="tab-content">
+          <div v-else-if="activeTab === 'feature' && hasActiveData" class="tab-content">
             <gis-feature-tree
               :data="activeData"
               :instance-id="instanceId"
@@ -120,7 +115,7 @@ const handleExitEditMode = () => emit('exit-edit-mode')
           </div>
 
           <!-- 校验 -->
-          <div v-else-if="activeTab === 'validate' && activeData?.features?.length" class="tab-content">
+          <div v-else-if="activeTab === 'validate' && hasActiveData" class="tab-content">
             <gis-data-validator
               :data="activeData"
               :instance-id="instanceId"
@@ -129,7 +124,7 @@ const handleExitEditMode = () => emit('exit-edit-mode')
           </div>
 
           <!-- 导出 -->
-          <div v-else-if="activeTab === 'export' && activeData?.features?.length" class="tab-content">
+          <div v-else-if="activeTab === 'export' && hasActiveData" class="tab-content">
             <gis-data-export :data="activeData" />
           </div>
         </div>
@@ -179,7 +174,7 @@ const handleExitEditMode = () => emit('exit-edit-mode')
 .drawer-body {
   flex: 1;
   overflow: hidden;
-  padding: 4px;
+  padding: 2px;
 }
 
 .tab-content {
