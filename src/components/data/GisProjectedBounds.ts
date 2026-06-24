@@ -1,12 +1,20 @@
 /**
- * CRS (Coordinate Reference System) 信息接口定义
+ * @file GIS projected coordinate bounds
+ * @description Defines CRS information interfaces and a comprehensive registry of Chinese CRS
+ *              bounds (CGCS2000, Xian80, Beijing54 Gauss-Kruger zones) with envelope and
+ *              projection metadata for OpenLayers reprojection support.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
+/**
+ * CRS (Coordinate Reference System) information interface
  */
 export interface CrsInfo {
-    // 是否为投影坐标系
+    /** Whether this is a projected coordinate system */
     projected: boolean;
-    // 坐标范围
+    /** Coordinate envelope bounds */
     envelope: {
-        // 北
+        /** North bound */
         top: number;
         // 西
         left: number;

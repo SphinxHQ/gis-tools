@@ -1,3 +1,9 @@
+/**
+ * @file DataFormat tests
+ * @description Unit tests for data type identification and format detection.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import { describe, it, expect } from 'vitest'
 import { getDataType } from '~/components/data/DataFormat'
 import { GisDataType } from '~/components/data/GisDataInfo'

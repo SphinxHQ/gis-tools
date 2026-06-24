@@ -1,3 +1,9 @@
+/**
+ * @file GeoJsonDataFormat tests
+ * @description Unit tests for the GeoJSON data format parser.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import { describe, it, expect } from 'vitest'
 import { GeoJsonDataFormat } from '~/components/data/GeoJsonDataFormat'
 

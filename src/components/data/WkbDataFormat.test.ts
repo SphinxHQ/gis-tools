@@ -1,3 +1,9 @@
+/**
+ * @file WkbDataFormat tests
+ * @description Unit tests for the WKB data format parser.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import { describe, it, expect } from 'vitest'
 import { WkbDataFormat } from '~/components/data/WkbDataFormat'
 
