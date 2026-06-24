@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <!-- 黑底 -->
   <rect width="512" height="512" fill="#1d1e1f"/>
-  <!-- 五边形：缩小 + 边距留白 -->
+  <!-- 正五边形：半径160，中心(256,256)，顶点在顶部 -->
   <polygon 
     points="256,96 408,194 344,408 168,408 104,194" 
     fill="rgba(234,88,12,0.15)" stroke="#ea580c" stroke-width="16" 
