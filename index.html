@@ -1,556 +1,562 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-    <meta name="theme-color" content="#1d1e1f" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1d1e1f" />
-    <!-- 主入口 loading 屏：写在 HTML 中，浏览器解析即渲染，-->
-    <!-- 不依赖任何 JS / CSS 资源，最早出现的视觉反馈。-->
-    <!-- 浅色 / 深色主题分别配色，由 data-entry-theme 属性控制；默认 dark。-->
-    <style>
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        overscroll-behavior: none;
-        -webkit-tap-highlight-color: transparent;
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#1d1e1f" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#1d1e1f" />
+  <!-- 主入口 loading 屏：写在 HTML 中，浏览器解析即渲染，-->
+  <!-- 不依赖任何 JS / CSS 资源，最早出现的视觉反馈。-->
+  <!-- 浅色 / 深色主题分别配色，由 data-entry-theme 属性控制；默认 dark。-->
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overscroll-behavior: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ===== 浅色主题（与 scss --gis-panel-bg 一致：#ffffff / #1d1e1f） ===== */
+    html[data-entry-theme="light"] body {
+      background: #ffffff;
+    }
+
+    html[data-entry-theme="light"] #entry-loader-mask {
+      background: #ffffff;
+    }
+
+    /* ===== 深色主题（默认，与 scss html.dark --gis-panel-bg 一致：#1d1e1f） ===== */
+    html,
+    body {
+      background: #1d1e1f;
+    }
+
+    html[data-entry-theme="dark"] body,
+    html:not([data-entry-theme]) body {
+      background: #1d1e1f;
+    }
+
+    #entry-loader-mask {
+      background: #1d1e1f;
+    }
+
+    #entry-loader-mask {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      z-index: 2147483647;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      overflow: hidden;
+      opacity: 1;
+      transition: opacity 0.3s ease-out;
+      padding-top: env(safe-area-inset-top);
+      padding-right: env(safe-area-inset-right);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
+
+    #entry-loader-mask.fade-out {
+      opacity: 0;
+    }
+
+    /* canvas 固定 280×380 逻辑像素，居中于黄金分割点（0.382 屏高） */
+    #entry-loader-canvas {
+      display: block;
+      width: 280px;
+      height: 380px;
+      margin-top: calc(38.2dvh - 110px);
+      margin-top: calc(38.2vh - 110px);
+    }
+  </style>
+  <!--__ENTRY_LOADER_MANIFEST__-->
+  <!-- 在主入口脚本之前同步检测主题：localStorage 优先，否则按系统偏好。-->
+  <script>
+    // 资源加载进度追踪：基于构建时清单 + PerformanceObserver 精确匹配
+    //
+    // build 模式：window.__entryLoaderManifest 是 Vite 插件注入的 JS/CSS 文件名数组
+    //   - 总资源数 = 清单长度
+    //   - PerformanceObserver 监听资源加载，匹配清单中的文件名
+    //   - 已加载 = 匹配到的条目数
+    //
+    // dev 模式：window.__entryLoaderManifest 为 null
+    //   - 降级为里程碑驱动（entryLoader.ts 中的 updateLoaderProgress）
+    //   - PerformanceObserver 仍然追踪，但只用于辅助
+    (function () {
+      var manifest = window.__entryLoaderManifest || null;
+      var loaded = 0;
+      var matched = {}; // 已匹配的文件名 → true，避免重复计数
+
+      window.__loaderResourceLoaded = 0;
+      window.__loaderResourceTotal = manifest ? manifest.length : 0;
+      window.__loaderManifestReady = !!manifest;
+
+      // 将清单文件名转为匹配用的后缀（取最后 N 个字符）
+      // 因为 PerformanceObserver 的 entry.name 是完整 URL，需要匹配文件名部分
+      var manifestSuffixes = [];
+      if (manifest) {
+        for (var i = 0; i < manifest.length; i++) {
+          // 取文件名部分（去掉路径），保留 hash
+          var name = manifest[i].split("/").pop();
+          manifestSuffixes.push(name);
+        }
       }
 
-      /* ===== 浅色主题（与 scss --gis-panel-bg 一致：#ffffff / #1d1e1f） ===== */
-      html[data-entry-theme="light"] body {
-        background: #ffffff;
-      }
-      html[data-entry-theme="light"] #entry-loader-mask {
-        background: #ffffff;
-      }
-
-      /* ===== 深色主题（默认，与 scss html.dark --gis-panel-bg 一致：#1d1e1f） ===== */
-      html,
-      body {
-        background: #1d1e1f;
-      }
-      html[data-entry-theme="dark"] body,
-      html:not([data-entry-theme]) body {
-        background: #1d1e1f;
-      }
-      #entry-loader-mask {
-        background: #1d1e1f;
-      }
-
-      #entry-loader-mask {
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        height: 100vh;
-        height: 100dvh;
-        z-index: 2147483647;
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        overflow: hidden;
-        opacity: 1;
-        transition: opacity 0.3s ease-out;
-        padding-top: env(safe-area-inset-top);
-        padding-right: env(safe-area-inset-right);
-        padding-bottom: env(safe-area-inset-bottom);
-        padding-left: env(safe-area-inset-left);
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
-      }
-
-      #entry-loader-mask.fade-out {
-        opacity: 0;
-      }
-
-      /* canvas 固定 280×380 逻辑像素，居中于黄金分割点（0.382 屏高） */
-      #entry-loader-canvas {
-        display: block;
-        width: 280px;
-        height: 380px;
-        margin-top: calc(38.2dvh - 110px);
-        margin-top: calc(38.2vh - 110px);
-      }
-    </style>
-    <!--__ENTRY_LOADER_MANIFEST__-->
-    <!-- 在主入口脚本之前同步检测主题：localStorage 优先，否则按系统偏好。-->
-    <script>
-      // 资源加载进度追踪：基于构建时清单 + PerformanceObserver 精确匹配
-      //
-      // build 模式：window.__entryLoaderManifest 是 Vite 插件注入的 JS/CSS 文件名数组
-      //   - 总资源数 = 清单长度
-      //   - PerformanceObserver 监听资源加载，匹配清单中的文件名
-      //   - 已加载 = 匹配到的条目数
-      //
-      // dev 模式：window.__entryLoaderManifest 为 null
-      //   - 降级为里程碑驱动（entryLoader.ts 中的 updateLoaderProgress）
-      //   - PerformanceObserver 仍然追踪，但只用于辅助
-      (function () {
-        var manifest = window.__entryLoaderManifest || null;
-        var loaded = 0;
-        var matched = {}; // 已匹配的文件名 → true，避免重复计数
-
-        window.__loaderResourceLoaded = 0;
-        window.__loaderResourceTotal = manifest ? manifest.length : 0;
-        window.__loaderManifestReady = !!manifest;
-
-        // 将清单文件名转为匹配用的后缀（取最后 N 个字符）
-        // 因为 PerformanceObserver 的 entry.name 是完整 URL，需要匹配文件名部分
-        var manifestSuffixes = [];
-        if (manifest) {
-          for (var i = 0; i < manifest.length; i++) {
-            // 取文件名部分（去掉路径），保留 hash
-            var name = manifest[i].split("/").pop();
-            manifestSuffixes.push(name);
+      // 检查 URL 是否匹配清单中的某个文件
+      function matchManifest(url) {
+        if (!manifest) return false;
+        var fileName = url.split("/").pop().split("?")[0];
+        for (var i = 0; i < manifestSuffixes.length; i++) {
+          if (fileName === manifestSuffixes[i] && !matched[manifestSuffixes[i]]) {
+            matched[manifestSuffixes[i]] = true;
+            return true;
           }
         }
+        return false;
+      }
 
-        // 检查 URL 是否匹配清单中的某个文件
-        function matchManifest(url) {
-          if (!manifest) return false;
-          var fileName = url.split("/").pop().split("?")[0];
-          for (var i = 0; i < manifestSuffixes.length; i++) {
-            if (fileName === manifestSuffixes[i] && !matched[manifestSuffixes[i]]) {
-              matched[manifestSuffixes[i]] = true;
-              return true;
-            }
-          }
-          return false;
-        }
-
-        try {
-          var observer = new PerformanceObserver(function (list) {
-            var entries = list.getEntries();
-            for (var i = 0; i < entries.length; i++) {
-              var entry = entries[i];
-              if (manifest) {
-                // build 模式：精确匹配清单
-                if (matchManifest(entry.name)) {
-                  loaded++;
-                  window.__loaderResourceLoaded = loaded;
-                }
-              } else {
-                // dev 模式：追踪所有 JS/CSS，但不用于进度计算（靠里程碑驱动）
+      try {
+        var observer = new PerformanceObserver(function (list) {
+          var entries = list.getEntries();
+          for (var i = 0; i < entries.length; i++) {
+            var entry = entries[i];
+            if (manifest) {
+              // build 模式：精确匹配清单
+              if (matchManifest(entry.name)) {
+                loaded++;
+                window.__loaderResourceLoaded = loaded;
               }
+            } else {
+              // dev 模式：追踪所有 JS/CSS，但不用于进度计算（靠里程碑驱动）
             }
-          });
-          observer.observe({ type: "resource", buffered: true });
-        } catch (e) {
-          // PerformanceObserver 不可用时静默降级
-        }
-      })();
-    </script>
-    <script>
-      (function () {
-        try {
-          var mode = localStorage.getItem("gis-theme-mode");
-          var dark =
-            mode === "dark" ||
-            (mode !== "light" &&
-              window.matchMedia &&
-              window.matchMedia("(prefers-color-scheme: dark)").matches);
-          document.documentElement.setAttribute(
-            "data-entry-theme",
-            dark ? "dark" : "light",
+          }
+        });
+        observer.observe({ type: "resource", buffered: true });
+      } catch (e) {
+        // PerformanceObserver 不可用时静默降级
+      }
+    })();
+  </script>
+  <script>
+    (function () {
+      try {
+        var mode = localStorage.getItem("gis-theme-mode");
+        var dark =
+          mode === "dark" ||
+          (mode !== "light" &&
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.setAttribute(
+          "data-entry-theme",
+          dark ? "dark" : "light",
+        );
+      } catch (e) {
+        document.documentElement.setAttribute("data-entry-theme", "dark");
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <!-- 主入口 loading 屏（纯 HTML，几何动画由 Worker + OffscreenCanvas 绘制，不占主线程） -->
+  <div id="entry-loader-mask">
+    <canvas id="entry-loader-canvas"></canvas>
+  </div>
+  <script>
+    // 主入口 loading 动画初始化：
+    // 优先使用 Worker + OffscreenCanvas（独立线程绘制，不卡主线程）
+    // 浏览器不支持时降级到主线程 Canvas（直接加载 worker 脚本内的逻辑）
+    (function () {
+      var canvas = document.getElementById("entry-loader-canvas");
+      if (!canvas || !canvas.getContext) return;
+
+      var LOGICAL_W = 280;
+      var LOGICAL_H = 380;
+      var dpr = 1;
+
+      // 检测主题
+      var isLight =
+        document.documentElement.getAttribute("data-entry-theme") === "light";
+
+      // 主题变化观察
+      var themeObserver = null;
+      try {
+        themeObserver = new MutationObserver(function () {
+          var nowLight =
+            document.documentElement.getAttribute("data-entry-theme") ===
+            "light";
+          isLight = nowLight;
+          // 通知 Worker 主题变化
+          if (window.__loaderWorker) {
+            window.__loaderWorker.postMessage({ type: "theme", isLight: nowLight });
+          }
+          // 降级模式：更新全局变量
+          window.__loaderThemeLight = nowLight;
+        });
+        themeObserver.observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ["data-entry-theme"],
+        });
+      } catch (e) { }
+
+      // 文字通道初始化
+      window.__loaderText = { percent: "0%", tip: "正在加载地图核心模块" };
+
+      // 尝试 Worker + OffscreenCanvas
+      var useWorker = false;
+      try {
+        if (
+          typeof canvas.transferControlToOffscreen === "function" &&
+          typeof Worker !== "undefined"
+        ) {
+          var offscreen = canvas.transferControlToOffscreen();
+          // 用 Blob URL 创建 Worker，避免路径/CSP/MIME type 问题
+          var workerUrl = "/gis-tools/entry-loader-worker.js";
+          // 优先用 Blob URL 方式（更可靠，不受 CSP 限制）
+          var worker = null;
+          try {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", workerUrl, false); // 同步获取 worker 脚本
+            xhr.send();
+            if (xhr.status === 200) {
+              var blob = new Blob([xhr.responseText], { type: "application/javascript" });
+              worker = new Worker(URL.createObjectURL(blob));
+            }
+          } catch (e2) {
+            // Blob 方式失败，回退到直接加载
+          }
+          if (!worker) {
+            worker = new Worker(workerUrl);
+          }
+          window.__loaderWorker = worker;
+
+          // Worker 错误捕获（Worker 内部错误不会出现在主页面控制台）
+          // 出错时自动降级到主线程 Canvas
+          worker.onerror = function (e) {
+            console.error("[entryLoader] Worker error:", e.message, e.filename, e.lineno);
+            if (useWorker) {
+              useWorker = false;
+              // 旧 canvas 已被 transferControlToOffscreen 占用，创建新 canvas 替换
+              try { worker.terminate(); } catch (e2) { }
+              delete window.__loaderWorker;
+              var newCanvas = document.createElement("canvas");
+              newCanvas.id = "entry-loader-canvas";
+              newCanvas.width = LOGICAL_W;
+              newCanvas.height = LOGICAL_H;
+              canvas.parentElement.replaceChild(newCanvas, canvas);
+              canvas = newCanvas;
+              window.__loaderThemeLight = isLight;
+              startFallbackCanvas(canvas, LOGICAL_W, LOGICAL_H, dpr, isLight, window.innerHeight);
+            }
+          };
+
+          // Worker 发回的消息
+          worker.onmessage = function (e) {
+            var msg = e.data;
+            if (msg.type === "cycleRemaining") {
+              window.__loaderCycleRemaining = msg.value;
+            }
+            if (msg.type === "done") {
+              // 结束动画完成，清理
+              cleanupLoader();
+            }
+          };
+
+          // 发送初始化
+          worker.postMessage(
+            {
+              type: "init",
+              canvas: offscreen,
+              dpr: dpr,
+              isLight: isLight,
+              width: LOGICAL_W,
+              height: LOGICAL_H,
+              screenHeight: window.innerHeight,
+            },
+            [offscreen]
           );
-        } catch (e) {
-          document.documentElement.setAttribute("data-entry-theme", "dark");
+          useWorker = true;
         }
-      })();
-    </script>
-  </head>
-  <body>
-    <!-- 主入口 loading 屏（纯 HTML，几何动画由 Worker + OffscreenCanvas 绘制，不占主线程） -->
-    <div id="entry-loader-mask">
-      <canvas id="entry-loader-canvas"></canvas>
-    </div>
-    <script>
-      // 主入口 loading 动画初始化：
-      // 优先使用 Worker + OffscreenCanvas（独立线程绘制，不卡主线程）
-      // 浏览器不支持时降级到主线程 Canvas（直接加载 worker 脚本内的逻辑）
-      (function () {
-        var canvas = document.getElementById("entry-loader-canvas");
-        if (!canvas || !canvas.getContext) return;
+      } catch (e) {
+        // Worker 创建失败，降级
+      }
 
-        var LOGICAL_W = 280;
-        var LOGICAL_H = 380;
-        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // 降级：主线程 Canvas
+      if (!useWorker) {
+        window.__loaderThemeLight = isLight;
+        // 动态加载 worker 脚本作为普通脚本执行（降级模式）
+        // 这里直接内联主线程绘制逻辑
+        startFallbackCanvas(canvas, LOGICAL_W, LOGICAL_H, dpr, isLight, window.innerHeight);
+      }
 
-        // 检测主题
-        var isLight =
-          document.documentElement.getAttribute("data-entry-theme") === "light";
-
-        // 主题变化观察
-        var themeObserver = null;
-        try {
-          themeObserver = new MutationObserver(function () {
-            var nowLight =
-              document.documentElement.getAttribute("data-entry-theme") ===
-              "light";
-            isLight = nowLight;
-            // 通知 Worker 主题变化
+      // 通道：entryLoader.ts 通过 window.__loaderText 写入进度，主线程转发给 Worker
+      // 使用 defineProperty + setter 实现自动转发
+      var _loaderText = window.__loaderText;
+      try {
+        Object.defineProperty(window, "__loaderText", {
+          get: function () {
+            return _loaderText;
+          },
+          set: function (val) {
+            _loaderText = val;
+            // 转发给 Worker
             if (window.__loaderWorker) {
-              window.__loaderWorker.postMessage({ type: "theme", isLight: nowLight });
+              window.__loaderWorker.postMessage({
+                type: "text",
+                percent: val.percent,
+                tip: val.tip,
+              });
             }
-            // 降级模式：更新全局变量
-            window.__loaderThemeLight = nowLight;
-          });
-          themeObserver.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ["data-entry-theme"],
-          });
-        } catch (e) {}
+          },
+          configurable: true,
+        });
+      } catch (e) { }
 
-        // 文字通道初始化
-        window.__loaderText = { percent: "0%", tip: "正在加载地图核心模块" };
-
-        // 尝试 Worker + OffscreenCanvas
-        var useWorker = false;
-        try {
-          if (
-            typeof canvas.transferControlToOffscreen === "function" &&
-            typeof Worker !== "undefined"
-          ) {
-            var offscreen = canvas.transferControlToOffscreen();
-            // 用 Blob URL 创建 Worker，避免路径/CSP/MIME type 问题
-            var workerUrl = "/gis-tools/entry-loader-worker.js";
-            // 优先用 Blob URL 方式（更可靠，不受 CSP 限制）
-            var worker = null;
-            try {
-              var xhr = new XMLHttpRequest();
-              xhr.open("GET", workerUrl, false); // 同步获取 worker 脚本
-              xhr.send();
-              if (xhr.status === 200) {
-                var blob = new Blob([xhr.responseText], { type: "application/javascript" });
-                worker = new Worker(URL.createObjectURL(blob));
-              }
-            } catch (e2) {
-              // Blob 方式失败，回退到直接加载
-            }
-            if (!worker) {
-              worker = new Worker(workerUrl);
-            }
-            window.__loaderWorker = worker;
-
-            // Worker 错误捕获（Worker 内部错误不会出现在主页面控制台）
-            // 出错时自动降级到主线程 Canvas
-            worker.onerror = function (e) {
-              console.error("[entryLoader] Worker error:", e.message, e.filename, e.lineno);
-              if (useWorker) {
-                useWorker = false;
-                // 旧 canvas 已被 transferControlToOffscreen 占用，创建新 canvas 替换
-                try { worker.terminate(); } catch (e2) {}
-                delete window.__loaderWorker;
-                var newCanvas = document.createElement("canvas");
-                newCanvas.id = "entry-loader-canvas";
-                newCanvas.width = LOGICAL_W;
-                newCanvas.height = LOGICAL_H;
-                canvas.parentElement.replaceChild(newCanvas, canvas);
-                canvas = newCanvas;
-                window.__loaderThemeLight = isLight;
-                startFallbackCanvas(canvas, LOGICAL_W, LOGICAL_H, dpr, isLight, window.innerHeight);
-              }
-            };
-
-            // Worker 发回的消息
-            worker.onmessage = function (e) {
-              var msg = e.data;
-              if (msg.type === "cycleRemaining") {
-                window.__loaderCycleRemaining = msg.value;
-              }
-              if (msg.type === "done") {
-                // 结束动画完成，清理
-                cleanupLoader();
-              }
-            };
-
-            // 发送初始化
-            worker.postMessage(
-              {
-                type: "init",
-                canvas: offscreen,
-                dpr: dpr,
-                isLight: isLight,
-                width: LOGICAL_W,
-                height: LOGICAL_H,
-                screenHeight: window.innerHeight,
-              },
-              [offscreen]
-            );
-            useWorker = true;
-          }
-        } catch (e) {
-          // Worker 创建失败，降级
+      // 通道：主程序调用 window.__startEnding() 触发结束动画
+      window.__startEnding = function () {
+        if (window.__loaderWorker) {
+          window.__loaderWorker.postMessage({ type: "startEnding" });
         }
-
-        // 降级：主线程 Canvas
-        if (!useWorker) {
-          window.__loaderThemeLight = isLight;
-          // 动态加载 worker 脚本作为普通脚本执行（降级模式）
-          // 这里直接内联主线程绘制逻辑
-          startFallbackCanvas(canvas, LOGICAL_W, LOGICAL_H, dpr, isLight, window.innerHeight);
+        // 降级模式：直接调用
+        if (window.__fallbackStartEnding) {
+          window.__fallbackStartEnding();
         }
+      };
 
-        // 通道：entryLoader.ts 通过 window.__loaderText 写入进度，主线程转发给 Worker
-        // 使用 defineProperty + setter 实现自动转发
-        var _loaderText = window.__loaderText;
-        try {
-          Object.defineProperty(window, "__loaderText", {
-            get: function () {
-              return _loaderText;
-            },
-            set: function (val) {
-              _loaderText = val;
-              // 转发给 Worker
-              if (window.__loaderWorker) {
-                window.__loaderWorker.postMessage({
-                  type: "text",
-                  percent: val.percent,
-                  tip: val.tip,
-                });
-              }
-            },
-            configurable: true,
-          });
-        } catch (e) {}
-
-        // 通道：主程序调用 window.__startEnding() 触发结束动画
-        window.__startEnding = function () {
-          if (window.__loaderWorker) {
-            window.__loaderWorker.postMessage({ type: "startEnding" });
-          }
-          // 降级模式：直接调用
-          if (window.__fallbackStartEnding) {
-            window.__fallbackStartEnding();
-          }
-        };
-
-        // 清理函数：先渐隐，过渡完成后移除 DOM
-        function cleanupLoader() {
-          var mask = document.getElementById("entry-loader-mask");
-          if (mask && mask.parentElement) {
-            if (mask.classList.contains("fade-out")) return; // 已在渐隐中
-            mask.classList.add("fade-out");
-            // 过渡结束后移除 DOM
-            var onEnd = function () {
-              mask.removeEventListener("transitionend", onEnd);
-              if (mask.parentElement) mask.parentElement.removeChild(mask);
-            };
-            mask.addEventListener("transitionend", onEnd);
-            // 兜底：300ms transition + 100ms buffer 后强制移除
-            setTimeout(function () {
-              if (mask.parentElement) mask.parentElement.removeChild(mask);
-            }, 450);
-          }
-          if (window.__loaderWorker) {
-            window.__loaderWorker.terminate();
-            delete window.__loaderWorker;
-          }
-          try { delete window.__loaderText; } catch (e) {}
-          try { delete window.__startEnding; } catch (e) {}
-          try { delete window.__loaderCycleRemaining; } catch (e) {}
-          try { delete window.__fallbackStartEnding; } catch (e) {}
-          try { delete window.__loaderThemeLight; } catch (e) {}
-          if (themeObserver) themeObserver.disconnect();
+      // 清理函数：先渐隐，过渡完成后移除 DOM
+      function cleanupLoader() {
+        var mask = document.getElementById("entry-loader-mask");
+        if (mask && mask.parentElement) {
+          if (mask.classList.contains("fade-out")) return; // 已在渐隐中
+          mask.classList.add("fade-out");
+          // 过渡结束后移除 DOM
+          var onEnd = function () {
+            mask.removeEventListener("transitionend", onEnd);
+            if (mask.parentElement) mask.parentElement.removeChild(mask);
+          };
+          mask.addEventListener("transitionend", onEnd);
+          // 兜底：300ms transition + 100ms buffer 后强制移除
+          setTimeout(function () {
+            if (mask.parentElement) mask.parentElement.removeChild(mask);
+          }, 450);
         }
-        window.__cleanupLoader = cleanupLoader;
+        if (window.__loaderWorker) {
+          window.__loaderWorker.terminate();
+          delete window.__loaderWorker;
+        }
+        try { delete window.__loaderText; } catch (e) { }
+        try { delete window.__startEnding; } catch (e) { }
+        try { delete window.__loaderCycleRemaining; } catch (e) { }
+        try { delete window.__fallbackStartEnding; } catch (e) { }
+        try { delete window.__loaderThemeLight; } catch (e) { }
+        if (themeObserver) themeObserver.disconnect();
+      }
+      window.__cleanupLoader = cleanupLoader;
 
-        // ---- 降级：主线程 Canvas 绘制（从 worker 脚本复制核心逻辑）----
-        function startFallbackCanvas(canvas, LOGICAL_W, LOGICAL_H, dpr, isLight) {
-          var ctx = canvas.getContext("2d");
-          var W = LOGICAL_W;
-          var H = LOGICAL_H;
+      // ---- 降级：主线程 Canvas 绘制（从 worker 脚本复制核心逻辑）----
+      function startFallbackCanvas(canvas, LOGICAL_W, LOGICAL_H, dpr, isLight) {
+        var ctx = canvas.getContext("2d");
+        var W = LOGICAL_W;
+        var H = LOGICAL_H;
 
-          var GEO_CY = 110, GEO_RADIUS = 78;
-          var TEXT_Y_TITLE = 232, TEXT_Y_PROGRESS = 268;
-          var PROGRESS_BAR_Y = 286, PROGRESS_BAR_W = 200, PROGRESS_BAR_H = 4;
-          var TEXT_Y_TIP = 318;
-          var STAGE_DURATION = 1200, FADE = 220;
-          var END_CONTENT_FADE = 200, END_RING_SQUISH = 300, END_RING_COLLAPSE = 400;
-          var END_TOTAL = 900, CLEANUP_DELAY = 200;
+        var GEO_CY = 110, GEO_RADIUS = 78;
+        var TEXT_Y_TITLE = 232, TEXT_Y_PROGRESS = 268;
+        var PROGRESS_BAR_Y = 286, PROGRESS_BAR_W = 200, PROGRESS_BAR_H = 4;
+        var TEXT_Y_TIP = 318;
+        var STAGE_DURATION = 1200, FADE = 220;
+        var END_CONTENT_FADE = 200, END_RING_SQUISH = 300, END_RING_COLLAPSE = 400;
+        var END_TOTAL = 900, CLEANUP_DELAY = 200;
 
-          var rafId = null, startTs = 0;
-          var ending = false, endStartT = 0;
+        var rafId = null, startTs = 0;
+        var ending = false, endStartT = 0;
 
-          if (dpr !== 1) {
-            canvas.width = LOGICAL_W * dpr;
-            canvas.height = LOGICAL_H * dpr;
-            canvas.style.width = LOGICAL_W + "px";
-            canvas.style.height = LOGICAL_H + "px";
-            ctx.scale(dpr, dpr);
-          }
 
-          function getColors() {
-            var light = window.__loaderThemeLight;
-            return {
-              GRAY_FRAME: light ? "rgba(144, 147, 153, 0.45)" : "rgba(163, 166, 173, 0.45)",
-              GRAY_DASH: light ? "rgba(192, 196, 204, 0.35)" : "rgba(108, 110, 114, 0.35)",
-              TEXT_TITLE: light ? "#303133" : "#e5eaf3",
-              TEXT_PERCENT: light ? "rgba(48, 49, 51, 0.85)" : "rgba(229, 234, 243, 0.85)",
-              TEXT_TIP: light ? "rgba(48, 49, 51, 0.5)" : "rgba(229, 234, 243, 0.5)",
-              PROGRESS_TRACK: light ? "rgba(144, 147, 153, 0.2)" : "rgba(163, 166, 173, 0.2)",
-            };
-          }
+        canvas.width = LOGICAL_W * dpr;
+        canvas.height = LOGICAL_H * dpr;
+        canvas.style.width = LOGICAL_W + "px";
+        canvas.style.height = LOGICAL_H + "px";
+        ctx.scale(dpr, dpr);
 
-          var GEO_POINT_LINE = "#2563eb", GEO_POINT_FILL = "rgba(37, 99, 235, 0.12)";
-          var GEO_LINE_LINE = "#16a34a";
-          var GEO_POLY_LINE = "#ea580c", GEO_POLY_FILL = "rgba(234, 88, 12, 0.12)";
-          var PROGRESS_FILL = "#409EFF";
 
-          function drawOuterRing(cx, cy, t) {
-            var c = getColors();
-            ctx.save();
-            if (!ending) {
-              ctx.strokeStyle = c.GRAY_FRAME; ctx.lineWidth = 1;
-              ctx.beginPath(); ctx.arc(cx, cy, GEO_RADIUS, 0, Math.PI * 2); ctx.stroke();
-              ctx.strokeStyle = c.GRAY_DASH; ctx.lineWidth = 1;
-              for (var i = 0; i < 4; i++) {
-                var a = (i * Math.PI) / 2 + Math.PI / 4;
-                ctx.beginPath();
-                ctx.moveTo(cx + Math.cos(a) * (GEO_RADIUS + 4), cy + Math.sin(a) * (GEO_RADIUS + 4));
-                ctx.lineTo(cx + Math.cos(a) * (GEO_RADIUS + 12), cy + Math.sin(a) * (GEO_RADIUS + 12));
-                ctx.stroke();
-              }
-              ctx.restore(); return;
-            }
-            var elapsed = t - endStartT;
-            var tickAlpha = Math.max(0, 1 - elapsed / 200);
-            if (tickAlpha > 0) {
-              ctx.globalAlpha = tickAlpha; ctx.strokeStyle = c.GRAY_DASH; ctx.lineWidth = 1;
-              for (var i = 0; i < 4; i++) {
-                var a = (i * Math.PI) / 2 + Math.PI / 4;
-                ctx.beginPath();
-                ctx.moveTo(cx + Math.cos(a) * (GEO_RADIUS + 4), cy + Math.sin(a) * (GEO_RADIUS + 4));
-                ctx.lineTo(cx + Math.cos(a) * (GEO_RADIUS + 12), cy + Math.sin(a) * (GEO_RADIUS + 12));
-                ctx.stroke();
-              }
-              ctx.globalAlpha = 1;
-            }
-            var R = GEO_RADIUS;
-            var squishT = Math.min(elapsed / END_RING_SQUISH, 1);
-            var collapseT = Math.max(0, Math.min((elapsed - END_RING_SQUISH) / END_RING_COLLAPSE, 1));
-            if (squishT < 1) {
-              ctx.strokeStyle = c.GRAY_FRAME; ctx.lineWidth = 1;
-              ctx.beginPath(); ctx.ellipse(cx, cy, R, R * (1 - squishT), 0, 0, Math.PI * 2); ctx.stroke();
-            } else if (collapseT < 1) {
-              var hl = R * (1 - collapseT);
-              if (hl > 0.5) { ctx.strokeStyle = c.GRAY_FRAME; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx - hl, cy); ctx.lineTo(cx + hl, cy); ctx.stroke(); }
-            }
-            ctx.restore();
-          }
-
-          function drawPoint(cx, cy, local) {
-            ctx.save();
-            ctx.fillStyle = GEO_POINT_LINE; ctx.strokeStyle = GEO_POINT_LINE; ctx.lineWidth = 1.5;
-            var RING_R = 16, DOT_R = 5, PEN_R = 2, T1 = 200, T2 = 1000;
-            if (local < T1) { ctx.globalAlpha *= local / T1; ctx.beginPath(); ctx.arc(cx, cy, DOT_R, 0, Math.PI * 2); ctx.fill(); }
-            else if (local < T2) {
-              ctx.beginPath(); ctx.arc(cx, cy, DOT_R, 0, Math.PI * 2); ctx.fill();
-              var progress = (local - T1) / (T2 - T1), sa = -Math.PI / 2, ea = sa + progress * Math.PI * 2;
-              ctx.beginPath(); ctx.arc(cx, cy, RING_R, sa, ea); ctx.stroke();
-              ctx.beginPath(); ctx.arc(cx + Math.cos(ea) * RING_R, cy + Math.sin(ea) * RING_R, PEN_R, 0, Math.PI * 2); ctx.fill();
-            } else {
-              ctx.beginPath(); ctx.arc(cx, cy, DOT_R, 0, Math.PI * 2); ctx.fill();
-              ctx.beginPath(); ctx.arc(cx, cy, RING_R, 0, Math.PI * 2); ctx.stroke();
-            }
-            ctx.restore();
-          }
-
-          function drawLine(cx, cy, local) {
-            ctx.save(); ctx.strokeStyle = GEO_LINE_LINE; ctx.fillStyle = GEO_LINE_LINE;
-            ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.lineJoin = "round";
-            var pts = [{ x: cx - 56, y: cy + 30 }, { x: cx - 18, y: cy - 40 }, { x: cx + 24, y: cy + 12 }, { x: cx + 58, y: cy - 24 }];
-            var DOT_R = 3, PEN_R = 5, T1 = 200, T2 = 1000;
-            var segs = [], total = 0;
-            for (var i = 1; i < pts.length; i++) { var dx = pts[i].x - pts[i - 1].x, dy = pts[i].y - pts[i - 1].y; var l = Math.sqrt(dx * dx + dy * dy); segs.push({ from: pts[i - 1], to: pts[i], len: l }); total += l; }
-            if (local < T1) { ctx.globalAlpha *= local / T1; ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, PEN_R, 0, Math.PI * 2); ctx.fill(); }
-            else if (local < T2) {
-              var progress = (local - T1) / (T2 - T1), targetLen = total * progress;
-              ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); var drawnLen = 0, penX = pts[0].x, penY = pts[0].y;
-              for (var s = 0; s < segs.length; s++) { var seg = segs[s]; if (drawnLen + seg.len <= targetLen) { ctx.lineTo(seg.to.x, seg.to.y); drawnLen += seg.len; penX = seg.to.x; penY = seg.to.y; } else { var remain = targetLen - drawnLen, ratio = remain / seg.len; penX = seg.from.x + (seg.to.x - seg.from.x) * ratio; penY = seg.from.y + (seg.to.y - seg.from.y) * ratio; ctx.lineTo(penX, penY); break; } }
-              ctx.stroke(); ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, DOT_R, 0, Math.PI * 2); ctx.fill();
-              ctx.beginPath(); ctx.arc(penX, penY, PEN_R, 0, Math.PI * 2); ctx.fill();
-            } else {
-              ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for (var j = 1; j < pts.length; j++) ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke();
-              for (var k = 0; k < pts.length; k++) { ctx.beginPath(); ctx.arc(pts[k].x, pts[k].y, DOT_R, 0, Math.PI * 2); ctx.fill(); }
-            }
-            ctx.restore();
-          }
-
-          function drawPolygon(cx, cy, local) {
-            ctx.save(); ctx.strokeStyle = GEO_POLY_LINE; ctx.fillStyle = GEO_POLY_FILL;
-            ctx.lineWidth = 2; ctx.lineJoin = "round";
-            var R = 46, pts = []; for (var k = 0; k < 5; k++) { var ang = -Math.PI / 2 + (k * 2 * Math.PI) / 5; pts.push({ x: cx + Math.cos(ang) * R, y: cy + Math.sin(ang) * R }); }
-            var PEN_R = 5, DOT_R = 3, T1 = 200, T2 = 1000;
-            var segs = [], total = 0;
-            for (var i = 0; i < pts.length; i++) { var next = pts[(i + 1) % pts.length]; var dx = next.x - pts[i].x, dy = next.y - pts[i].y; segs.push({ from: pts[i], to: next, len: Math.sqrt(dx * dx + dy * dy) }); total += segs[segs.length - 1].len; }
-            if (local < T1) { ctx.globalAlpha *= local / T1; ctx.fillStyle = GEO_POLY_LINE; ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, PEN_R, 0, Math.PI * 2); ctx.fill(); }
-            else if (local < T2) {
-              var progress = (local - T1) / (T2 - T1), targetLen = total * progress;
-              ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); var drawnLen = 0, penX = pts[0].x, penY = pts[0].y;
-              for (var s = 0; s < segs.length; s++) { var seg = segs[s]; if (drawnLen + seg.len <= targetLen) { ctx.lineTo(seg.to.x, seg.to.y); drawnLen += seg.len; penX = seg.to.x; penY = seg.to.y; } else { var remain = targetLen - drawnLen, ratio = remain / seg.len; penX = seg.from.x + (seg.to.x - seg.from.x) * ratio; penY = seg.from.y + (seg.to.y - seg.from.y) * ratio; ctx.lineTo(penX, penY); break; } }
-              ctx.stroke(); ctx.fillStyle = GEO_POLY_LINE; ctx.beginPath(); ctx.arc(penX, penY, PEN_R, 0, Math.PI * 2); ctx.fill();
-            } else {
-              ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for (var m = 1; m < pts.length; m++) ctx.lineTo(pts[m].x, pts[m].y); ctx.closePath(); ctx.fill(); ctx.stroke();
-              ctx.fillStyle = GEO_POLY_LINE; for (var k = 0; k < pts.length; k++) { ctx.beginPath(); ctx.arc(pts[k].x, pts[k].y, DOT_R, 0, Math.PI * 2); ctx.fill(); }
-            }
-            ctx.restore();
-          }
-
-          function roundRect(x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
-
-          function drawFrame(t) {
-            ctx.clearRect(0, 0, W, H);
-            var c = getColors();
-            var cx = W / 2, cy = GEO_CY;
-            var local = t % STAGE_DURATION;
-            var cycleT = t % (STAGE_DURATION * 3);
-            window.__loaderCycleRemaining = STAGE_DURATION * 3 - cycleT;
-            drawOuterRing(cx, cy, t);
-            var contentAlpha = 1;
-            if (ending) contentAlpha = Math.max(0, 1 - (t - endStartT) / END_CONTENT_FADE);
-            ctx.globalAlpha = contentAlpha;
-            var stage = Math.floor(t / STAGE_DURATION) % 3;
-            var stageAlpha = 1;
-            if (local > STAGE_DURATION - FADE) stageAlpha = (STAGE_DURATION - local) / FADE;
-            ctx.globalAlpha = Math.max(0, Math.min(1, contentAlpha * stageAlpha));
-            if (stage === 0) drawPoint(cx, cy, local); else if (stage === 1) drawLine(cx, cy, local); else drawPolygon(cx, cy, local);
-            ctx.globalAlpha = 1;
-            var txt = _loaderText || { percent: "0%", tip: "" };
-            var textAlpha = 1;
-            if (ending) { var elapsed = t - endStartT; if (elapsed >= END_RING_SQUISH) textAlpha = Math.max(0, 1 - (elapsed - END_RING_SQUISH) / END_RING_COLLAPSE); }
-            ctx.globalAlpha = textAlpha;
-            ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            ctx.fillStyle = c.TEXT_TITLE; ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'; ctx.fillText("GIS Tools", W / 2, TEXT_Y_TITLE);
-            ctx.fillStyle = c.TEXT_PERCENT; ctx.font = "500 14px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"; ctx.fillText(txt.percent, W / 2, TEXT_Y_PROGRESS);
-            ctx.fillStyle = c.PROGRESS_TRACK; roundRect((W - PROGRESS_BAR_W) / 2, PROGRESS_BAR_Y, PROGRESS_BAR_W, PROGRESS_BAR_H, 2); ctx.fill();
-            var pct = parseFloat(txt.percent) || 0;
-            if (pct > 0) { ctx.fillStyle = PROGRESS_FILL; var fillW = Math.max(PROGRESS_BAR_H, (PROGRESS_BAR_W * pct) / 100); roundRect((W - PROGRESS_BAR_W) / 2, PROGRESS_BAR_Y, fillW, PROGRESS_BAR_H, 2); ctx.fill(); }
-            ctx.fillStyle = c.TEXT_TIP; ctx.font = '400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'; ctx.fillText(txt.tip || "", W / 2, TEXT_Y_TIP);
-            ctx.globalAlpha = 1;
-          }
-
-          function tick(ts) {
-            if (!startTs) startTs = ts;
-            var t = ts - startTs;
-            drawFrame(t);
-            if (ending) { var elapsed = t - endStartT; if (elapsed >= END_TOTAL + CLEANUP_DELAY) { if (rafId) cancelAnimationFrame(rafId); rafId = null; cleanupLoader(); return; } }
-            rafId = requestAnimationFrame(tick);
-          }
-          rafId = requestAnimationFrame(tick);
-
-          window.__fallbackStartEnding = function () {
-            if (ending) return;
-            ending = true;
-            endStartT = performance.now() - startTs;
+        function getColors() {
+          var light = window.__loaderThemeLight;
+          return {
+            GRAY_FRAME: light ? "rgba(144, 147, 153, 0.45)" : "rgba(163, 166, 173, 0.45)",
+            GRAY_DASH: light ? "rgba(192, 196, 204, 0.35)" : "rgba(108, 110, 114, 0.35)",
+            TEXT_TITLE: light ? "#303133" : "#e5eaf3",
+            TEXT_PERCENT: light ? "rgba(48, 49, 51, 0.85)" : "rgba(229, 234, 243, 0.85)",
+            TEXT_TIP: light ? "rgba(48, 49, 51, 0.5)" : "rgba(229, 234, 243, 0.5)",
+            PROGRESS_TRACK: light ? "rgba(144, 147, 153, 0.2)" : "rgba(163, 166, 173, 0.2)",
           };
         }
-      })();
-    </script>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+
+        var GEO_POINT_LINE = "#2563eb", GEO_POINT_FILL = "rgba(37, 99, 235, 0.12)";
+        var GEO_LINE_LINE = "#16a34a";
+        var GEO_POLY_LINE = "#ea580c", GEO_POLY_FILL = "rgba(234, 88, 12, 0.12)";
+        var PROGRESS_FILL = "#409EFF";
+
+        function drawOuterRing(cx, cy, t) {
+          var c = getColors();
+          ctx.save();
+          if (!ending) {
+            ctx.strokeStyle = c.GRAY_FRAME; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(cx, cy, GEO_RADIUS, 0, Math.PI * 2); ctx.stroke();
+            ctx.strokeStyle = c.GRAY_DASH; ctx.lineWidth = 1;
+            for (var i = 0; i < 4; i++) {
+              var a = (i * Math.PI) / 2 + Math.PI / 4;
+              ctx.beginPath();
+              ctx.moveTo(cx + Math.cos(a) * (GEO_RADIUS + 4), cy + Math.sin(a) * (GEO_RADIUS + 4));
+              ctx.lineTo(cx + Math.cos(a) * (GEO_RADIUS + 12), cy + Math.sin(a) * (GEO_RADIUS + 12));
+              ctx.stroke();
+            }
+            ctx.restore(); return;
+          }
+          var elapsed = t - endStartT;
+          var tickAlpha = Math.max(0, 1 - elapsed / 200);
+          if (tickAlpha > 0) {
+            ctx.globalAlpha = tickAlpha; ctx.strokeStyle = c.GRAY_DASH; ctx.lineWidth = 1;
+            for (var i = 0; i < 4; i++) {
+              var a = (i * Math.PI) / 2 + Math.PI / 4;
+              ctx.beginPath();
+              ctx.moveTo(cx + Math.cos(a) * (GEO_RADIUS + 4), cy + Math.sin(a) * (GEO_RADIUS + 4));
+              ctx.lineTo(cx + Math.cos(a) * (GEO_RADIUS + 12), cy + Math.sin(a) * (GEO_RADIUS + 12));
+              ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+          }
+          var R = GEO_RADIUS;
+          var squishT = Math.min(elapsed / END_RING_SQUISH, 1);
+          var collapseT = Math.max(0, Math.min((elapsed - END_RING_SQUISH) / END_RING_COLLAPSE, 1));
+          if (squishT < 1) {
+            ctx.strokeStyle = c.GRAY_FRAME; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.ellipse(cx, cy, R, R * (1 - squishT), 0, 0, Math.PI * 2); ctx.stroke();
+          } else if (collapseT < 1) {
+            var hl = R * (1 - collapseT);
+            if (hl > 0.5) { ctx.strokeStyle = c.GRAY_FRAME; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx - hl, cy); ctx.lineTo(cx + hl, cy); ctx.stroke(); }
+          }
+          ctx.restore();
+        }
+
+        function drawPoint(cx, cy, local) {
+          ctx.save();
+          ctx.fillStyle = GEO_POINT_LINE; ctx.strokeStyle = GEO_POINT_LINE; ctx.lineWidth = 1.5;
+          var RING_R = 16, DOT_R = 5, PEN_R = 2, T1 = 200, T2 = 1000;
+          if (local < T1) { ctx.globalAlpha *= local / T1; ctx.beginPath(); ctx.arc(cx, cy, DOT_R, 0, Math.PI * 2); ctx.fill(); }
+          else if (local < T2) {
+            ctx.beginPath(); ctx.arc(cx, cy, DOT_R, 0, Math.PI * 2); ctx.fill();
+            var progress = (local - T1) / (T2 - T1), sa = -Math.PI / 2, ea = sa + progress * Math.PI * 2;
+            ctx.beginPath(); ctx.arc(cx, cy, RING_R, sa, ea); ctx.stroke();
+            ctx.beginPath(); ctx.arc(cx + Math.cos(ea) * RING_R, cy + Math.sin(ea) * RING_R, PEN_R, 0, Math.PI * 2); ctx.fill();
+          } else {
+            ctx.beginPath(); ctx.arc(cx, cy, DOT_R, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cx, cy, RING_R, 0, Math.PI * 2); ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        function drawLine(cx, cy, local) {
+          ctx.save(); ctx.strokeStyle = GEO_LINE_LINE; ctx.fillStyle = GEO_LINE_LINE;
+          ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.lineJoin = "round";
+          var pts = [{ x: cx - 56, y: cy + 30 }, { x: cx - 18, y: cy - 40 }, { x: cx + 24, y: cy + 12 }, { x: cx + 58, y: cy - 24 }];
+          var DOT_R = 3, PEN_R = 5, T1 = 200, T2 = 1000;
+          var segs = [], total = 0;
+          for (var i = 1; i < pts.length; i++) { var dx = pts[i].x - pts[i - 1].x, dy = pts[i].y - pts[i - 1].y; var l = Math.sqrt(dx * dx + dy * dy); segs.push({ from: pts[i - 1], to: pts[i], len: l }); total += l; }
+          if (local < T1) { ctx.globalAlpha *= local / T1; ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, PEN_R, 0, Math.PI * 2); ctx.fill(); }
+          else if (local < T2) {
+            var progress = (local - T1) / (T2 - T1), targetLen = total * progress;
+            ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); var drawnLen = 0, penX = pts[0].x, penY = pts[0].y;
+            for (var s = 0; s < segs.length; s++) { var seg = segs[s]; if (drawnLen + seg.len <= targetLen) { ctx.lineTo(seg.to.x, seg.to.y); drawnLen += seg.len; penX = seg.to.x; penY = seg.to.y; } else { var remain = targetLen - drawnLen, ratio = remain / seg.len; penX = seg.from.x + (seg.to.x - seg.from.x) * ratio; penY = seg.from.y + (seg.to.y - seg.from.y) * ratio; ctx.lineTo(penX, penY); break; } }
+            ctx.stroke(); ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, DOT_R, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(penX, penY, PEN_R, 0, Math.PI * 2); ctx.fill();
+          } else {
+            ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for (var j = 1; j < pts.length; j++) ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke();
+            for (var k = 0; k < pts.length; k++) { ctx.beginPath(); ctx.arc(pts[k].x, pts[k].y, DOT_R, 0, Math.PI * 2); ctx.fill(); }
+          }
+          ctx.restore();
+        }
+
+        function drawPolygon(cx, cy, local) {
+          ctx.save(); ctx.strokeStyle = GEO_POLY_LINE; ctx.fillStyle = GEO_POLY_FILL;
+          ctx.lineWidth = 2; ctx.lineJoin = "round";
+          var R = 46, pts = []; for (var k = 0; k < 5; k++) { var ang = -Math.PI / 2 + (k * 2 * Math.PI) / 5; pts.push({ x: cx + Math.cos(ang) * R, y: cy + Math.sin(ang) * R }); }
+          var PEN_R = 5, DOT_R = 3, T1 = 200, T2 = 1000;
+          var segs = [], total = 0;
+          for (var i = 0; i < pts.length; i++) { var next = pts[(i + 1) % pts.length]; var dx = next.x - pts[i].x, dy = next.y - pts[i].y; segs.push({ from: pts[i], to: next, len: Math.sqrt(dx * dx + dy * dy) }); total += segs[segs.length - 1].len; }
+          if (local < T1) { ctx.globalAlpha *= local / T1; ctx.fillStyle = GEO_POLY_LINE; ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, PEN_R, 0, Math.PI * 2); ctx.fill(); }
+          else if (local < T2) {
+            var progress = (local - T1) / (T2 - T1), targetLen = total * progress;
+            ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); var drawnLen = 0, penX = pts[0].x, penY = pts[0].y;
+            for (var s = 0; s < segs.length; s++) { var seg = segs[s]; if (drawnLen + seg.len <= targetLen) { ctx.lineTo(seg.to.x, seg.to.y); drawnLen += seg.len; penX = seg.to.x; penY = seg.to.y; } else { var remain = targetLen - drawnLen, ratio = remain / seg.len; penX = seg.from.x + (seg.to.x - seg.from.x) * ratio; penY = seg.from.y + (seg.to.y - seg.from.y) * ratio; ctx.lineTo(penX, penY); break; } }
+            ctx.stroke(); ctx.fillStyle = GEO_POLY_LINE; ctx.beginPath(); ctx.arc(penX, penY, PEN_R, 0, Math.PI * 2); ctx.fill();
+          } else {
+            ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for (var m = 1; m < pts.length; m++) ctx.lineTo(pts[m].x, pts[m].y); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = GEO_POLY_LINE; for (var k = 0; k < pts.length; k++) { ctx.beginPath(); ctx.arc(pts[k].x, pts[k].y, DOT_R, 0, Math.PI * 2); ctx.fill(); }
+          }
+          ctx.restore();
+        }
+
+        function roundRect(x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+        function drawFrame(t) {
+          ctx.clearRect(0, 0, W, H);
+          var c = getColors();
+          var cx = W / 2, cy = GEO_CY;
+          var local = t % STAGE_DURATION;
+          var cycleT = t % (STAGE_DURATION * 3);
+          window.__loaderCycleRemaining = STAGE_DURATION * 3 - cycleT;
+          drawOuterRing(cx, cy, t);
+          var contentAlpha = 1;
+          if (ending) contentAlpha = Math.max(0, 1 - (t - endStartT) / END_CONTENT_FADE);
+          ctx.globalAlpha = contentAlpha;
+          var stage = Math.floor(t / STAGE_DURATION) % 3;
+          var stageAlpha = 1;
+          if (local > STAGE_DURATION - FADE) stageAlpha = (STAGE_DURATION - local) / FADE;
+          ctx.globalAlpha = Math.max(0, Math.min(1, contentAlpha * stageAlpha));
+          if (stage === 0) drawPoint(cx, cy, local); else if (stage === 1) drawLine(cx, cy, local); else drawPolygon(cx, cy, local);
+          ctx.globalAlpha = 1;
+          var txt = _loaderText || { percent: "0%", tip: "" };
+          var textAlpha = 1;
+          if (ending) { var elapsed = t - endStartT; if (elapsed >= END_RING_SQUISH) textAlpha = Math.max(0, 1 - (elapsed - END_RING_SQUISH) / END_RING_COLLAPSE); }
+          ctx.globalAlpha = textAlpha;
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.fillStyle = c.TEXT_TITLE; ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'; ctx.fillText("GIS Tools", W / 2, TEXT_Y_TITLE);
+          ctx.fillStyle = c.TEXT_PERCENT; ctx.font = "500 14px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"; ctx.fillText(txt.percent, W / 2, TEXT_Y_PROGRESS);
+          ctx.fillStyle = c.PROGRESS_TRACK; roundRect((W - PROGRESS_BAR_W) / 2, PROGRESS_BAR_Y, PROGRESS_BAR_W, PROGRESS_BAR_H, 2); ctx.fill();
+          var pct = parseFloat(txt.percent) || 0;
+          if (pct > 0) { ctx.fillStyle = PROGRESS_FILL; var fillW = Math.max(PROGRESS_BAR_H, (PROGRESS_BAR_W * pct) / 100); roundRect((W - PROGRESS_BAR_W) / 2, PROGRESS_BAR_Y, fillW, PROGRESS_BAR_H, 2); ctx.fill(); }
+          ctx.fillStyle = c.TEXT_TIP; ctx.font = '400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'; ctx.fillText(txt.tip || "", W / 2, TEXT_Y_TIP);
+          ctx.globalAlpha = 1;
+        }
+
+        function tick(ts) {
+          if (!startTs) startTs = ts;
+          var t = ts - startTs;
+          drawFrame(t);
+          if (ending) { var elapsed = t - endStartT; if (elapsed >= END_TOTAL + CLEANUP_DELAY) { if (rafId) cancelAnimationFrame(rafId); rafId = null; cleanupLoader(); return; } }
+          rafId = requestAnimationFrame(tick);
+        }
+        rafId = requestAnimationFrame(tick);
+
+        window.__fallbackStartEnding = function () {
+          if (ending) return;
+          ending = true;
+          endStartT = performance.now() - startTs;
+        };
+      }
+    })();
+  </script>
+  <div id="app"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
 </html>

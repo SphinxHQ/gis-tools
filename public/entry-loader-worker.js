@@ -483,13 +483,12 @@ self.onmessage = function (e) {
     }
 
     var dpr = msg.dpr || 1;
+
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+      ctx = canvas.getContext("2d");
     if (dpr !== 1) {
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      ctx = canvas.getContext("2d");
       ctx.scale(dpr, dpr);
-    } else {
-      ctx = canvas.getContext("2d");
     }
 
     rafId = requestAnimationFrame(tick);
