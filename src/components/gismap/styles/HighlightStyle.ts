@@ -1,3 +1,11 @@
+/**
+ * @file Highlight styles (selection/flash)
+ * @description Provides the OpenLayers style factory for highlighted (selected/flashed) features.
+ *              Semantic colors align with scss --gis-geo-* variables:
+ *              point=blue(#2563eb), line=green(#16a34a), polygon=orange(#ea580c).
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-20
+ */
 import {Circle, Fill, Stroke, Style} from 'ol/style.js';
 
 /**

@@ -1,3 +1,11 @@
+/**
+ * @file GIS style utilities
+ * @description Provides style creation, parsing, and application utilities for OpenLayers features.
+ *              Supports converting style option objects to OL Style instances, geometry-type-based
+ *              style resolution, and style serialization.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-20
+ */
 import { Feature } from 'ol';
 import type { FeatureLike } from 'ol/Feature';
 import LineString from 'ol/geom/LineString';

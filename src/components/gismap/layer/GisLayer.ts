@@ -1,3 +1,11 @@
+/**
+ * @file GisLayer class
+ * @description Provides a wrapper class for managing OpenLayers layers including tile, vector,
+ *              image, and static image layers. Handles layer creation, styling, visibility,
+ *              opacity, and z-index management.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-06
+ */
 import "ol/ol.css";
 import Feature from "ol/Feature";
 import GeoJSON from 'ol/format/GeoJSON';

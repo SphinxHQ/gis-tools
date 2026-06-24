@@ -1,3 +1,11 @@
+/**
+ * @file Default map feature styles
+ * @description Provides the default OpenLayers style factory for map features.
+ *              Semantic colors align with scss --gis-geo-* variables:
+ *              point=blue(#2563eb), line=green(#16a34a), polygon=orange(#ea580c), collection=gray(#64748b).
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-20
+ */
 import {Circle, Fill, Stroke, Style,Text} from 'ol/style.js';
 
 /**

@@ -1,3 +1,11 @@
+/**
+ * @file Draw tool styles
+ * @description Provides the OpenLayers style factory for the draw tool interaction.
+ *              Semantic colors align with scss --gis-geo-* variables:
+ *              point=blue(#2563eb), line=green(#16a34a), polygon=orange(#ea580c).
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-20
+ */
 import {Circle, Fill, Stroke, Style} from 'ol/style.js';
 
 /**
