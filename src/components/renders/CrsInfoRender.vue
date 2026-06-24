@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file CRS info render
+ * @description Renders CRS information as an Element Plus tag with category color.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-23
+ */
+
 import { computed } from 'vue'
 
 import { CrsCategory } from '~/enums'

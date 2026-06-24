@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * @file WKT parser component
+ * @description A text editor with syntax highlighting for WKT (Well-Known Text) input,
+ *              providing real-time parsing and map preview.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import {ElMessage} from "element-plus";
 import {computed, ref} from "vue";
 

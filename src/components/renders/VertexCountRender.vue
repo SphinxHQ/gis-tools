@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file Vertex count render
+ * @description Renders vertex count with color gradient from green to red.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-23
+ */
+
 import { computed } from 'vue'
 /**
  * 顶点数分级渲染

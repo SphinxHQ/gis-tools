@@ -1,3 +1,10 @@
+/**
+ * @file Enum barrel exports
+ * @description Central export point for all GIS-related enums including geometry types,
+ *              coordinate reference system categories, draw tool types, data types, and tip levels.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-23
+ */
 export { GeometryType } from './GeometryType'
 export type { GeometryTypeValue } from './GeometryType'
 

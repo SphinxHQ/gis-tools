@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file Split panel layout
+ * @description Resizable split panel with draggable divider and size memory.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
+
 import {computed, getCurrentInstance, onMounted, onUnmounted, reactive, ref, watch} from "vue";
 
 interface SlotItem {

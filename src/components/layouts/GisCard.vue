@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file GIS card component
+ * @description A styled card container for GIS data sections.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
+
 import {getCurrentInstance, onMounted, ref} from "vue";
 
 defineProps({

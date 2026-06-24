@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * @file GIS text parser component
+ * @description Tabbed text parser for WKT and GeoJSON input formats.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-06
+ */
+
 import {ref} from "vue";
 
 const activeTab = ref('wkt')

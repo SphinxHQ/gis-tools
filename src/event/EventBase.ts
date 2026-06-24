@@ -1,3 +1,9 @@
+/**
+ * @file Event base class
+ * @description Base event class providing event dispatch and listener management.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import {logger} from "~/common/logger";
 
 export default class EventBase {

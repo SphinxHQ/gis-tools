@@ -14,6 +14,13 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * @file Left panel component
+ * @description Collapsible left sidebar panel for data tools and CRS selection.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-06
+ */
+
 import * as GeoJSON from 'geojson';
 import { onMounted, ref } from 'vue';
 

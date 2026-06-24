@@ -1,4 +1,10 @@
 /**
+ * @file Monaco editor setup
+ * @description Preloads Monaco editor and registers custom WKT language and theme.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-23
+ */
+/**
  * Monaco 编辑器自定义语言与主题注册
  * 在 app 初始化时预加载，确保任何编辑器实例创建前语言/主题已就绪
  */

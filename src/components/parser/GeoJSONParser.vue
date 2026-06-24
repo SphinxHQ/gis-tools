@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * @file GeoJSON parser component
+ * @description Text editor with syntax highlighting for GeoJSON input.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-06
+ */
+
 import {ElMessage} from "element-plus";
 import {computed, ref} from "vue";
 

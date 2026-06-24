@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file GIS descriptions component
+ * @description Element Plus descriptions wrapper for displaying feature properties.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
+
 import {computed} from "vue";
 
 import GisDataInfo from "~/components/data/GisDataInfo";

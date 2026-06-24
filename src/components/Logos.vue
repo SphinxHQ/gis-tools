@@ -1,3 +1,9 @@
+<!--
+@file Logos component
+@description Application logo display component.
+@author yuanyu <yuanyu@supermap.com>
+@date 2024-08-06
+-->
 <template>
   <div>
     <a href="https://vitejs.dev" target="_blank">

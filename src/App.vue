@@ -1,4 +1,12 @@
 <script lang="ts" setup>
+/**
+ * @file Root application component
+ * @description Manages the entry loading screen lifecycle using MutationObserver to detect
+ *              when the app DOM stabilizes, then hides the loader. Includes mobile responsive
+ *              styles for dialogs and drawers to minimize whitespace on small screens.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-06
+ */
 import {reactive, onMounted, onBeforeUnmount} from "vue";
 
 import {hideEntryLoader, updateLoaderProgress, canHideLoader} from "~/composables/entryLoader";

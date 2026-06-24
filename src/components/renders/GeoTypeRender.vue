@@ -1,5 +1,12 @@
 <script setup lang="ts">
 /**
+ * @file Geometry type render
+ * @description Renders geometry type as a colored Element Plus tag.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-23
+ */
+
+/**
  * 几何类型渲染组件：图标 + 汉字
  * 用于数据信息、历史记录等处的类型展示
  */

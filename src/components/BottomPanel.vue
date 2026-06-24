@@ -7,6 +7,13 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * @file Bottom panel component
+ * @description Resizable bottom panel for data display.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-06
+ */
+
 import { ref } from 'vue';
 
 import { eventBus } from '~/composables/eventBus';

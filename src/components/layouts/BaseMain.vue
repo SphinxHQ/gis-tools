@@ -17,6 +17,13 @@
     </div>
 </template>
 <script setup lang="ts">
+/**
+ * @file Base main layout
+ * @description Main layout wrapper with header and content area.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-06
+ */
+
 import { computed, ref } from 'vue';
 
 import Common from '~/common/Common';

@@ -1,5 +1,12 @@
 <script setup lang="ts">
 /**
+ * @file Geometry type icon render
+ * @description Renders a geometry type icon based on the feature type.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-23
+ */
+
+/**
  * 几何类型图标渲染组件
  * 使用 src/assets/geo-icons/ 下的纯色 SVG 作为固定资产
  * 语义色：点=蓝 线=绿 面=橙  集合=灰

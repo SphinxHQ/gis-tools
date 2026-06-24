@@ -1,4 +1,10 @@
 /**
+ * @file Shared test data
+ * @description Shared test fixtures and sample GeoJSON data for unit tests.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
+/**
  * GeomUtils 模块共享测试数据
  *
  * 数据来源: docs/test/process/SHARED-TEST-DATA.md

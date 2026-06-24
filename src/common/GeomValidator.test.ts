@@ -1,3 +1,9 @@
+/**
+ * @file GeomValidator tests
+ * @description Unit tests for geometry validation functions.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import { describe, it, expect } from 'vitest'
 import {
   validateCoordinate,

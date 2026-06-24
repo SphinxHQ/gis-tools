@@ -1,3 +1,9 @@
+/**
+ * @file Test setup
+ * @description Global test setup configuration for Vitest.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import { config } from '@vue/test-utils'
 import { vi } from 'vitest'
 

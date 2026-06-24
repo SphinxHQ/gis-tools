@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file Geo string editor
+ * @description Monaco-based text editor for GeoJSON/WKT with syntax highlighting.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-06
+ */
+
 import type { editor as MonacoEditorNS } from 'monaco-editor/esm/vs/editor/editor.api'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
