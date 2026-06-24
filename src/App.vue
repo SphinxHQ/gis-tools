@@ -145,6 +145,16 @@ body,
   .el-message-box {
     width: 90% !important;
   }
+
+  /* 移动端 el-drawer 留白优化 */
+  .el-drawer__body {
+    padding: 8px 8px 4px !important;
+  }
+
+  .el-drawer__header {
+    padding: 8px 12px !important;
+    margin-bottom: 0 !important;
+  }
 }
 </style>
 <style scoped>

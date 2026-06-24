@@ -86,7 +86,7 @@ const hasActiveData = computed(() => !!activeData.value?.features?.length)
     <el-drawer
       v-model="drawerVisible"
       direction="btt"
-      size="35%"
+      size="50%"
       :show-close="false"
       :with-header="false"
       class="mobile-drawer"
@@ -167,14 +167,14 @@ const hasActiveData = computed(() => !!activeData.value?.features?.length)
   height: 4px;
   background: var(--el-border-color);
   border-radius: 2px;
-  margin: 8px auto 4px;
+  margin: 4px auto 2px;
   flex-shrink: 0;
 }
 
 .drawer-body {
   flex: 1;
   overflow: hidden;
-  padding: 2px;
+  padding: 0;
 }
 
 .tab-content {
