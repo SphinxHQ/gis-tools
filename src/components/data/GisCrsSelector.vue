@@ -225,22 +225,22 @@ const handleConfirm = () => {
 
     <!-- 选中详情（非紧凑模式） -->
     <el-descriptions v-if="!compact && selectedCrs?.epsgCode" border :column="2" class="crs-detail">
-      <el-descriptions-item label-class-name="w-80px" label="坐标系名称">
+      <el-descriptions-item label-class-name="w-40px" label="名称">
         <CrsInfoRender :crs-info="selectedCrs" display="name" />
       </el-descriptions-item>
-      <el-descriptions-item label-class-name="w-80px" label="坐标系代码">
+      <el-descriptions-item label-class-name="w-40px" label="代码">
         <CrsInfoRender :crs-info="selectedCrs" display="epsgCode" />
       </el-descriptions-item>
-      <el-descriptions-item label-class-name="w-80px" label="坐标系类型">
+      <el-descriptions-item label-class-name="w-40px" label="类型">
         <CrsInfoRender :crs-info="selectedCrs" display="projected" />
       </el-descriptions-item>
-      <el-descriptions-item label-class-name="w-80px" label="带号">
+      <el-descriptions-item label-class-name="w-40px" label="带号">
         <CrsInfoRender :crs-info="selectedCrs" display="withZone" />
       </el-descriptions-item>
-      <el-descriptions-item label-class-name="w-80px" label="中央经线">
+      <el-descriptions-item label-class-name="w-40px" label="中线">
         <CrsInfoRender :crs-info="selectedCrs" display="centralMeridian" />
       </el-descriptions-item>
-      <el-descriptions-item label-class-name="w-80px" label="经度范围">
+      <el-descriptions-item label-class-name="w-40px" label="经度">
         <CrsInfoRender :crs-info="selectedCrs" display="minLon" /> ~ <CrsInfoRender :crs-info="selectedCrs" display="maxLon" />
       </el-descriptions-item>
     </el-descriptions>
@@ -379,6 +379,10 @@ const handleConfirm = () => {
   flex-shrink: 0;
 }
 
+.crs-detail :deep(.el-descriptions__label) {
+  white-space: nowrap;
+}
+
 .crs-footer {
   display: flex;
   justify-content: space-between;
@@ -390,6 +394,88 @@ const handleConfirm = () => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* ===== 移动端适配 ===== */
+@media (max-width: 768px) {
+  .crs-selector {
+    gap: 8px;
+  }
+
+  .source-info {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .crs-search-input :deep(.el-input__wrapper) {
+    padding: 4px 8px;
+  }
+
+  .crs-category-select {
+    width: 80px;
+  }
+
+  .crs-list :deep(.el-scrollbar__bar) {
+    display: none;
+  }
+
+  .crs-group-title {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  .crs-item {
+    padding: 5px 10px;
+    gap: 6px;
+  }
+
+  .crs-item-code {
+    font-size: 12px;
+    min-width: 70px;
+  }
+
+  .crs-item-name {
+    font-size: 12px;
+  }
+
+  /* 移动端：列表项上的 projected tag 缩小 */
+  .crs-item :deep(.el-tag) {
+    height: 18px;
+    padding: 0 5px;
+    font-size: 10px;
+    line-height: 18px;
+  }
+
+  /* 移动端：选中详情用单列展示，缩小 padding */
+  .crs-detail :deep(.el-descriptions__label),
+  .crs-detail :deep(.el-descriptions__content) {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  /* 移动端：自定义 proj4 区域紧凑 */
+  .custom-proj4 {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  /* 移动端：注册按钮文字缩小 */
+  .crs-footer :deep(.el-button) {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 超窄屏：隐藏族名分组标题 */
+  .crs-group-title {
+    display: none;
+  }
+
+  .crs-item-code {
+    min-width: 60px;
+    font-size: 11px;
+  }
 }
 
 .custom-proj4 {

@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#1d1e1f" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#1d1e1f" />
     <!-- 主入口 loading 屏：写在 HTML 中，浏览器解析即渲染，-->
     <!-- 不依赖任何 JS / CSS 资源，最早出现的视觉反馈。-->
@@ -14,6 +16,8 @@
         margin: 0;
         padding: 0;
         height: 100%;
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
       }
 
       /* ===== 浅色主题（与 scss --gis-panel-bg 一致：#ffffff / #1d1e1f） ===== */
@@ -40,6 +44,9 @@
       #entry-loader-mask {
         position: fixed;
         inset: 0;
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
         z-index: 2147483647;
         display: flex;
         align-items: center;
@@ -47,6 +54,12 @@
         overflow: hidden;
         opacity: 1;
         transition: opacity 0.3s ease-out;
+        padding-top: env(safe-area-inset-top);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
       }
 
       #entry-loader-mask.fade-out {

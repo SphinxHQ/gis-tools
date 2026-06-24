@@ -3,7 +3,7 @@
     <div class="gismap-btns-wrap">
       <div class="gismap-btns">
         <map-city-selector :map-name="mapName" style="width: 140px;" />
-        <el-popover ref="crsPopoverRef" placement="bottom" :width="640" trigger="click" @show="crsSelectorKey++">
+        <el-popover ref="crsPopoverRef" placement="bottom" :width="crsPopoverWidth" trigger="click" @show="crsSelectorKey++">
           <template #reference>
             <button type="button" class="gismap-btn">坐标系: EPSG:{{ crsCode }}</button>
           </template>
@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref } from 'vue';
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
 
 import GisCrsSelector from '~/components/data/GisCrsSelector.vue';
 import { CrsInfo } from '~/components/data/GisProjectedBounds';
@@ -47,6 +47,11 @@ const inputGeo = ref<string>('')
 const crsCode = ref<number>(4490)
 const crsPopoverRef = ref()
 const crsSelectorKey = ref(0)
+// 响应式 popover 宽度：桌面 640px，移动端 92vw（避免撑出屏幕）
+const crsPopoverWidth = ref(640)
+const updatePopoverWidth = () => {
+  crsPopoverWidth.value = window.innerWidth < 768 ? Math.min(window.innerWidth * 0.92, 480) : 640
+}
 const cleanBefore = ref<boolean>(true)
 const once = ref<boolean>(false)
 const keep = ref<boolean>(true)
@@ -71,9 +76,12 @@ const drawEndHandler = async (data: any) => {
 }
 onMounted(() => {
     eventBus.on(props.mapName, MapTypes.DRAWEND, drawEndHandler)
+    updatePopoverWidth()
+    window.addEventListener('resize', updatePopoverWidth)
 })
 onBeforeUnmount(() => {
     eventBus.off(props.mapName, MapTypes.DRAWEND, drawEndHandler)
+    window.removeEventListener('resize', updatePopoverWidth)
 })
 </script>
 

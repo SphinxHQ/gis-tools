@@ -2,6 +2,26 @@
 @use "element-plus/theme-chalk/src/dark/css-vars.scss" as *;
 @use "./element/dark.scss" as *;
 
+// ===== 文本选择控制 =====
+// 1) 输入/可编辑元素：允许选择（保持默认）
+input, textarea, [contenteditable="true"], [contenteditable=""],
+.el-input__inner, .el-textarea__inner, .cm-content, .monaco-editor {
+  user-select: text;
+  -webkit-user-select: text;
+}
+// 2) 其余全部 UI：禁止选择（防止误选）
+html, body, div, span, p, label, h1, h2, h3, h4, h5, h6, ul, li, table, tr, td, th,
+button, a, svg, path, polygon, circle, line, rect, img,
+[class*="el-"]:not([contenteditable="true"]) {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+// el-descriptions 标签不换行（移动端紧凑）
+.el-descriptions__label {
+  white-space: nowrap;
+}
+
 // ===== 业务设计令牌 (Design Tokens) =====
 :root {
   // 面板与容器

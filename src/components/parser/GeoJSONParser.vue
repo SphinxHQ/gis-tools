@@ -172,8 +172,8 @@ const handleSample = (type: string) => {
     <div v-if="isValid && hasParsed" class="geojson-parser-result">
       <el-alert title="验证通过" type="success" show-icon :closable="false" />
       <el-descriptions :column="2" border size="small" style="margin-top: 8px">
-        <el-descriptions-item label="要素数量">{{ parsedFeatures.length }}</el-descriptions-item>
-        <el-descriptions-item label="几何类型">{{ geometryTypes.join(', ') }}</el-descriptions-item>
+        <el-descriptions-item label="要素">{{ parsedFeatures.length }}</el-descriptions-item>
+        <el-descriptions-item label="类型">{{ geometryTypes.join(', ') }}</el-descriptions-item>
       </el-descriptions>
     </div>
   </div>

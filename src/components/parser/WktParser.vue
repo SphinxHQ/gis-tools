@@ -115,9 +115,9 @@ const handleSample = (type: string) => {
     </div>
     <div v-if="hasParsed" class="wkt-parser-result">
       <el-descriptions title="解析结果" :column="2" border size="small">
-        <el-descriptions-item label="要素数量">{{ parsedFeatures.length }}</el-descriptions-item>
-        <el-descriptions-item label="坐标数量">{{ coordinateCount }}</el-descriptions-item>
-        <el-descriptions-item label="几何类型" :span="2">{{ geometryTypes.join(', ') }}</el-descriptions-item>
+        <el-descriptions-item label="要素">{{ parsedFeatures.length }}</el-descriptions-item>
+        <el-descriptions-item label="坐标">{{ coordinateCount }}</el-descriptions-item>
+        <el-descriptions-item label="类型" :span="2">{{ geometryTypes.join(', ') }}</el-descriptions-item>
       </el-descriptions>
     </div>
   </div>
