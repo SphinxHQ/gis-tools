@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <!-- 黑底 -->
   <rect width="512" height="512" fill="#1d1e1f"/>
-  <!-- 正五边形：半径160，中心(256,256)，顶点在顶部 -->
-  <polygon 
-    points="256,96 408,194 344,408 168,408 104,194" 
-    fill="rgba(234,88,12,0.15)" stroke="#ea580c" stroke-width="16" 
+  <!-- 正五边形：中心(256,256)，半径160，顶点间隔72° -->
+  <polygon
+    points="256,96 408,194 350,408 162,408 104,194"
+    fill="rgba(234,88,12,0.15)" stroke="#ea580c" stroke-width="16"
     stroke-linejoin="round"/>
   <!-- 节点突出 -->
   <circle cx="256" cy="96" r="20" fill="#ea580c"/>
   <circle cx="408" cy="194" r="20" fill="#ea580c"/>
-  <circle cx="344" cy="408" r="20" fill="#ea580c"/>
-  <circle cx="168" cy="408" r="20" fill="#ea580c"/>
+  <circle cx="350" cy="408" r="20" fill="#ea580c"/>
+  <circle cx="162" cy="408" r="20" fill="#ea580c"/>
   <circle cx="104" cy="194" r="20" fill="#ea580c"/>
 </svg>
