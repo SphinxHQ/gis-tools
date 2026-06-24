@@ -49,7 +49,7 @@
         height: 100dvh;
         z-index: 2147483647;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         overflow: hidden;
         opacity: 1;
@@ -66,9 +66,13 @@
         opacity: 0;
       }
 
-      /* 唯一画布：所有视觉（几何动画 + 标题 + 百分比 + 进度条 + 提示语）全部用 Canvas 2D 绘制 */
+      /* canvas 固定 280×380 逻辑像素，居中于黄金分割点（0.382 屏高） */
       #entry-loader-canvas {
         display: block;
+        width: 280px;
+        height: 380px;
+        margin-top: calc(38.2dvh - 110px);
+        margin-top: calc(38.2vh - 110px);
       }
     </style>
     <!--__ENTRY_LOADER_MANIFEST__-->
@@ -161,7 +165,7 @@
   <body>
     <!-- 主入口 loading 屏（纯 HTML，几何动画由 Worker + OffscreenCanvas 绘制，不占主线程） -->
     <div id="entry-loader-mask">
-      <canvas id="entry-loader-canvas" width="280" height="380"></canvas>
+      <canvas id="entry-loader-canvas"></canvas>
     </div>
     <script>
       // 主入口 loading 动画初始化：
@@ -247,7 +251,7 @@
                 canvas.parentElement.replaceChild(newCanvas, canvas);
                 canvas = newCanvas;
                 window.__loaderThemeLight = isLight;
-                startFallbackCanvas(canvas, LOGICAL_W, LOGICAL_H, dpr, isLight);
+                startFallbackCanvas(canvas, LOGICAL_W, LOGICAL_H, dpr, isLight, window.innerHeight);
               }
             };
 
@@ -272,6 +276,7 @@
                 isLight: isLight,
                 width: LOGICAL_W,
                 height: LOGICAL_H,
+                screenHeight: window.innerHeight,
               },
               [offscreen]
             );
@@ -286,7 +291,7 @@
           window.__loaderThemeLight = isLight;
           // 动态加载 worker 脚本作为普通脚本执行（降级模式）
           // 这里直接内联主线程绘制逻辑
-          startFallbackCanvas(canvas, LOGICAL_W, LOGICAL_H, dpr, isLight);
+          startFallbackCanvas(canvas, LOGICAL_W, LOGICAL_H, dpr, isLight, window.innerHeight);
         }
 
         // 通道：entryLoader.ts 通过 window.__loaderText 写入进度，主线程转发给 Worker

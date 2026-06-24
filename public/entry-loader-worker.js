@@ -465,6 +465,23 @@ self.onmessage = function (e) {
     isLight = !!msg.isLight;
     updateThemeColors();
 
+    // 黄金分割点定位：几何动画中心在屏幕 38.2% 高度处
+    // GEO_CY 是 canvas 内部坐标，需要根据屏幕高度映射
+    var screenH = msg.screenHeight || 800;
+    var goldenCy = screenH * 0.382;
+    // canvas 在 CSS 中 margin-top = 38.2vh - 110px（110 是 GEO_CY 基准值）
+    // 所以 canvas 顶部 = goldenCy - 110，GEO_CY 保持 110 不变
+    // 但如果屏幕很小，需要确保内容不溢出
+    if (screenH < 500) {
+      // 小屏幕：整体上移，GEO_CY 减小
+      var offset = (500 - screenH) * 0.3;
+      GEO_CY = 110 - offset;
+      TEXT_Y_TITLE = 232 - offset;
+      TEXT_Y_PROGRESS = 268 - offset;
+      PROGRESS_BAR_Y = 286 - offset;
+      TEXT_Y_TIP = 318 - offset;
+    }
+
     var dpr = msg.dpr || 1;
     if (dpr !== 1) {
       canvas.width = W * dpr;
