@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file Mobile navigation component
+ * @description Bottom navigation bar for mobile layout providing tab switching
+ *              between map, data, validation, and export views.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-24
+ */
 import { ref, watch, computed } from 'vue'
 import { Compass, MapLocation, CircleCheck, Download } from '@element-plus/icons-vue'
 

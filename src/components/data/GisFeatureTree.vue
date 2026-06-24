@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file Feature tree component
+ * @description Displays a tree-structured view of features by geometry type with
+ *              selection, locate, and delete operations.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-24
+ */
 import * as turf from "@turf/turf";
 import {ElMessage, ElMessageBox} from "element-plus";
 import type { Feature as GeoFeature, Point as GeoPoint, Position } from "geojson";

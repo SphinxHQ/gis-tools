@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file GIS data validator component
+ * @description Provides geometry validation with visual error highlighting,
+ *              coordinate inspection, and auto-fix capabilities using Turf.js.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-24
+ */
 import * as turf from "@turf/turf";
 import {ElMessage, ElMessageBox} from "element-plus";
 import type { Feature as GeoFeature, Point as GeoPoint, Position } from "geojson";

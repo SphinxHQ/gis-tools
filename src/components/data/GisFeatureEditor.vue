@@ -1,5 +1,12 @@
 <script setup lang="ts">
 /**
+ * @file Feature editor component
+ * @description Multi-page feature editor with list view, geometry/property editing,
+ *              and coordinate table. Operates on a working copy to preserve original data.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-23
+ */
+/**
  * 要素编辑器
  * 进入时创建完整数据副本(workingFeatures)，所有操作在副本上进行
  * 页面1 - 要素列表：定位+编辑 / 要素级操作（分割、合并）

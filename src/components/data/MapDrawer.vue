@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file Map drawer component
+ * @description A collapsible drawer panel for the map view with layer visibility controls,
+ *              basemap switching, and map interaction tools.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import {ElMessageBox} from "element-plus";
 import {computed, getCurrentInstance, onBeforeUnmount, onMounted, ref} from "vue";
 import {View, Hide, Delete, Fold, Expand} from '@element-plus/icons-vue'
