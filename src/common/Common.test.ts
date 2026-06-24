@@ -1,3 +1,10 @@
+/**
+ * @file Common utility tests
+ * @description Unit tests for the Common utility class covering UUID generation,
+ *              localStorage operations, Base64 conversion, and other helper functions.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import { describe, it, expect } from 'vitest'
 
 import Common from '~/common/Common'

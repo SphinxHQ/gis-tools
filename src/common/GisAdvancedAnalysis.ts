@@ -1,4 +1,13 @@
 /**
+ * @file GIS advanced analysis module (placeholder)
+ * @description Contains planned advanced GIS analysis functions (batch coordinate transform,
+ *              geometry editing, spatial query, statistical analysis, topology analysis,
+ *              geometry repair, measurement tools, CRS tools). All functions currently
+ *              throw NotImplemented errors, pending future implementation.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
+/**
  * GIS 高级分析功能模块（待实现）
  *
  * 本模块包含计划中的高级GIS分析功能，当前均为空实现。

@@ -1,11 +1,28 @@
+/**
+ * @file Coordinate transformation utilities
+ * @description Provides point and geometry coordinate transformation using Proj4.
+ *              Supports transformation between any registered EPSG codes with
+ *              structured result objects containing source/target info and error details.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import proj4 from "proj4";
 
+/**
+ * Result of a coordinate transformation
+ */
 export interface TransformResult {
+    /** Source CRS EPSG code */
     sourceCrs: string;
+    /** Target CRS EPSG code */
     targetCrs: string;
+    /** Source coordinate */
     sourcePoint: number[];
+    /** Transformed target coordinate */
     targetPoint: number[];
+    /** Whether the transformation succeeded */
     success: boolean;
+    /** Error message if transformation failed */
     error?: string;
 }
 

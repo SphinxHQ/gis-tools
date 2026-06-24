@@ -1,4 +1,11 @@
 /**
+ * @file Spatial analysis algorithms
+ * @description Provides common spatial analysis functions using Turf.js including buffer analysis,
+ *              distance calculation (Haversine), area calculation, geometry simplification, etc.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
+/**
  * GIS 空间分析算法模块
  * 提供常用的空间分析功能：缓冲区分析、距离计算、面积计算、简化算法等
  */

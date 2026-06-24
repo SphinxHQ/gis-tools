@@ -1,3 +1,10 @@
+/**
+ * @file UI helper utilities
+ * @description Provides Element Plus based UI helpers including select-confirm dialogs,
+ *              message boxes with dropdown selection, and other reusable UI patterns.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import { ElMessage, ElMessageBox, ElOption, ElSelect} from "element-plus";
 import {h, ref} from "vue";
 
