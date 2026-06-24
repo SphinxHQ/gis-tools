@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file Main GIS data view component
+ * @description The primary application view providing data import, dataset management,
+ *              left panel with data tree, CRS tools, and map integration via GisMapSlot.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { Fold, Expand, UploadFilled, Plus, Monitor, Sunny, Moon, FolderOpened, MapLocation, Delete, Message } from '@element-plus/icons-vue'

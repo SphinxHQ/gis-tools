@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * @file CRS transform component
+ * @description Provides coordinate transformation between source and target CRS with
+ *              real-time preview, batch transformation, and transform path versioning.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import {ElMessage} from "element-plus";
 import {computed, ref} from "vue";
 

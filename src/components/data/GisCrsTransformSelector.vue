@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file CRS transform selector component
+ * @description A combined source/target CRS selector pair for coordinate transformation,
+ *              with swap button and validation feedback.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-13
+ */
 import { CrsInfo } from '~/components/data/GisProjectedBounds'
 import GisCrsSelector from '~/components/data/GisCrsSelector.vue'
 

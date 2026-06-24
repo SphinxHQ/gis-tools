@@ -1,5 +1,11 @@
 <script setup lang="ts">
-
+/**
+ * @file GIS data reader component
+ * @description Handles file upload, drag-and-drop, clipboard paste, and share target
+ *              data import. Supports all spatial data formats via SimpleDataFormat parsing.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import * as GeoJSON from 'geojson';
 import {getCurrentInstance, onMounted, ref,ComponentInternalInstance} from "vue";
 

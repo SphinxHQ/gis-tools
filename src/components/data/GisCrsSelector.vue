@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file CRS selector component
+ * @description Provides a searchable dropdown for selecting a coordinate reference system,
+ *              filtering by category (projected/geographic) and EPSG code.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import proj4 from 'proj4'
 import { computed, ref } from 'vue'
 
