@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 /**
  * @file GIS descriptions component
  * @description Element Plus descriptions wrapper for displaying feature properties.
@@ -84,4 +84,4 @@ const _data = computed(() => {
 
 <style scoped>
 
-</style>
+</style> -->

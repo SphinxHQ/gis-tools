@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<!-- <script lang="ts" setup>
 /**
  * @file GeoJSON parser component
  * @description Text editor with syntax highlighting for GeoJSON input.
@@ -246,4 +246,4 @@ const handleSample = (type: string) => {
 .geojson-parser-result {
   margin-top: 4px;
 }
-</style>
+</style> -->

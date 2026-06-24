@@ -1,0 +1,26 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/ExfPaser.js</file>
+  <line>135</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/ExfPaser.js" />
+  <problem_class id="JSObjectNullOrUndefined" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Object is 'null' or 'undefined'</problem_class>
+  <description>curTab is possibly null</description>
+  <highlighted_element>curTab</highlighted_element>
+  <language>ECMAScript 6</language>
+  <offset>16</offset>
+  <length>6</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/ExfPaser.js</file>
+  <line>175</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/ExfPaser.js" />
+  <problem_class id="JSObjectNullOrUndefined" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Object is 'null' or 'undefined'</problem_class>
+  <description>curPolygon is possibly null</description>
+  <highlighted_element>curPolygon</highlighted_element>
+  <language>ECMAScript 6</language>
+  <offset>27</offset>
+  <length>10</length>
+</problem>
+</problems>

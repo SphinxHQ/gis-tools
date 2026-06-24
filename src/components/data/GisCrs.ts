@@ -10,7 +10,7 @@ import * as GeoJSON from 'geojson';
 import proj4 from "proj4";
 
 import {GisError, GisErrorCode} from "~/common/GisError";
-import {UIHelper} from "~/common/UIHelper";
+/* [UNUSED] import {UIHelper} from "~/common/UIHelper"; */
 import {logger} from "~/common/logger";
 import GisProjectedBounds, {CrsBounds, CrsInfo} from "~/components/data/GisProjectedBounds";
 
@@ -140,9 +140,12 @@ export default class GisCrs {
                         crs: new GisCrs(crsInfos[0].epsgCode)
                     });
                 } else {
+                    /* [UNUSED] UIHelper.selectConfirm - UIHelper 已注释掉
                     return UIHelper.selectConfirm(`无法识别[${point[0]},${point[1]}]所在坐标系，请选择`, null, crsInfos).then(data => {
                         return {point, crs: new GisCrs(data.epsgCode)}
                     });
+                    */
+                    return Promise.reject(new GisError(GisErrorCode.CRS_NOT_FOUND, `无法识别[${point[0]},${point[1]}]所在坐标系，有${crsInfos.length}个候选`));
                 }
             } else {
                 try {
@@ -153,17 +156,23 @@ export default class GisCrs {
                             crs: new GisCrs(crsInfosFull[0].epsgCode)
                         });
                     } else if (crsInfosFull.length > 1) {
+                        /* [UNUSED] UIHelper.selectConfirm
                         return UIHelper.selectConfirm(`无法识别[${point[0]},${point[1]}]所在坐标系，请选择`, null, crsInfosFull).then(data => {
                             return {point, crs: new GisCrs(data.epsgCode)}
                         });
+                        */
+                        return Promise.reject(new GisError(GisErrorCode.CRS_NOT_FOUND, `无法识别[${point[0]},${point[1]}]所在坐标系，有${crsInfosFull.length}个候选`));
                     }
                 } catch (e) {
                     logger.warn('GisCrs::_tryGetCrs coordinate recognition failed:', e);
                 }
 
+                /* [UNUSED] UIHelper.selectConfirm
                 return UIHelper.selectConfirm(`无法识别[${point[0]},${point[1]}]所在坐标系，请选择`, null, Object.values(CrsBounds)).then(data => {
                     return {point, crs: new GisCrs(data.epsgCode)}
                 });
+                */
+                return Promise.reject(new GisError(GisErrorCode.CRS_NOT_FOUND, `无法识别[${point[0]},${point[1]}]所在坐标系`));
             }
         } else if (typeof x === "string") {
             if (!isNaN(Number(x))) {

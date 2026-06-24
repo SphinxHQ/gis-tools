@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<!-- <script lang="ts" setup>
 /**
  * @file GIS text parser component
  * @description Tabbed text parser for WKT and GeoJSON input formats.
@@ -45,4 +45,4 @@ const activeTab = ref('wkt')
 .gis-text-parser-container :deep(.el-tab-pane) {
   height: 100%;
 }
-</style>
+</style> -->

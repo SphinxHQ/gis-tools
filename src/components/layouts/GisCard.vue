@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 /**
  * @file GIS card component
  * @description A styled card container for GIS data sections.
@@ -72,4 +72,4 @@ onMounted(() => {
 .gis-card-container .gis-card-box__body{
 
 }
-</style>
+</style> -->

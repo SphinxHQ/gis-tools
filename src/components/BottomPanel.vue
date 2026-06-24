@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
     <div class="bottom-container">
 <div v-for="log in logs" :key="log" class="log-item">
     {{ log }}
@@ -50,4 +50,4 @@ eventBus.on('main','console-log', (...args: any[]) => {
     background-color: var(--el-color-primary);
     border: 1px solid var(--ep-border-color-dark);
 }
-</style>
+</style> -->

@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<!-- <script lang="ts" setup>
 /**
  * @file WKT parser component
  * @description A text editor with syntax highlighting for WKT (Well-Known Text) input,
@@ -184,4 +184,4 @@ const handleSample = (type: string) => {
 .wkt-parser-result {
   margin-top: 4px;
 }
-</style>
+</style> -->

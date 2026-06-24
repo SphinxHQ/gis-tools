@@ -23,12 +23,14 @@ import { DefaultLayerNames } from '../GisMap';
 import createDefaultStyle from './DefaultStyle'
 import {createSysDrawStyle,createSysDrawHandleStyle} from './DrawStyle'
 
+/* [UNUSED] drwaHandleStyle - 拼写错误(drwa→draw)，无任何外部引用
 const drwaHandleStyle = new Style({
     renderer: () => {
     },
     hitDetectionRenderer: () => {
     },
 });
+*/
 function getDefaultStyleFunction(): (feature: FeatureLike) => Style[] {
     const styles = createDefaultStyle();
     return function (feature: FeatureLike): Style[] {
@@ -60,11 +62,13 @@ function getDrawStyleFunction(): (feature: FeatureLike) => Style[] {
         }
     };
 }
+/* [UNUSED] getFlashStyleFunction - 无任何外部引用
 function getFlashStyleFunction(): (feature: FeatureLike) => Style[] {
     return function (): Style[] {
         return [new Style({})];
     };
 }
+*/
 function getDrawHandleStyleFunction(): (feature: FeatureLike) => Style[] {
     const styles = createSysDrawHandleStyle();
     return function (feature: FeatureLike): Style[] {
@@ -145,13 +149,15 @@ function getModifyStyleFunction(): (feature: FeatureLike) => Style[] {
     };
 }
 
+/* [UNUSED] getDrawToolStyle - 无任何外部引用
 const getDrawToolStyle = (): StyleLike => {
     return  getDrawStyleFunction()
 }
+*/
 export default {
-    drwaHandleStyle,
+    /* [UNUSED] drwaHandleStyle, */
     getDefaultStyleFunction,
-    getDrawToolStyle,
+    /* [UNUSED] getDrawToolStyle, */
     getDrawHandleStyleFunction,
     getDrawStyleFunction,
     getModifyStyleFunction
@@ -163,8 +169,7 @@ export const getLayerStyles = (layerName: string) => {
         case DefaultLayerNames.SYS_DRAW_TOOL_ACTION:
         case DefaultLayerNames.SYS_DRAW_TOOL_DISPLAY:
             return getDrawStyleFunction();
-        case DefaultLayerNames.SYS_TEMP_FLASH:
-            return getFlashStyleFunction();
+        /* [UNUSED] case DefaultLayerNames.SYS_TEMP_FLASH: return getFlashStyleFunction(); */
         default:
             return getDefaultStyleFunction();
     }

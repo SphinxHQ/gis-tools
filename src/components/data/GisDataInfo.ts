@@ -40,6 +40,7 @@ export interface DataInfo {
     crs?: GisCrs;
 }
 
+/* [UNUSED] EmptyDataInfo - 无任何外部引用，已注释掉
 export class EmptyDataInfo implements DataInfo {
     descriptions?: Record<string, unknown>;
     features: GeoJSON.Feature[] = [];
@@ -48,6 +49,7 @@ export class EmptyDataInfo implements DataInfo {
     
     constructor() {}
 }
+*/
 
 /**
  * 表示地理信息系统数据的信息类

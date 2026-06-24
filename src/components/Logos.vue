@@ -4,7 +4,7 @@
 @author yuanyu <yuanyu@supermap.com>
 @date 2024-08-06
 -->
-<template>
+<!-- <template>
   <div>
     <a href="https://vitejs.dev" target="_blank">
       <img src="/vite.svg" class="logo" alt="Vite logo" />
@@ -34,4 +34,4 @@
 .logo.element-plus:hover {
   filter: drop-shadow(0 0 2em #409effaa);
 }
-</style>
+</style> -->

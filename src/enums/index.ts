@@ -11,8 +11,10 @@ export type { GeometryTypeValue } from './GeometryType'
 export { CrsCategory } from './CrsCategory'
 export type { CrsCategoryValue } from './CrsCategory'
 
+/* [UNUSED] DrawType - 无任何业务代码引用
 export { DrawType } from './DrawType'
 export type { DrawTypeValue } from './DrawType'
+*/
 
 export { GisDataType } from './GisDataType'
 export type { GisDataTypeValue } from './GisDataType'

@@ -1,0 +1,146 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/ExchangeDataFormat.ts</file>
+  <line>340</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/ExchangeDataFormat.ts" />
+  <problem_class id="DuplicatedCode" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Duplicated code fragment</problem_class>
+  <description>Duplicate code: lines 340-355</description>
+  <highlighted_element>((ring: unknown[][], ring_idx: number) =&gt; {</highlighted_element>
+  <language>TypeScript</language>
+  <offset>39</offset>
+  <length>43</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/ExchangeDataFormat.ts</file>
+  <line>359</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/ExchangeDataFormat.ts" />
+  <problem_class id="DuplicatedCode" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Duplicated code fragment</problem_class>
+  <description>Duplicate code: lines 359-374</description>
+  <highlighted_element>((ring: unknown[][], ring_idx: number) =&gt; {</highlighted_element>
+  <language>TypeScript</language>
+  <offset>62</offset>
+  <length>43</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts</file>
+  <line>36</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts" />
+  <problem_class id="DuplicatedCode" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Duplicated code fragment</problem_class>
+  <description>Duplicate code: lines 36-43</description>
+  <highlighted_element>GisCrs.tryGetCrs(features).then((crs: GisCrs) =&gt; {</highlighted_element>
+  <language>TypeScript</language>
+  <offset>20</offset>
+  <length>50</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts</file>
+  <line>92</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts" />
+  <problem_class id="DuplicatedCode" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Duplicated code fragment</problem_class>
+  <description>Duplicate code: lines 92-99</description>
+  <highlighted_element>GisCrs.tryGetCrs(features).then((crs: GisCrs) =&gt; {</highlighted_element>
+  <language>TypeScript</language>
+  <offset>20</offset>
+  <length>50</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>820</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="DuplicatedCode" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Duplicated code fragment</problem_class>
+  <description>Duplicate code: lines 820-826</description>
+  <highlighted_element>if (rings[0] &amp;&amp; rings[0].length &gt; 1) {</highlighted_element>
+  <language>TypeScript</language>
+  <offset>16</offset>
+  <length>38</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>1046</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="DuplicatedCode" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Duplicated code fragment</problem_class>
+  <description>Duplicate code: lines 1,046-1,056</description>
+  <highlighted_element>const _projection = (typeof projection === 'string') ? projection : `EPSG:${projection}`;</highlighted_element>
+  <language>TypeScript</language>
+  <offset>8</offset>
+  <length>89</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>1097</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="DuplicatedCode" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Duplicated code fragment</problem_class>
+  <description>Duplicate code: lines 1,097-1,107</description>
+  <highlighted_element>const _projection = (typeof projection === 'string') ? projection : `EPSG:${projection}`;</highlighted_element>
+  <language>TypeScript</language>
+  <offset>8</offset>
+  <length>89</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/styles/DefaultStyle.ts</file>
+  <line>48</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/styles/DefaultStyle.ts" />
+  <problem_class id="DuplicatedCode" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Duplicated code fragment</problem_class>
+  <description>Duplicate code: lines 48-88</description>
+  <highlighted_element>styles['MultiPolygon'] = styles['Polygon'];</highlighted_element>
+  <language>TypeScript</language>
+  <offset>4</offset>
+  <length>43</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/styles/DrawStyle.ts</file>
+  <line>17</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/styles/DrawStyle.ts" />
+  <problem_class id="DuplicatedCode" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Duplicated code fragment</problem_class>
+  <description>Duplicate code: lines 17-85</description>
+  <highlighted_element>const styles:Record&lt;string,Style[]&gt; = {};</highlighted_element>
+  <language>TypeScript</language>
+  <offset>4</offset>
+  <length>42</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/styles/DrawStyle.ts</file>
+  <line>90</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/styles/DrawStyle.ts" />
+  <problem_class id="DuplicatedCode" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Duplicated code fragment</problem_class>
+  <description>Duplicate code: lines 90-158</description>
+  <highlighted_element>const styles:Record&lt;string,Style[]&gt; = {};</highlighted_element>
+  <language>TypeScript</language>
+  <offset>4</offset>
+  <length>42</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/styles/GisStyle.ts</file>
+  <line>101</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/styles/GisStyle.ts" />
+  <problem_class id="DuplicatedCode" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Duplicated code fragment</problem_class>
+  <description>Duplicate code: lines 101-107</description>
+  <highlighted_element>if (rings[0] &amp;&amp; rings[0].length &gt; 1) {</highlighted_element>
+  <language>TypeScript</language>
+  <offset>16</offset>
+  <length>38</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/styles/HighlightStyle.ts</file>
+  <line>31</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/styles/HighlightStyle.ts" />
+  <problem_class id="DuplicatedCode" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Duplicated code fragment</problem_class>
+  <description>Duplicate code: lines 31-73</description>
+  <highlighted_element>styles['MultiPolygon'] = styles['Polygon'];</highlighted_element>
+  <language>TypeScript</language>
+  <offset>4</offset>
+  <length>43</length>
+</problem>
+</problems>

@@ -1,0 +1,26 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/data/chinaBoundaryCache.ts</file>
+  <line>90</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/data/chinaBoundaryCache.ts" />
+  <problem_class id="JSSuspiciousNameCombination" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Suspicious variable/parameter name combination</problem_class>
+  <description>'scaleX' should probably not be assigned to 'scaleY'</description>
+  <highlighted_element>scaleY = scaleX</highlighted_element>
+  <language>TypeScript</language>
+  <offset>8</offset>
+  <length>15</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/data/chinaBoundaryCache.ts</file>
+  <line>90</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/data/chinaBoundaryCache.ts" />
+  <problem_class id="JSSuspiciousNameCombination" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Suspicious variable/parameter name combination</problem_class>
+  <description>'scaleX' should probably not be assigned to 'scaleY'</description>
+  <highlighted_element>scaleY = scaleX</highlighted_element>
+  <language>TypeScript</language>
+  <offset>8</offset>
+  <length>15</length>
+</problem>
+</problems>
