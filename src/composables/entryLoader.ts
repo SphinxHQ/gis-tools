@@ -1,4 +1,15 @@
 /**
+ * @file Entry loading screen controller
+ * @description Controls the main entry loading screen with build manifest tracking and
+ *              smooth progress animation. Progress algorithm uses exponential decay toward
+ *              target (non-100%) or linear sprint (100% finishing phase).
+ *
+ *              Build mode (with manifest): 0-95% resource load ratio, 95-100% sprint.
+ *              Dev mode (no manifest): 0-60% fake progress, 60-95% milestones, 95-100% sprint.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-23
+ */
+/**
  * 主入口 loading 屏控制（构建时清单 + 平滑推进）
  *
  * 进度算法：

@@ -1,3 +1,10 @@
+/**
+ * @file Event bus tests
+ * @description Unit tests for the GisEventBus and GisEvent classes covering
+ *              event registration, emission, removal, and error handling.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GisEventBus, GisEvent } from '~/composables/eventBus'
 

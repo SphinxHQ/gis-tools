@@ -1,32 +1,48 @@
+/**
+ * @file Dark mode theme management
+ * @description Manages the application theme (auto/light/dark) using VueUse storage and
+ *              system preference detection. Syncs the theme to the document root class
+ *              and the inline loading screen attribute.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-06
+ */
 import { usePreferredDark, useStorage } from '@vueuse/core'
 import { computed, watch } from 'vue'
 
+/** Theme mode: 'auto' follows system, 'light'/'dark' forces the theme */
 export type ThemeMode = 'auto' | 'light' | 'dark'
 
-/** 用户偏好 — 持久化到 localStorage */
+/** User preference — persisted to localStorage */
 export const themeMode = useStorage<ThemeMode>('gis-theme-mode', 'auto')
 
-/** 系统暗色偏好 — 响应 prefers-color-scheme */
+/** System dark preference — responds to prefers-color-scheme */
 const prefersDark = usePreferredDark()
 
-/** 实际渲染状态 — 由偏好 + 系统推导 */
+/** Actual render state — derived from preference + system */
 export const isActuallyDark = computed(() => {
   if (themeMode.value === 'dark') return true
   if (themeMode.value === 'light') return false
   return prefersDark.value
 })
 
-// 同步到 html.dark class
+// Sync to html.dark class
 watch(isActuallyDark, (dark) => {
   document.documentElement.classList.toggle('dark', dark)
-  // 同步给内联 loading 屏（index.html）使用
+  // Sync to inline loading screen (index.html) for use
   document.documentElement.setAttribute('data-entry-theme', dark ? 'dark' : 'light')
 }, { immediate: true })
 
+/**
+ * Set the theme mode
+ * @param mode - Theme mode to set
+ */
 export function setThemeMode(mode: ThemeMode) {
   themeMode.value = mode
 }
 
+/**
+ * Cycle through theme modes: auto → light → dark → auto
+ */
 export function cycleThemeMode() {
   const order: ThemeMode[] = ['auto', 'light', 'dark']
   const idx = order.indexOf(themeMode.value)
