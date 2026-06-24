@@ -1,41 +1,84 @@
+/**
+ * @file Geometry validator
+ * @description Provides strict geometry validation using Turf.js including coordinate validation,
+ *              self-intersection detection, polygon ring orientation checking, and hole validation.
+ *              Returns structured validation results with errors and warnings.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import * as turf from '@turf/turf'
 import type {Geometry, Feature, FeatureCollection, Position, Polygon, MultiPolygon, GeometryCollection} from 'geojson'
 
 import {GisError, GisErrorCode} from '~/common/GisError'
 
+/**
+ * Result of coordinate validation
+ */
 export interface CoordinateValidationResult {
+    /** Whether all coordinates are valid */
     isValid: boolean
+    /** Array of coordinate errors */
     errors: CoordinateError[]
+    /** Array of coordinate warnings */
     warnings: CoordinateWarning[]
 }
 
+/**
+ * Represents a coordinate validation error
+ */
 export interface CoordinateError {
+    /** Path to the invalid coordinate */
     path: string
+    /** Error message */
     message: string
+    /** The invalid value */
     value?: unknown
 }
 
+/**
+ * Represents a coordinate validation warning
+ */
 export interface CoordinateWarning {
+    /** Path to the coordinate */
     path: string
+    /** Warning message */
     message: string
     value?: unknown
 }
 
+/**
+ * Result of full geometry validation
+ */
 export interface GeometryValidationResult {
+    /** Whether the geometry is valid */
     isValid: boolean
+    /** Array of geometry errors */
     errors: GeometryError[]
+    /** Array of geometry warnings */
     warnings: GeometryWarning[]
 }
 
+/**
+ * Represents a geometry validation error
+ */
 export interface GeometryError {
+    /** Type of geometry error */
     type: 'self_intersection' | 'ring_orientation' | 'unclosed_ring' | 'too_few_points' | 'invalid_coordinate' | 'empty_geometry' | 'degenerate_ring' | 'hole_outside_shell' | 'nested_holes' | 'duplicate_vertices' | 'hole_intersect_shell' | 'holes_overlap' | 'validation_exception'
+    /** Error message */
     message: string
+    /** Optional path to the error location */
     path?: string
 }
 
+/**
+ * Represents a geometry validation warning
+ */
 export interface GeometryWarning {
+    /** Type of warning */
     type: 'suspicious_coordinate' | 'near_zero_coordinate'
+    /** Warning message */
     message: string
+    /** Optional path to the warning location */
     path?: string
 }
 

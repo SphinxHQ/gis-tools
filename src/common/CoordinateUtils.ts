@@ -1,4 +1,11 @@
 /**
+ * @file Coordinate utility functions
+ * @description Provides coordinate format conversion, coordinate validation helpers,
+ *              and coordinate system determination utilities.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
+/**
  * 坐标工具模块
  * 提供坐标格式转换、坐标验证辅助、坐标系判断等工具函数
  */

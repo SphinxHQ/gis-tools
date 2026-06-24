@@ -1,3 +1,11 @@
+/**
+ * @file Geometry utility functions
+ * @description Provides geometry operations using Turf.js including ring orientation detection,
+ *              geometry simplification, area/length calculation, format conversion between
+ *              GeoJSON/WKT/WKB/OpenLayers, and geometry validation helpers.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-20
+ */
 import * as turf from "@turf/turf";
 import type { Geometry, Feature, Polygon, MultiPolygon, FeatureCollection } from 'geojson';
 import type OlFeature from "ol/Feature";
