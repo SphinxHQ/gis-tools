@@ -1,4 +1,11 @@
 /**
+ * @file Tip log level enum
+ * @description Defines tip log levels (Info, Warn, Error) as an enum class with value, label,
+ *              and Element Plus tag type. Replaces the original numeric enum in TipLogger.ts.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-23
+ */
+/**
  * 提示日志级别枚举
  * 替代原 TipLogger.ts 中的数字 enum，改为枚举类携带 label / tagType
  */

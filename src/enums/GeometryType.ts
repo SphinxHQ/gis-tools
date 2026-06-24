@@ -1,4 +1,12 @@
 /**
+ * @file GeoJSON geometry type enum
+ * @description Defines all GeoJSON geometry types (Point, LineString, Polygon, etc.) per RFC 7946.
+ *              Each instance carries value, label, and default color. Includes utility methods
+ *              for lookup and single-geometry detection.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-23
+ */
+/**
  * GeoJSON 几何类型枚举类
  * 参考 RFC 7946 定义，每个实例携带 value / label / color 三元组
  */

@@ -1,4 +1,11 @@
 /**
+ * @file GIS data format type enum
+ * @description Defines all supported spatial data format types (GeoJSON, WKT, WKB, Shapefile, DXF, etc.)
+ *              as an enum class with value and label. Replaces the original numeric enum in GisDataInfo.ts.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-23
+ */
+/**
  * GIS 数据格式类型枚举
  * 替代原 GisDataInfo.ts 中的数字 enum，改为枚举类携带 label
  */

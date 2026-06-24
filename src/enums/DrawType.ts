@@ -1,4 +1,11 @@
 /**
+ * @file Draw tool type enum
+ * @description Defines map draw tool types (Point, LineString, Polygon, None) as an enum class.
+ *              Used to unify the type literals for the OpenLayers draw interaction.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-23
+ */
+/**
  * 绘制工具类型枚举
  * 统一管理地图绘制工具的 type 字面量
  */

@@ -1,4 +1,12 @@
 /**
+ * @file Coordinate reference system category enum
+ * @description Defines the two CRS categories (Projected and Geographic) with value, label,
+ *              color, and Element Plus tag type. Includes utility methods for lookup by
+ *              boolean or value string, and a computed fullLabel getter.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-23
+ */
+/**
  * 坐标系大类枚举
  * 统一管理「投影 / 地理」的 value、中文标签、展示颜色
  */
