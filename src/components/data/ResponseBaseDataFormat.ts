@@ -1,3 +1,10 @@
+/**
+ * @file ResponseBase data format parser
+ * @description Parses ANTU response format data into GisDataInfo datasets,
+ *              supporting JSON structures with geometry and attribute fields.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import * as GeoJSON from 'geojson';
 
 import Common from "~/common/Common";

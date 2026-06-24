@@ -1,3 +1,9 @@
+/**
+ * @file EXF data format parser
+ * @description Parses EXF (Exchange Format) data into GisDataInfo datasets using the ExfPaser.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import Common from "~/common/Common";
 import {logger} from "~/common/logger";
 import {DataFormat} from "~/components/data/DataFormat";

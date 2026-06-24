@@ -1,4 +1,12 @@
+/**
+ * @file EXF parser
+ * @description Parses EXF (Exchange Format) structured text with block-based sections
+ *              (Head, Coordinates, Attributes) using custom separators.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 export default class ExfPaser {
+    /** Field separator character */
     separator = '♂';
     BLOCK_START = 'Begin';
     BLOCK_END = 'End';

@@ -1,3 +1,10 @@
+/**
+ * @file Exchange data format parser
+ * @description Parses electronic exchange format (电子报盘) data into GisDataInfo datasets,
+ *              supporting structured text with coordinate and attribute sections.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import * as GeoJSON from 'geojson';
 import {markRaw} from "vue";
 

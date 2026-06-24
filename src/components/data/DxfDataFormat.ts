@@ -1,3 +1,9 @@
+/**
+ * @file DXF data format parser
+ * @description Parses DXF (Drawing Exchange Format) files into GisDataInfo datasets.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import {DataFormat} from "~/components/data/DataFormat";
 import GisDataInfo from "~/components/data/GisDataInfo";
 
