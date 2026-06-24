@@ -185,10 +185,43 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
+        // Web Share Target：让已安装的 PWA 出现在移动端系统分享面板
+        // 接收空间数据文件（GeoJSON/WKT/SHP/ShapeZip/DXF/EXF/电子报盘）
+        share_target: {
+          action: '/gis-tools/share-receiver',
+          method: 'POST',
+          enctype: 'multipart/form-data',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url',
+            files: [
+              {
+                name: 'files',
+                accept: [
+                  'application/json',
+                  '.geojson',
+                  'text/plain',
+                  '.wkt',
+                  '.txt',
+                  'application/octet-stream',
+                  '.shp',
+                  '.exf',
+                  'application/zip',
+                  '.zip',
+                  'application/dxf',
+                  '.dxf',
+                ],
+              },
+            ],
+          },
+        },
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,txt,woff2}'],
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // 8 MiB，覆盖 Monaco/GisData 等大 chunk
+        // 引入自定义 SW 脚本：拦截系统分享的 POST 请求并暂存文件
+        importScripts: ['sw-share-target.js'],
       },
     }),
   ],

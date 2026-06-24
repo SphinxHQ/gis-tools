@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { Fold, Expand, UploadFilled, Plus, Monitor, Sunny, Moon, FolderOpened, MapLocation, Delete, Message } from '@element-plus/icons-vue'
 
@@ -15,11 +15,18 @@ import GisMapSlot from '~/components/gismap/GisMapSlot.vue'
 import { themeMode } from '~/composables/dark'
 import { useBreakpoint } from '~/composables/useBreakpoint'
 import { useGisDataStore } from '~/composables/gisDataStore'
+import { useShareReceiver } from '~/composables/useShareReceiver'
 
 const { datasets, dataSources, activeId, activeDataset, setActive, addDataSource, removeDataset } = useGisDataStore()
 const { isMobile, panelWidth, panelCollapsedWidth, showLeftPanel, showMobileNav } = useBreakpoint()
 
 const importDialogVisible = ref(false)
+
+// 初始化分享接收：检测 URL ?share=1 标记，从 Cache Storage 读取系统分享的文件并自动导入
+const { init: initShareReceiver } = useShareReceiver()
+onMounted(() => {
+  initShareReceiver()
+})
 
 // logo 动画重播：通过改变 key 强制重新挂载 SVG，使 SMIL 动画重新播放
 const logoKey = ref(0)
