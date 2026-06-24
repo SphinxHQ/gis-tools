@@ -1,0 +1,18 @@
+<component name="libraryTable">
+  <library name="demo">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/demo/1号拌合站.zip!/" />
+      <root url="jar://$PROJECT_DIR$/demo/合并65个大地块.zip!/" />
+      <root url="jar://$PROJECT_DIR$/demo/TDFKGHT.zip!/" />
+      <root url="jar://$PROJECT_DIR$/demo/在建矿山shp.zip!/" />
+      <root url="jar://$PROJECT_DIR$/demo/报征范围线shp.zip!/" />
+      <root url="jar://$PROJECT_DIR$/demo/134_图斑量算shp.zip!/" />
+      <root url="jar://$PROJECT_DIR$/demo/总的SHP.zip!/" />
+      <root url="jar://$PROJECT_DIR$/demo/Export_Output.zip!/" />
+      <root url="jar://$PROJECT_DIR$/demo/shp.zip!/" />
+      <root url="jar://$PROJECT_DIR$/demo/压盖20个图形shp.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
