@@ -1,3 +1,10 @@
+/**
+ * @file Map controller composable
+ * @description Provides reactive binding between a GisDataInfo instance and a GisMap instance,
+ *              handling feature synchronization, flash/highlight events, and modify mode lifecycle.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-24
+ */
 import { ref, watch, onBeforeUnmount, nextTick, type Ref } from 'vue'
 import type { Feature as GeoFeature } from 'geojson'
 
@@ -7,8 +14,13 @@ import GisDataInfo from '~/components/data/GisDataInfo'
 import { GisMapAddFeaturesEvent, GisMapflashFeaturesEvent, GisMapStopModifyEvent } from '~/components/gismap/events/GisMapEvents'
 import { eventBus } from '~/composables/eventBus'
 
+/**
+ * Options for the map controller composable
+ */
 export interface MapControllerOptions {
+  /** Map instance id ref */
   instanceId: Ref<number | string>
+  /** Data source ref */
   data: Ref<GisDataInfo | undefined>
 }
 

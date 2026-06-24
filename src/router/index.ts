@@ -1,3 +1,10 @@
+/**
+ * @file Vue Router configuration
+ * @description Defines the application routes and router instance with HTML5 history mode
+ *              under the /gis-tools/ base path. Includes a beforeEach guard for document title.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import {createRouter, createWebHistory} from 'vue-router'
 
 

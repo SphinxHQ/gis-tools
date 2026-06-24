@@ -1,4 +1,18 @@
 /**
+ * @file Share receiver composable
+ * @description Receives shared files from the system share target (Web Share Target API).
+ *              Works with public/sw-share-target.js: the SW intercepts the share POST request,
+ *              stores files in Cache Storage, and redirects to /?share=1. This composable detects
+ *              the ?share=1 flag on page load, reads files from cache, parses them via
+ *              SimpleDataFormat, imports as a new dataset, then cleans up cache and URL params.
+ *
+ *              Data structure (agreed with sw-share-target.js):
+ *              - /gis-tools/share-pending-meta → JSON { title, text, url, timestamp, fileCount, fileNames, fileTypes }
+ *              - /gis-tools/share-pending-file-{i} → Blob (binary data of a single file)
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-24
+ */
+/**
  * 分享接收 Composable
  *
  * 配合 public/sw-share-target.js 使用。SW 拦截系统分享的 POST 请求后，
