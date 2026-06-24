@@ -17,8 +17,10 @@ export class GisEvent {
     event_id: string;
     /** Event type string */
     event_type: string;
-    /** Whether the event expects a callback */
+    /*
+    /** Whether the event expects a callback *\/
     hasCallBack: boolean = true;
+    */
     /** Event options payload */
     options: unknown;
     /** Additional event parameters */
@@ -36,15 +38,15 @@ export class GisEvent {
         this.params = params;
     }
 }
-/**
+/*
  * Promise wrapper for aggregating settled results from event dispatch
- */
+ *
 export class EventPromise{
-    /** The aggregated promise of all settled results */
+    /* The aggregated promise of all settled results *\/
     promise: Promise<PromiseSettledResult<unknown>[]>;
-    /** Resolve handler */
+    /* Resolve handler *\/
     handlerResolve: (value: PromiseSettledResult<unknown>[]) => void = () => {};
-    /** Reject handler */
+    /* Reject handler *\/
     handlerReject: (reason?: unknown) => void = () => {};
     constructor(){
         this.promise = new Promise((resolve,reject)=>{
@@ -53,6 +55,7 @@ export class EventPromise{
         })
     }
 }
+*/
 /**
  * Grouped event bus supporting on/emit/off with promise-based dispatch
  */
@@ -103,7 +106,7 @@ export class GisEventBus {
      * @param gisEvent - The event to emit
      * @returns Promise of settled results from all callbacks
      */
-    emit(group:string,gisEvent:GisEvent):Promise<PromiseSettledResult<unknown>[]>{
+    emit(group:string,gisEvent:GisEvent | { event_type: string; options: unknown; params?: unknown[] }):Promise<PromiseSettledResult<unknown>[]>{
         const event = gisEvent.event_type
         const params = gisEvent.params;
         const options = gisEvent?.options;

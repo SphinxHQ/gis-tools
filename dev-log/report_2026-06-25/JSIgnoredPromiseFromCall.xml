@@ -1,0 +1,188 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>483</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from emit is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>489</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from emit is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>500</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from emit is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>510</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from emit is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>543</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from emit is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>613</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from emit is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>622</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from drawTool is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>623</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from cleanLayer is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>624</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from cleanLayer is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>722</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from emit is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/GisMap.ts</file>
+  <line>903</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from cleanLayer is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/composables/eventBus.ts</file>
+  <line>156</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/composables/eventBus.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from dispatch is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/composables/useMapController.ts</file>
+  <line>84</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/composables/useMapController.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from nextTick is ignored</description>
+  <highlighted_element>nextTick</highlighted_element>
+  <language>JavaScript</language>
+  <offset>-17</offset>
+  <length>8</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/composables/useMapController.ts</file>
+  <line>93</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/composables/useMapController.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from emit is ignored</description>
+  <highlighted_element>emit</highlighted_element>
+  <language>JavaScript</language>
+  <offset>-46</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/composables/useMapController.ts</file>
+  <line>112</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/composables/useMapController.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from emit is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/composables/useMapController.ts</file>
+  <line>138</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/composables/useMapController.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from emit is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/composables/useMapController.ts</file>
+  <line>139</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/composables/useMapController.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from emit is ignored</description>
+  <highlighted_element>emit</highlighted_element>
+  <language>JavaScript</language>
+  <offset>-100</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/main.ts</file>
+  <line>30</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/main.ts" />
+  <problem_class id="JSIgnoredPromiseFromCall" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Result of method call returning a promise is ignored</problem_class>
+  <description>Promise returned from setupMonaco is ignored</description>
+  <highlighted_element />
+  <language />
+</problem>
+</problems>

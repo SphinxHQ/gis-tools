@@ -49,7 +49,7 @@ import {BaseTianDiTuMap, BlankMap, GisMap, GisMapOption} from './GisMap';
 import {getChinaBoundaryImage} from './data/chinaBoundaryCache';
 import {Types as MapTypes} from './events/GisMapEvents';
 import type {GisMapLayer} from './layer/GisLayer';
-import {ImageGisMapLayer} from './layer/GisLayer';
+import {ImageGisMapLayer, SysGisMapLayer} from './layer/GisLayer';
 import { selectAvailableTianDiTuKey } from './tiandituConfig';
 
 
@@ -370,8 +370,8 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
   vertical-align: middle;
   color: var(--el-color-primary-dark-2);
-  border: 1px solid var(--gis-map-props-border);
-  border-width: 1px 0 0 1px;
+  border-top: 1px solid var(--gis-map-props-border);
+  border-left: 1px solid var(--gis-map-props-border);
 }
 .fea-props .row .value {
   display: inline-block;
@@ -380,8 +380,8 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
-  border: 1px solid var(--gis-map-props-border);
-  border-width: 1px 0 0 1px;
+  border-top: 1px solid var(--gis-map-props-border);
+  border-left: 1px solid var(--gis-map-props-border);
 }
 
 .mouse-coord {

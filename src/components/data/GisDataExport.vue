@@ -6,15 +6,15 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-06-24
  */
+import { Download } from "@element-plus/icons-vue";
 import { ShapefileParser, GeoJSONFeatureCollection } from "@sphinx_hq/shapefile-parser";
 import { ElMessage } from "element-plus";
-import { Download } from "@element-plus/icons-vue";
 import { computed, Ref, ref, watch } from "vue";
 
 import { ExchangeDataFormat } from "~/components/data/ExchangeDataFormat";
 import GisDataInfo from "~/components/data/GisDataInfo";
-import GeoTypeIconRender from "~/components/renders/GeoTypeIconRender.vue";
 import { WktDataFormat } from "~/components/data/WktDataFormat";
+import GeoTypeIconRender from "~/components/renders/GeoTypeIconRender.vue";
 
 const props = defineProps({
   data: {
@@ -24,10 +24,6 @@ const props = defineProps({
 })
 
 const exportType = ref<'geojson' | 'wkt' | 'exchange'>('geojson')
-
-const hasFeatures = computed(() => {
-  return props.data?.features?.length > 0
-})
 
 // ===== GeoJson 导出 =====
 const geoJsonType = ref("FeatureCollection")
@@ -246,7 +242,8 @@ const handleDownloadExchange = () => {
         { value: 'geojson', label: 'GeoJson' },
         { value: 'wkt', label: 'WKT' },
         { value: 'exchange', label: '电子报盘' }
-      ]" size="small" />
+      ]" size="small"
+/>
     </div>
 
     <!-- GeoJson 导出 -->

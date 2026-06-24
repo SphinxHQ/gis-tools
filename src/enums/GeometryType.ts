@@ -52,10 +52,12 @@ export class GeometryType {
     return this.values().find(item => item.value === value);
   }
 
-  /** 判断是否为单一几何类型（排除 GeometryCollection） */
+  /*
+  // 判断是否为单一几何类型（排除 GeometryCollection）
   isSingleGeometry(): boolean {
     return this !== GeometryType.GeometryCollection;
   }
+  */
 
   toString(): string {
     return `GeometryType.${this.value}`;

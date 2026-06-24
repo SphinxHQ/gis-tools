@@ -2896,7 +2896,7 @@ export default class GisProjectedBounds {
         return find;
     }
 
-    static findByLonFull(x: number): CrsInfo[] {
+    /* static findByLonFull(x: number): CrsInfo[] {
         let find: CrsInfo[] = [];
         for (const crsBoundsKey in CrsBounds) {
             const crsInfo = CrsBounds[crsBoundsKey];
@@ -2906,5 +2906,5 @@ export default class GisProjectedBounds {
 
         }
         return find;
-    }
+    } */
 }

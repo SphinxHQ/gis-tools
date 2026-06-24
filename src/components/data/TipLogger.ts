@@ -56,7 +56,7 @@ export class TipLogger extends EventBase{
     error(name:string, message: string){
         this.log(TipLevel.ERROR, name, message);
     }
-    getLogs(): TipLog[]{
+    /* getLogs(): TipLog[]{
         return this.logs;
-    }
+    } */
 }

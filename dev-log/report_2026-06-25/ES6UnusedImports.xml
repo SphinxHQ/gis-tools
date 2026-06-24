@@ -1,0 +1,232 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/GeomUtils.test.ts</file>
+  <line>17</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/GeomUtils.test.ts" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>Unused import specifier GEOM_BEIJING_VALID_HOLED_POLYGON</description>
+  <highlighted_element>GEOM_BEIJING_VALID_HOLED_POLYGON</highlighted_element>
+  <language>TypeScript</language>
+  <offset>11</offset>
+  <length>32</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/GeomUtils.test.ts</file>
+  <line>36</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/GeomUtils.test.ts" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>Unused import specifier EDGE_MIXED_POSITIVE_NEGATIVE</description>
+  <highlighted_element>EDGE_MIXED_POSITIVE_NEGATIVE</highlighted_element>
+  <language>TypeScript</language>
+  <offset>12</offset>
+  <length>28</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/GeomUtils.test.ts</file>
+  <line>39</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/GeomUtils.test.ts" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>Unused import specifier EXPECTED_CLOCKWISE</description>
+  <highlighted_element>EXPECTED_CLOCKWISE</highlighted_element>
+  <language>TypeScript</language>
+  <offset>42</offset>
+  <length>18</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/GeomUtils.test.ts</file>
+  <line>40</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/GeomUtils.test.ts" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>Unused import specifier EXPECTED_COUNTERCLOCKWISE</description>
+  <highlighted_element>EXPECTED_COUNTERCLOCKWISE</highlighted_element>
+  <language>TypeScript</language>
+  <offset>34</offset>
+  <length>25</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/GeomUtils.test.ts</file>
+  <line>41</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/GeomUtils.test.ts" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>Unused import specifier</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/GeomUtils.test.ts</file>
+  <line>42</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/GeomUtils.test.ts" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>Unused import specifier</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/GeomUtils.test.ts</file>
+  <line>43</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/GeomUtils.test.ts" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>Unused import specifier</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/GeomUtils.test.ts</file>
+  <line>46</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/GeomUtils.test.ts" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>Unused import specifier</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisCrsSelector.vue</file>
+  <line>14</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisCrsSelector.vue" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>&lt;html&gt;Unused &lt;code&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;import&amp;#32;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;{&amp;#32;CrsCategory&amp;#32;}&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;from&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#6aab73;&quot;&gt;'~/enums'&lt;/span&gt;&lt;/code&gt;&lt;/html&gt;</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataReader.vue</file>
+  <line>21</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataReader.vue" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>&lt;html&gt;Unused &lt;pre&gt;&lt;code&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;import&amp;#32;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;GeoTypeIconRender&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;from&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#6aab73;&quot;&gt;&quot;~/components/renders/GeoTypeIconRender.vue&quot;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/html&gt;</description>
+  <highlighted_element>import GeoTypeRender from &quot;~/components/renders/GeoTypeRender.vue&quot;;</highlighted_element>
+  <language>TypeScript</language>
+  <offset>0</offset>
+  <length>67</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataTransformer.vue</file>
+  <line>19</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataTransformer.vue" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>Unused import specifier</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataValidator.vue</file>
+  <line>12</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataValidator.vue" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>Unused import specifier ref</description>
+  <highlighted_element>ref</highlighted_element>
+  <language>TypeScript</language>
+  <offset>9</offset>
+  <length>3</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue</file>
+  <line>24</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>&lt;html&gt;Unused &lt;pre&gt;&lt;code&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;import&amp;#32;type&amp;#32;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;{&amp;#32;Feature&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;as&amp;#32;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;GeoFeature&amp;#32;}&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;from&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#6aab73;&quot;&gt;'geojson'&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/html&gt;</description>
+  <highlighted_element>import { computed, onBeforeUnmount, ref, watch } from 'vue'</highlighted_element>
+  <language>TypeScript</language>
+  <offset>0</offset>
+  <length>59</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureTree.vue</file>
+  <line>9</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureTree.vue" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>&lt;html&gt;Unused &lt;code&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;import&amp;#32;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;*&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;as&amp;#32;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;turf&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;from&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#6aab73;&quot;&gt;&quot;@turf/turf&quot;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/html&gt;</description>
+  <highlighted_element>import {ElMessage, ElMessageBox} from &quot;element-plus&quot;;</highlighted_element>
+  <language>TypeScript</language>
+  <offset>0</offset>
+  <length>53</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureTree.vue</file>
+  <line>11</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureTree.vue" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>&lt;html&gt;Unused &lt;pre&gt;&lt;code&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;import&amp;#32;type&amp;#32;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;{&amp;#32;Feature&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;as&amp;#32;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;GeoFeature,&amp;#32;Point&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;as&amp;#32;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;GeoPoint,&amp;#32;Position&amp;#32;}&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;from&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#6aab73;&quot;&gt;&quot;geojson&quot;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/html&gt;</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureTree.vue</file>
+  <line>15</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureTree.vue" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>Unused import specifier</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureTree.vue</file>
+  <line>16</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureTree.vue" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>Unused import specifier</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureTree.vue</file>
+  <line>24</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureTree.vue" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>&lt;html&gt;Unused &lt;code&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;import&amp;#32;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;Common&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;from&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#6aab73;&quot;&gt;&quot;~/common/Common&quot;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/html&gt;</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/MapControlPanel.vue</file>
+  <line>36</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/MapControlPanel.vue" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>Unused import specifier onMounted</description>
+  <highlighted_element>onMounted</highlighted_element>
+  <language>TypeScript</language>
+  <offset>9</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/styles/GisStyle.ts</file>
+  <line>17</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/styles/GisStyle.ts" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>&lt;html&gt;Unused &lt;pre&gt;&lt;code&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;import&amp;#32;type&amp;#32;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;{&amp;#32;StyleLike&amp;#32;}&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;from&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#6aab73;&quot;&gt;'ol/style/Style'&lt;/span&gt;&lt;span style=&quot;&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/html&gt;</description>
+  <highlighted_element>import { logger } from '~/common/logger';</highlighted_element>
+  <language>TypeScript</language>
+  <offset>1</offset>
+  <length>41</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/composables/useMapController.ts</file>
+  <line>9</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/composables/useMapController.ts" />
+  <problem_class id="ES6UnusedImports" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused import</problem_class>
+  <description>&lt;html&gt;Unused &lt;pre&gt;&lt;code&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;import&amp;#32;type&amp;#32;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;{&amp;#32;Feature&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;as&amp;#32;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;GeoFeature&amp;#32;}&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#cf8e6d;&quot;&gt;from&amp;#32;&lt;/span&gt;&lt;span style=&quot;color:#6aab73;&quot;&gt;'geojson'&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/html&gt;</description>
+  <highlighted_element />
+  <language />
+</problem>
+</problems>

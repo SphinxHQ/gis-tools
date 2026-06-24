@@ -87,13 +87,12 @@ export class SysGisMapLayer implements GisMapLayer {
     init() {
         const source = new VectorSource({wrapX: false});
         this.source = source;
-        const vector = new VectorLayer({
+        this.layer = new VectorLayer({
           source: source,
             background: '#FFFFFF00',
           style: this.style,
           zIndex: this.zIndex ?? 0,
         });
-        this.layer = vector;
         return this.layer;
     }
     addFeatures(features: Feature[]): Feature[] {

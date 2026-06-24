@@ -283,7 +283,7 @@ onMounted(() => {
 </script>
 <template>
   <div :class="`split-panel ${props.direction}`">
-    <template v-for="(item, index) in props.length" :key="index">
+    <template v-for="(_, index) in props.length" :key="index">
       <div ref="slotElements" :class="`split-panel-item ${props.direction}`">
         <slot :name="`slot-${index}`" />
       </div>
@@ -302,9 +302,6 @@ onMounted(() => {
 
 .split-panel.horizontal {
 
-}
-
-.split-panel.vertical {
 }
 
 .split-panel-item {

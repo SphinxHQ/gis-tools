@@ -1,0 +1,62 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisCrs.ts</file>
+  <line>32</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisCrs.ts" />
+  <problem_class id="JSUnusedLocalSymbols" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused local symbol</problem_class>
+  <description>Unused field</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue</file>
+  <line>642</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue" />
+  <problem_class id="JSUnusedLocalSymbols" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused local symbol</problem_class>
+  <description>Unused local variable</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/styles/DefaultStyle.ts</file>
+  <line>21</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/styles/DefaultStyle.ts" />
+  <problem_class id="JSUnusedLocalSymbols" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused local symbol</problem_class>
+  <description>Unused constant</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue</file>
+  <line>286</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue" />
+  <problem_class id="JSUnusedLocalSymbols" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused local symbol</problem_class>
+  <description>Unused local variable</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/composables/entryLoader.ts</file>
+  <line>145</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/composables/entryLoader.ts" />
+  <problem_class id="JSUnusedLocalSymbols" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused local symbol</problem_class>
+  <description>Unused parameter</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/composables/useBreakpoint.ts</file>
+  <line>33</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/composables/useBreakpoint.ts" />
+  <problem_class id="JSUnusedLocalSymbols" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused local symbol</problem_class>
+  <description>Unused constant</description>
+  <highlighted_element />
+  <language />
+</problem>
+</problems>

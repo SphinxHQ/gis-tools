@@ -4,6 +4,7 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-04-13
  */
+import type * as GeoJSON from 'geojson';
 import * as Wkx from "wkx";
 
 import Common from "~/common/Common";

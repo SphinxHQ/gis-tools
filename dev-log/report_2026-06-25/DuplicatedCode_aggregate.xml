@@ -1,0 +1,35 @@
+<root>
+<duplicate cost="1" hash="0">
+  <fragment file="file://$PROJECT_DIR$/src/components/data/ExchangeDataFormat.ts" line="340" start="14504" end="15437" />
+  <fragment file="file://$PROJECT_DIR$/src/components/data/ExchangeDataFormat.ts" line="359" start="15674" end="16547" />
+</duplicate>
+<duplicate cost="1" hash="0">
+  <fragment file="file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts" line="36" start="1611" end="2040" />
+  <fragment file="file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts" line="36" start="1611" end="2041" />
+  <fragment file="file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts" line="92" start="4247" end="4676" />
+  <fragment file="file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts" line="92" start="4247" end="4677" />
+</duplicate>
+<duplicate cost="1" hash="0">
+  <fragment file="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" line="819" start="33889" end="34225" />
+  <fragment file="file://$PROJECT_DIR$/src/components/gismap/styles/GisStyle.ts" line="101" start="3714" end="4050" />
+</duplicate>
+<duplicate cost="1" hash="0">
+  <fragment file="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" line="1045" start="41944" end="42397" />
+  <fragment file="file://$PROJECT_DIR$/src/components/gismap/GisMap.ts" line="1096" start="44080" end="44533" />
+</duplicate>
+<duplicate cost="1" hash="0">
+  <fragment file="file://$PROJECT_DIR$/src/components/gismap/styles/DefaultStyle.ts" line="49" start="1576" end="2638" />
+  <fragment file="file://$PROJECT_DIR$/src/components/gismap/styles/DrawStyle.ts" line="43" start="1308" end="2370" />
+  <fragment file="file://$PROJECT_DIR$/src/components/gismap/styles/DrawStyle.ts" line="116" start="3237" end="4299" />
+  <fragment file="file://$PROJECT_DIR$/src/components/gismap/styles/HighlightStyle.ts" line="31" start="984" end="2046" />
+</duplicate>
+<duplicate cost="1" hash="0">
+  <fragment file="file://$PROJECT_DIR$/src/components/gismap/styles/DrawStyle.ts" line="17" start="551" end="2390" />
+  <fragment file="file://$PROJECT_DIR$/src/components/gismap/styles/DrawStyle.ts" line="90" start="2468" end="4319" />
+</duplicate>
+<duplicate cost="1" hash="0">
+  <fragment file="file://$PROJECT_DIR$/src/components/gismap/styles/DrawStyle.ts" line="43" start="1308" end="2390" />
+  <fragment file="file://$PROJECT_DIR$/src/components/gismap/styles/DrawStyle.ts" line="116" start="3237" end="4319" />
+  <fragment file="file://$PROJECT_DIR$/src/components/gismap/styles/HighlightStyle.ts" line="31" start="984" end="2066" />
+</duplicate>
+</root>

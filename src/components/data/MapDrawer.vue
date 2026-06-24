@@ -6,9 +6,9 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-04-13
  */
+import {View, Hide, Delete, Fold, Expand} from '@element-plus/icons-vue'
 import {ElMessageBox} from "element-plus";
 import {computed, getCurrentInstance, onBeforeUnmount, onMounted, ref} from "vue";
-import {View, Hide, Delete, Fold, Expand} from '@element-plus/icons-vue'
 
 import GeomUtils from "~/common/GeomUtils";
 import {GisMapRemoveDrawFeatureEvent, GisMapToggleDrawFeatureVisibleEvent, Types} from "~/components/gismap/events/GisMapEvents";
@@ -112,7 +112,7 @@ const handleSubmit = () => {
     <div v-if="!isMobile" class="md-left" :class="{ collapsed: sidebarCollapsed }" :style="{ width: sidebarWidth + 'px' }">
       <div class="md-left-header">
         <span v-if="!sidebarCollapsed" class="md-left-title">绘制要素</span>
-        <el-button text size="small" @click="sidebarCollapsed = !sidebarCollapsed" :title="sidebarCollapsed ? '展开' : '折叠'">
+        <el-button text size="small" :title="sidebarCollapsed ? '展开' : '折叠'" @click="sidebarCollapsed = !sidebarCollapsed">
           <el-icon><Expand v-if="sidebarCollapsed" /><Fold v-else /></el-icon>
         </el-button>
       </div>
@@ -122,10 +122,10 @@ const handleSubmit = () => {
           <el-table-column prop="type" label="类型" width="50" />
           <el-table-column label="操作" min-width="80">
             <template #default="{ row }">
-              <el-button text size="small" @click="handleToggleVisible(row.id)" :title="row.hidden ? '显示' : '隐藏'">
+              <el-button text size="small" :title="row.hidden ? '显示' : '隐藏'" @click="handleToggleVisible(row.id)">
                 <el-icon><View v-if="row.hidden" /><Hide v-else /></el-icon>
               </el-button>
-              <el-button text size="small" type="danger" @click="handleRemove(row.id)" title="移除">
+              <el-button text size="small" type="danger" title="移除" @click="handleRemove(row.id)">
                 <el-icon><Delete /></el-icon>
               </el-button>
             </template>
@@ -133,14 +133,14 @@ const handleSubmit = () => {
         </el-table>
       </div>
       <div v-if="!sidebarCollapsed" class="md-left-bottom">
-        <el-button type="primary" :disabled="featureList?.length===0" @click="handleSubmit" size="small">确定</el-button>
+        <el-button type="primary" :disabled="featureList?.length===0" size="small" @click="handleSubmit">确定</el-button>
       </div>
     </div>
 
     <!-- 移动端：抽屉按钮（图标按钮，位于城市下拉框左侧） -->
     <div v-else class="md-mobile-trigger">
       <el-badge :value="featureList.length" :hidden="featureList.length === 0" class="md-mobile-badge">
-        <el-button type="primary" size="small" circle @click="drawerVisible = true" title="要素列表">
+        <el-button type="primary" size="small" circle title="要素列表" @click="drawerVisible = true">
           <el-icon><Fold /></el-icon>
         </el-button>
       </el-badge>
@@ -160,17 +160,17 @@ const handleSubmit = () => {
         <el-table-column prop="type" label="类型" width="50" />
         <el-table-column label="操作" min-width="80">
           <template #default="{ row }">
-            <el-button text size="small" @click="handleToggleVisible(row.id)" :title="row.hidden ? '显示' : '隐藏'">
+            <el-button text size="small" :title="row.hidden ? '显示' : '隐藏'" @click="handleToggleVisible(row.id)">
               <el-icon><View v-if="row.hidden" /><Hide v-else /></el-icon>
             </el-button>
-            <el-button text size="small" type="danger" @click="handleRemove(row.id)" title="移除">
+            <el-button text size="small" type="danger" title="移除" @click="handleRemove(row.id)">
               <el-icon><Delete /></el-icon>
             </el-button>
           </template>
         </el-table-column>
       </el-table>
       <template #footer>
-        <el-button type="primary" :disabled="featureList?.length===0" @click="handleSubmit" style="width: 100%">确定</el-button>
+        <el-button type="primary" :disabled="featureList?.length===0" style="width: 100%" @click="handleSubmit">确定</el-button>
       </template>
     </el-drawer>
 

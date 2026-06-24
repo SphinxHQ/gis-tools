@@ -6,14 +6,10 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-06-24
  */
-import * as turf from "@turf/turf";
-import {ElMessage, ElMessageBox} from "element-plus";
-import type { Feature as GeoFeature, Point as GeoPoint, Position } from "geojson";
 import { Edit } from '@element-plus/icons-vue'
+import {ElMessage, ElMessageBox} from "element-plus";
 import {
   getCurrentInstance,
-  markRaw,
-  nextTick,
   onBeforeUnmount,
   onMounted,
   ref,
@@ -21,7 +17,6 @@ import {
   watch
 } from "vue";
 
-import Common from "~/common/Common";
 import GeomUtils from "~/common/GeomUtils";
 import {logger} from "~/common/logger";
 import GisDataInfo from "~/components/data/GisDataInfo";
@@ -391,6 +386,7 @@ const handleJsonUpdate = () => {
       const idx = props.data.features.indexOf(node.sourceFeature)
       if (idx >= 0) {
         const newFeature = { ...node.sourceFeature } as GeoJSON.Feature
+        // eslint-disable-next-line vue/no-mutating-props
         props.data.features[idx] = newFeature
         node.sourceFeature = newFeature
       }
@@ -431,12 +427,6 @@ const handleTreeNodeClick = (data: GeoInfoNode) => {
   selectedNodeData.value = data
   editedJson.value = getOriginalJson(data)
   isDirty.value = false
-  if (data.geometry) {
-    flashGeometries([data.geometry])
-  }
-}
-
-const handleTreeNodeView = (data: GeoInfoNode) => {
   if (data.geometry) {
     flashGeometries([data.geometry])
   }
@@ -487,6 +477,7 @@ const handleCreateArchive = (payload: { name: string; features: GeoJSON.Feature[
   payload.features.forEach((f, i) => {
     if (!f.properties) f.properties = {}
     f.properties.name = payload.name + (payload.features.length > 1 ? ` #${i + 1}` : '')
+    // eslint-disable-next-line vue/no-mutating-props
     props.data.features.push(f)
   })
   buildGeoJsonTree()
@@ -518,7 +509,8 @@ const handleClearShadow = () => {
       <el-segmented v-model="activeView" :options="[
         { value: 'tree', label: '结构树' },
         { value: 'editor', label: '要素编辑' }
-      ]" size="small" @change="(val: string | number) => handleViewChange(val as 'tree' | 'editor')" />
+      ]" size="small" @change="(val: string | number) => handleViewChange(val as 'tree' | 'editor')"
+/>
     </div>
 
     <!-- 结构树视图 -->

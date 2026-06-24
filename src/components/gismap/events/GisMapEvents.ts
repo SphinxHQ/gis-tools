@@ -75,11 +75,11 @@ export class GisMapFlyToEvent extends GisEvent {
     }
 }
 
-export class GisMapZoomToEvent extends GisEvent {
+/* export class GisMapZoomToEvent extends GisEvent {
     constructor(center: number[], zoom?: number) {
         super(Types.ZOOM_TO, {}, center, zoom);
     }
-}
+} */
 
 export class GisMapflashFeaturesEvent extends GisEvent {
     constructor(features: GeoJSON.Feature[], options?: Record<string, unknown>) {

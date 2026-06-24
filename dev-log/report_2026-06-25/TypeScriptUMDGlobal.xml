@@ -1,0 +1,122 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/ExfDataFormat.ts</file>
+  <line>27</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/ExfDataFormat.ts" />
+  <problem_class id="TypeScriptUMDGlobal" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Referenced UMD global variable</problem_class>
+  <description>Referenced UMD global variable</description>
+  <highlighted_element>GeoJSON</highlighted_element>
+  <language>TypeScript</language>
+  <offset>26</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/ExfDataFormat.ts</file>
+  <line>28</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/ExfDataFormat.ts" />
+  <problem_class id="TypeScriptUMDGlobal" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Referenced UMD global variable</problem_class>
+  <description>Referenced UMD global variable</description>
+  <highlighted_element>GeoJSON</highlighted_element>
+  <language>TypeScript</language>
+  <offset>124</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts</file>
+  <line>27</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts" />
+  <problem_class id="TypeScriptUMDGlobal" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Referenced UMD global variable</problem_class>
+  <description>Referenced UMD global variable</description>
+  <highlighted_element>GeoJSON</highlighted_element>
+  <language>TypeScript</language>
+  <offset>36</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts</file>
+  <line>31</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts" />
+  <problem_class id="TypeScriptUMDGlobal" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Referenced UMD global variable</problem_class>
+  <description>Referenced UMD global variable</description>
+  <highlighted_element>GeoJSON</highlighted_element>
+  <language>TypeScript</language>
+  <offset>49</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts</file>
+  <line>83</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts" />
+  <problem_class id="TypeScriptUMDGlobal" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Referenced UMD global variable</problem_class>
+  <description>Referenced UMD global variable</description>
+  <highlighted_element>GeoJSON</highlighted_element>
+  <language>TypeScript</language>
+  <offset>36</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts</file>
+  <line>88</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/WktDataFormat.ts" />
+  <problem_class id="TypeScriptUMDGlobal" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Referenced UMD global variable</problem_class>
+  <description>Referenced UMD global variable</description>
+  <highlighted_element>GeoJSON</highlighted_element>
+  <language>TypeScript</language>
+  <offset>49</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/composables/useMapController.ts</file>
+  <line>86</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/composables/useMapController.ts" />
+  <problem_class id="TypeScriptUMDGlobal" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Referenced UMD global variable</problem_class>
+  <description>Referenced UMD global variable</description>
+  <highlighted_element>GeoJSON</highlighted_element>
+  <language>TypeScript</language>
+  <offset>-51</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/composables/useMapController.ts</file>
+  <line>108</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/composables/useMapController.ts" />
+  <problem_class id="TypeScriptUMDGlobal" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Referenced UMD global variable</problem_class>
+  <description>Referenced UMD global variable</description>
+  <highlighted_element>GeoJSON</highlighted_element>
+  <language>TypeScript</language>
+  <offset>-18</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/composables/useMapController.ts</file>
+  <line>109</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/composables/useMapController.ts" />
+  <problem_class id="TypeScriptUMDGlobal" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Referenced UMD global variable</problem_class>
+  <description>Referenced UMD global variable</description>
+  <highlighted_element>GeoJSON</highlighted_element>
+  <language>TypeScript</language>
+  <offset>-27</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/composables/useMapController.ts</file>
+  <line>110</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/composables/useMapController.ts" />
+  <problem_class id="TypeScriptUMDGlobal" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Referenced UMD global variable</problem_class>
+  <description>Referenced UMD global variable</description>
+  <highlighted_element>GeoJSON</highlighted_element>
+  <language>TypeScript</language>
+  <offset>-16</offset>
+  <length>7</length>
+</problem>
+</problems>

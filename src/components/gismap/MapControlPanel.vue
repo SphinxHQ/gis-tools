@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
+import { onMounted, onBeforeUnmount, ref } from 'vue';
 
 import GisCrsSelector from '~/components/data/GisCrsSelector.vue';
 import { CrsInfo } from '~/components/data/GisProjectedBounds';

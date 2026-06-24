@@ -94,8 +94,7 @@ export default class ExfPaser {
             let split = line.split(":");
             if (split.length === 2) {
                 let key = split[0].trim();
-                let value = split[1].trim();
-                map[key] = value;
+                map[key] = split[1].trim();
             }
         }
 

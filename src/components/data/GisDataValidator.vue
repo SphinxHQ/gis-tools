@@ -9,7 +9,7 @@
 import * as turf from "@turf/turf";
 import {ElMessage, ElMessageBox} from "element-plus";
 import type { Feature as GeoFeature, Point as GeoPoint, Position } from "geojson";
-import { markRaw, ref, Ref, watch } from "vue";
+import { ref, Ref, watch } from "vue";
 
 import Common from "~/common/Common";
 import GeomUtils from "~/common/GeomUtils";
@@ -393,7 +393,7 @@ const handleTreeNodeClick = (data: GeoInfoNode) => {
 </script>
 
 <template>
-  <div class="gis-data-validator-container" v-loading="busy">
+  <div v-loading="busy" class="gis-data-validator-container">
     <div class="validator-header">
       <el-button type="primary" size="small" @click="handleValid">
         <el-icon><Check /></el-icon>

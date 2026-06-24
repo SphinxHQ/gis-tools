@@ -6,11 +6,11 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-06-24
  */
-import { ref, watch, computed } from 'vue'
 import { Compass, MapLocation, CircleCheck, Download } from '@element-plus/icons-vue'
+import { ref, watch, computed } from 'vue'
 
-import GisDataInfo from '~/components/data/GisDataInfo'
 import GisDataExport from '~/components/data/GisDataExport.vue'
+import GisDataInfo from '~/components/data/GisDataInfo'
 import GisDataTransformer from '~/components/data/GisDataTransformer.vue'
 import GisDataValidator from '~/components/data/GisDataValidator.vue'
 import GisFeatureTree from '~/components/data/GisFeatureTree.vue'
@@ -78,8 +78,6 @@ const handleActiveDataChange = (data: GisDataInfo, transformChain: number[]) => 
   emit('active-data-change', data, transformChain)
 }
 
-const handleRead = (data: unknown) => emit('read', data)
-const handleError = (err: Error) => emit('error', err)
 const handleEnterEditMode = () => emit('enter-edit-mode')
 const handleExitEditMode = () => emit('exit-edit-mode')
 

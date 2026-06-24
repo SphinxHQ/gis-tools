@@ -6,9 +6,9 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-04-13
  */
-import { computed, onMounted, ref, watch } from 'vue'
-import { ElMessageBox } from 'element-plus'
 import { Fold, Expand, UploadFilled, Plus, Monitor, Sunny, Moon, FolderOpened, MapLocation, Delete, Message } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import { GisError, createUserMessage } from '~/common/GisError'
 import { logger } from '~/common/logger'
@@ -20,12 +20,12 @@ import GisDataPanel from '~/components/data/GisDataPanel.vue'
 import GisMobileNav from '~/components/data/GisMobileNav.vue'
 import GisMapSlot from '~/components/gismap/GisMapSlot.vue'
 import { themeMode } from '~/composables/dark'
-import { useBreakpoint } from '~/composables/useBreakpoint'
 import { useGisDataStore } from '~/composables/gisDataStore'
+import { useBreakpoint } from '~/composables/useBreakpoint'
 import { useShareReceiver } from '~/composables/useShareReceiver'
 
 const { datasets, dataSources, activeId, activeDataset, setActive, addDataSource, removeDataset } = useGisDataStore()
-const { isMobile, panelWidth, panelCollapsedWidth, showLeftPanel, showMobileNav } = useBreakpoint()
+const { isMobile, panelWidth, panelCollapsedWidth, showLeftPanel } = useBreakpoint()
 
 const importDialogVisible = ref(false)
 
@@ -91,8 +91,7 @@ const startResize = (e: MouseEvent) => {
 
   const onMouseMove = (ev: MouseEvent) => {
     const delta = ev.clientX - startX
-    const newWidth = Math.min(MAX_PANEL_WIDTH, Math.max(MIN_PANEL_WIDTH, startWidth + delta))
-    userPanelWidth.value = newWidth
+    userPanelWidth.value = Math.min(MAX_PANEL_WIDTH, Math.max(MIN_PANEL_WIDTH, startWidth + delta))
   }
 
   const onMouseUp = () => {
@@ -231,7 +230,8 @@ const handleExitEditMode = () => {
 
           <!-- 描边逐步绘制 -->
           <polygon points="256,50 460,198 382,432 130,432 52,198" fill="none" stroke="#ea580c" stroke-width="24"
-            stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="1250" stroke-dashoffset="1250">
+            stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="1250" stroke-dashoffset="1250"
+>
             <animate attributeName="stroke-dashoffset" from="1250" to="0" dur="1.6s" fill="freeze" calcMode="linear" />
           </polygon>
 
@@ -255,7 +255,8 @@ const handleExitEditMode = () => {
           <!-- 画笔光点：与描边同步 -->
           <circle r="16" fill="#ea580c" opacity="0.85" filter="url(#glow)">
             <animateMotion path="M256,50 L460,198 L382,432 L130,432 L52,198 L256,50" dur="1.6s" fill="freeze"
-              calcMode="linear" />
+              calcMode="linear"
+/>
             <animate attributeName="opacity" values="0;0.85;0.85;0" keyTimes="0;0.02;0.9;1" dur="1.6s" fill="freeze" />
             <animate attributeName="r" values="16;16;0" keyTimes="0;0.9;1" dur="1.6s" fill="freeze" />
           </circle>
@@ -276,7 +277,8 @@ const handleExitEditMode = () => {
           <span>导入</span>
         </el-button>
         <el-button v-if="datasets.length > 0" size="small" class="dataset-badge-btn"
-          @click="sourceDrawerVisible = true">
+          @click="sourceDrawerVisible = true"
+>
           <el-icon>
             <FolderOpened />
           </el-icon>
@@ -321,14 +323,16 @@ const handleExitEditMode = () => {
           <!-- 数据集卡片 -->
           <div class="dataset-cards">
             <div v-for="entry in source.datasets" :key="entry.id" class="dataset-card"
-              :class="{ 'is-active': entry.id === activeId }" @click="setActive(entry.id)">
+              :class="{ 'is-active': entry.id === activeId }" @click="setActive(entry.id)"
+>
               <div class="dataset-card-header">
                 <el-icon class="dataset-card-icon">
                   <MapLocation />
                 </el-icon>
                 <span class="dataset-card-name">{{ entry.name }}</span>
                 <el-icon class="dataset-card-delete" title="删除"
-                  @click.stop="handleSourceDatasetRemove(entry.id, $event)">
+                  @click.stop="handleSourceDatasetRemove(entry.id, $event)"
+>
                   <Delete />
                 </el-icon>
               </div>
@@ -336,7 +340,8 @@ const handleExitEditMode = () => {
                 <el-tag size="small" type="info" effect="plain">{{ getDatasetCrs(entry.data) }}</el-tag>
                 <span class="dataset-card-stat">{{ entry.data?.features?.length ?? 0 }} 要素</span>
                 <el-tooltip v-if="entry.appendedFrom && entry.appendedFrom.length > 0"
-                  :content="entry.appendedFrom.map(a => `从「${a.name}」追加了 ${a.count} 个要素`).join('；')" placement="top">
+                  :content="entry.appendedFrom.map(a => `从「${a.name}」追加了 ${a.count} 个要素`).join('；')" placement="top"
+>
                   <el-tag size="small" type="warning" effect="dark">已追加</el-tag>
                 </el-tooltip>
               </div>
@@ -350,7 +355,8 @@ const handleExitEditMode = () => {
     <div class="main-content" @dragover="handleDragOver" @drop="handleDrop">
       <!-- 空状态 -->
       <div v-if="datasets.length === 0" class="empty-state" role="button" tabindex="0"
-        @click="importDialogVisible = true" @keydown.enter="importDialogVisible = true">
+        @click="importDialogVisible = true" @keydown.enter="importDialogVisible = true"
+>
         <div class="empty-content">
           <el-icon :size="44" color="var(--el-color-info-light-3)">
             <upload-filled />
@@ -373,8 +379,9 @@ const handleExitEditMode = () => {
           <div class="left-panel" :class="{ collapsed: panelCollapsed }" :style="{ width: currentPanelWidth + 'px' }">
             <div class="panel-header">
               <span v-if="!panelCollapsed" class="panel-title">数据操作</span>
-              <el-button text size="small" @click="panelCollapsed = !panelCollapsed"
-                :title="panelCollapsed ? '展开' : '折叠'">
+              <el-button text size="small" :title="panelCollapsed ? '展开' : '折叠'"
+                @click="panelCollapsed = !panelCollapsed"
+>
                 <el-icon>
                   <Expand v-if="panelCollapsed" />
                   <Fold v-else />
@@ -384,23 +391,27 @@ const handleExitEditMode = () => {
             <div v-if="!panelCollapsed" class="panel-body">
               <gis-data-panel :data="activeDataset?.data" :instance-id="activeMapInstanceId" :map-ready="true"
                 @active-data-change="handleActiveDataChange" @read="handleRead" @error="handleError"
-                @enter-edit-mode="handleEnterEditMode" @exit-edit-mode="handleExitEditMode" />
+                @enter-edit-mode="handleEnterEditMode" @exit-edit-mode="handleExitEditMode"
+/>
             </div>
           </div>
 
           <!-- 拖拽手柄 -->
           <div v-if="!panelCollapsed" class="panel-resize-handle" :class="{ dragging: isResizing }"
-            @mousedown="startResize"></div>
+            @mousedown="startResize"
+/>
 
           <!-- 主内容区 -->
           <div class="content-area"
-            :style="{ width: `calc(100% - ${currentPanelWidth}px - ${panelCollapsed ? 0 : 4}px)` }">
+            :style="{ width: `calc(100% - ${currentPanelWidth}px - ${panelCollapsed ? 0 : 4}px)` }"
+>
             <!-- 地图（多实例，每个数据集一个，v-show 切换） -->
             <div class="map-container">
               <gis-map-slot v-for="entry in datasets" :key="entry.id"
                 :ref="(el: any) => { if (entry.id === activeId) activeMapSlotRef = el as InstanceType<typeof GisMapSlot> }"
                 :dataset-id="entry.id" :data="getDatasetActiveData(entry.id, entry.data)"
-                :visible="entry.id === activeId" />
+                :visible="entry.id === activeId"
+/>
             </div>
             <!-- 底部状态栏 -->
             <gis-data-overview :data="activeData" :transform-chain="activeTransformChain" mode="full" />
@@ -414,14 +425,16 @@ const handleExitEditMode = () => {
             <gis-map-slot v-for="entry in datasets" :key="entry.id"
               :ref="(el: any) => { if (entry.id === activeId) activeMapSlotRef = el as InstanceType<typeof GisMapSlot> }"
               :dataset-id="entry.id" :data="getDatasetActiveData(entry.id, entry.data)"
-              :visible="entry.id === activeId" />
+              :visible="entry.id === activeId"
+/>
           </div>
           <!-- 底部简略状态栏 -->
           <gis-data-overview :data="activeData" :transform-chain="activeTransformChain" mode="compact" />
           <!-- 底部导航 -->
           <gis-mobile-nav :data="activeDataset?.data" :instance-id="activeMapInstanceId" :map-ready="true"
             @open-import="importDialogVisible = true" @active-data-change="handleActiveDataChange" @read="handleRead"
-            @error="handleError" @enter-edit-mode="handleEnterEditMode" @exit-edit-mode="handleExitEditMode" />
+            @error="handleError" @enter-edit-mode="handleEnterEditMode" @exit-edit-mode="handleExitEditMode"
+/>
         </div>
       </template>
     </div>
@@ -492,14 +505,6 @@ const handleExitEditMode = () => {
   background: var(--el-fill-color-light);
   color: var(--el-color-primary);
   opacity: 1;
-}
-
-.dataset-badge {
-  font-size: 12px;
-  color: var(--el-text-color-regular);
-  background: var(--el-fill-color-light);
-  padding: 2px 8px;
-  border-radius: 10px;
 }
 
 .theme-switch :deep(.el-radio-button__inner) {

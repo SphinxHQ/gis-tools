@@ -162,21 +162,21 @@ export default {
             throw new GisError(GisErrorCode.DATA_PARSE_FAILED, 'Base64 decoding failed', e);
         }
     },
-    /**
+    /*
      * Convert a Base64 string to a File object
      * @param base64 - Base64 string, optionally with data URL prefix
      * @param fileName - Name for the resulting File
      * @returns A File object containing the decoded data
      * @throws {GisError} When the Base64 string is invalid or conversion fails
-     */
+     *
     base64ToFile(base64: string, fileName: string): File {
         try {
             const base64Data = base64.replace(/^data:(.*?);base64,/, '');
-            
+
             if (!/^[A-Za-z0-9+/]*={0,2}$/.test(base64Data)) {
                 throw new GisError(GisErrorCode.DATA_PARSE_FAILED, 'Invalid Base64 string');
             }
-            
+
             const binaryData = (globalThis.atob?.(base64Data) ?? atob(base64Data));
             const arrayBuffer = new ArrayBuffer(binaryData.length);
             const uint8Array = new Uint8Array(arrayBuffer);
@@ -190,16 +190,18 @@ export default {
             throw new GisError(GisErrorCode.DATA_PARSE_FAILED, 'Base64 to File conversion failed', e);
         }
     },
-    /**
+    */
+    /*
      * Convert an ArrayBuffer to a File object
      * @param content - ArrayBuffer containing file data
      * @param fileName - Name for the resulting File
      * @returns A File object with the ArrayBuffer content
-     */
+     *
     ArrayBufferToFile(content: ArrayBuffer, fileName: string): File {
         const blob = new Blob([content], {type: 'application/octet-stream'});
         return new File([blob], fileName, {type: 'application/octet-stream'});
     },
+    */
     /**
      * Check if a string contains characters beyond the CJK Unified Ideographs range
      * @param str - String to check

@@ -142,7 +142,7 @@ function tickLoading(ts: number): void {
   fakeRafId = requestAnimationFrame(tick)
 }
 
-function tickWaiting(ts: number): void {
+function tickWaiting(_ts: number): void {
   const cycleRemaining = window.__loaderCycleRemaining || 0
   if (cycleRemaining <= 50) {
     phase = 'finishing'

@@ -32,19 +32,20 @@ watch(isActuallyDark, (dark) => {
   document.documentElement.setAttribute('data-entry-theme', dark ? 'dark' : 'light')
 }, { immediate: true })
 
-/**
+/*
  * Set the theme mode
  * @param mode - Theme mode to set
- */
+ *
 export function setThemeMode(mode: ThemeMode) {
   themeMode.value = mode
 }
-
-/**
+*/
+/*
  * Cycle through theme modes: auto → light → dark → auto
- */
+ *
 export function cycleThemeMode() {
   const order: ThemeMode[] = ['auto', 'light', 'dark']
   const idx = order.indexOf(themeMode.value)
   themeMode.value = order[(idx + 1) % order.length]
 }
+*/

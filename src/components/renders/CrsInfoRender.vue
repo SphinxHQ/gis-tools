@@ -8,8 +8,8 @@
 
 import { computed } from 'vue'
 
-import { CrsCategory } from '~/enums'
 import { CrsInfo } from '~/components/data/GisProjectedBounds'
+import { CrsCategory } from '~/enums'
 
 /**
  * CrsInfo 字段渲染器
@@ -148,11 +148,6 @@ const tagEffect = computed(() => props.effect)
 <style scoped>
 .crs-info-render {
   white-space: nowrap;
-}
-
-.crs-info-render-label {
-  opacity: 0.75;
-  margin-right: 2px;
 }
 
 .crs-info-render-empty {

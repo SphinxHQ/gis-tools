@@ -1,0 +1,52 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/GeomValidator.ts</file>
+  <line>860</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/GeomValidator.ts" />
+  <problem_class id="UnnecessaryLocalVariableJS" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Redundant local variable</problem_class>
+  <description>&lt;html&gt;Local variable &lt;code&gt;&lt;span style=&quot;color:#a9b7c6;&quot;&gt;repairedPolygon&lt;/span&gt;&lt;/code&gt; is redundant&lt;/html&gt;</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/ExfPaser.js</file>
+  <line>97</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/ExfPaser.js" />
+  <problem_class id="UnnecessaryLocalVariableJS" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Redundant local variable</problem_class>
+  <description>&lt;html&gt;Local variable &lt;code&gt;&lt;span style=&quot;color:#a9b7c6;&quot;&gt;value&lt;/span&gt;&lt;/code&gt; is redundant&lt;/html&gt;</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisData.vue</file>
+  <line>94</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisData.vue" />
+  <problem_class id="UnnecessaryLocalVariableJS" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Redundant local variable</problem_class>
+  <description>&lt;html&gt;Local variable &lt;code&gt;&lt;span style=&quot;color:#a9b7c6;&quot;&gt;newWidth&lt;/span&gt;&lt;/code&gt; is redundant&lt;/html&gt;</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataTransformer.vue</file>
+  <line>301</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataTransformer.vue" />
+  <problem_class id="UnnecessaryLocalVariableJS" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Redundant local variable</problem_class>
+  <description>&lt;html&gt;Local variable &lt;code&gt;&lt;span style=&quot;color:#a9b7c6;&quot;&gt;newDatasetId&lt;/span&gt;&lt;/code&gt; is redundant&lt;/html&gt;</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/gismap/layer/GisLayer.ts</file>
+  <line>90</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/gismap/layer/GisLayer.ts" />
+  <problem_class id="UnnecessaryLocalVariableJS" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Redundant local variable</problem_class>
+  <description>&lt;html&gt;Local variable &lt;code&gt;&lt;span style=&quot;color:#a9b7c6;&quot;&gt;vector&lt;/span&gt;&lt;/code&gt; is redundant&lt;/html&gt;</description>
+  <highlighted_element />
+  <language />
+</problem>
+</problems>

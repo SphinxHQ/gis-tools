@@ -139,7 +139,7 @@ export class GisMap extends EventBase {
             (window as any).__olMap = this.olMap;
             (window as any).__gisMap = this;
             if (!(window as any).__gisMaps) (window as any).__gisMaps = {};
-            (window as any).__gisMaps[this.instanceId] = this;
+            (window as any).__gisMaps[this.gisMapId] = this;
         }
     }
 
@@ -360,6 +360,7 @@ export class GisMap extends EventBase {
         }
     }
 
+    /*
     loadMapStatusFromLocal() {
         if (this.olMap) {
             const mapStatus = Common.loadLocal("mapStatus") as { center: number[], zoom: number } | null;
@@ -370,6 +371,7 @@ export class GisMap extends EventBase {
             }
         }
     }
+    */
 
     getLayerByName(name: string, options?: GisLayerOption): GisMapLayer {
         if (this.olMap) {
@@ -480,13 +482,13 @@ export class GisMap extends EventBase {
                             drawFeature = displayLayer.addFeature?.(drawFeature as unknown as Feature);
                         }
                     }
-                    eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::drawTool::drawend', displayLayer, drawFeature));
+                    void eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::drawTool::drawend', displayLayer, drawFeature));
                     // 将绘制结果转为 EPSG:4326 的 GeoJSON（GeoJSON 标准要求 WGS84 坐标）
                     const json = new GeoJSON().writeFeature(drawFeature as Feature, {
                         featureProjection: this.olView?.getProjection().getCode(),
                         rightHanded: true,
                     });
-                    eventBus.emit(this.mapName, new GisMapDrawEndEvent(json))
+                    void eventBus.emit(this.mapName, new GisMapDrawEndEvent(json))
                 })
                 if (once) {
                     this.olMap?.removeInteraction(drawTool);
@@ -497,7 +499,7 @@ export class GisMap extends EventBase {
             this.olMap?.addInteraction(drawTool);
         }
 
-        eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::drawTool', option));
+        void eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::drawTool', option));
     }
 
     cleanLayer(layerName: string): Promise<void> {
@@ -507,7 +509,7 @@ export class GisMap extends EventBase {
                 if (curLayer) {
                     curLayer.clear();
                 }
-                eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::cleanSource', curLayer));
+                void eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::cleanSource', curLayer));
                 resolve();
             }, 0);
 
@@ -540,7 +542,7 @@ export class GisMap extends EventBase {
         if (lay.source) {
             const feas = this.readFeaturesFromGeoJSON(features);
             lay.addFeatures?.(feas)
-            eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::addFeaturesToLayer', undefined, feas, lay));
+            void eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::addFeaturesToLayer', undefined, feas, lay));
             const extent = lay.getExtent?.() as import("ol/extent").Extent | undefined;
             if (extent) {
                 this.olView?.fit(extent, {
@@ -610,7 +612,7 @@ export class GisMap extends EventBase {
         if (lay.source) {
             const feas = this.readFeaturesFromGeoJSON(features);
             lay.addFeatures?.(feas)
-            eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::addFeaturesToLayer', undefined, feas, lay));
+            void eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::addFeaturesToLayer', undefined, feas, lay));
             const extent2 = lay.getExtent?.() as import("ol/extent").Extent | undefined;
             if (extent2) {
                 this.olView?.fit(extent2, {padding: Array(4).fill(40)});
@@ -620,8 +622,8 @@ export class GisMap extends EventBase {
 
     cleanDraw() {
         this.drawTool({type: 'None'});
-        this.cleanLayer(DefaultLayerNames.SYS_DRAW_TOOL_ACTION);
-        this.cleanLayer(DefaultLayerNames.SYS_DRAW_TOOL_DISPLAY);
+        void this.cleanLayer(DefaultLayerNames.SYS_DRAW_TOOL_ACTION);
+        void this.cleanLayer(DefaultLayerNames.SYS_DRAW_TOOL_DISPLAY);
     }
 
     removeDrawFeature(featureId: string) {
@@ -719,7 +721,7 @@ export class GisMap extends EventBase {
                     rightHanded: true,
                 });
                 const modifiedGeoJson = JSON.parse(geoJsonStr) as GeoJSON.Feature;
-                eventBus.emit(this.mapName, new GisMapModifyChangeEvent(modifiedGeoJson));
+                void eventBus.emit(this.mapName, new GisMapModifyChangeEvent(modifiedGeoJson));
             }
             // 同步更新顶点编号标注
             this.renderVertexLabels();
@@ -900,7 +902,7 @@ export class GisMap extends EventBase {
 
         if (!skipCleanup) {
             // 完全退出编辑模式：清空图层 + 恢复可见性
-            this.cleanLayer(DefaultLayerNames.VECTOR_EDIT);
+            void this.cleanLayer(DefaultLayerNames.VECTOR_EDIT);
             // 不在这里清空影子层，由 showEditShadow/clearEditShadow 同步管理
             this.setLayerVisibility(DefaultLayerNames.VECTOR_INPUT, true);
         }

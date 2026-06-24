@@ -6,7 +6,6 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-04-13
  */
-import {logger} from '~/common/logger'
 
 /**
  * Enumeration of all GIS error codes
@@ -92,7 +91,7 @@ export class GisError extends Error {
  * @param context - Optional context string for logging
  * @returns A GisError instance
  */
-export function handleError(error: unknown, context?: string): GisError {
+/* export function handleError(error: unknown, context?: string): GisError {
     if (error instanceof GisError) {
         logger.error(`[${error.code}] ${context ? context + ': ' : ''}${error.message}`, error.detail)
         return error
@@ -106,7 +105,7 @@ export function handleError(error: unknown, context?: string): GisError {
     const message = typeof error === 'string' ? error : String(error)
     logger.error(`${context ? context + ': ' : ''}${message}`)
     return new GisError(GisErrorCode.UNKNOWN_ERROR, message, error)
-}
+} */
 
 /**
  * Generate a user-friendly error message

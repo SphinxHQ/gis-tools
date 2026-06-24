@@ -30,8 +30,8 @@ import { ElMessage } from 'element-plus'
 import { logger } from '~/common/logger'
 import { SimpleDataFormat } from '~/components/data/DataFormat'
 import GisDataInfo from '~/components/data/GisDataInfo'
-import { localDb } from '~/composables/localDb'
 import { useGisDataStore } from '~/composables/gisDataStore'
+import { localDb } from '~/composables/localDb'
 
 /** 分享数据暂存的 Cache Storage 名称（与 sw-share-target.js 一致） */
 const SHARE_CACHE = 'share-data-cache'

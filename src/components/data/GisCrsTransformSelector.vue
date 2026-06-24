@@ -6,15 +6,15 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-06-13
  */
-import { CrsInfo } from '~/components/data/GisProjectedBounds'
 import GisCrsSelector from '~/components/data/GisCrsSelector.vue'
+import { CrsInfo } from '~/components/data/GisProjectedBounds'
 
 /**
  * 坐标系转换选择器 —— GisCrsSelector 的薄包装层
  * 复用 GisCrsSelector 的搜索、分组列表、详情展示
  * 取消/确认按钮由 GisCrsSelector 自带
  */
-const props = defineProps<{
+defineProps<{
   sourceCrs: CrsInfo | null
   existingEpsgCodes: number[]
 }>()

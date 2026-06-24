@@ -24,6 +24,7 @@ export enum ToolBarAction {
     DRAW,
 }
 
+/*
 export function toolBarItemProcess(item: ToolBarItem){
     switch (item.action) {
         case ToolBarAction.DRAW:
@@ -33,3 +34,4 @@ export function toolBarItemProcess(item: ToolBarItem){
     }
 
 }
+*/

@@ -125,10 +125,10 @@ export function getChinaBoundaryImage(projection: string): {
 }
 
 /** 切换坐标系时清除缓存，强制重新生成 */
-export function clearChinaBoundaryCache(projection?: string) {
+/* export function clearChinaBoundaryCache(projection?: string) {
   if (projection) {
     cacheMap.delete(projection);
   } else {
     cacheMap.clear();
   }
-}
+} */

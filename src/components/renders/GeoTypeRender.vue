@@ -11,7 +11,9 @@
  * 用于数据信息、历史记录等处的类型展示
  */
 import { computed } from 'vue'
+
 import GeomUtils from '~/common/GeomUtils'
+
 import GeoTypeIconRender from './GeoTypeIconRender.vue'
 
 const props = withDefaults(defineProps<{

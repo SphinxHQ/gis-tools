@@ -17,9 +17,8 @@ import GisDataInfo from "~/components/data/GisDataInfo";
 import {GisFileData} from "~/components/data/LocalDb";
 import MapDrawer from "~/components/data/MapDrawer.vue";
 import {TipLog, TipLogger} from "~/components/data/TipLogger";
-import VertexCountRender from "~/components/renders/VertexCountRender.vue";
-import GeoTypeIconRender from "~/components/renders/GeoTypeIconRender.vue";
 import GeoTypeRender from "~/components/renders/GeoTypeRender.vue";
+import VertexCountRender from "~/components/renders/VertexCountRender.vue";
 import {localDb} from "~/composables/localDb";
 
 const emitHandler = defineEmits(['read','error'])
@@ -269,7 +268,8 @@ defineExpose({
         </div>
         <el-table :data="historyDatas" stripe class="h-[100%-40px]" @row-click="handleHistoryRowClick">
           <el-table-column prop="id" label="时间" width="150"
-                           :formatter="(row: GisFileData) => Common.dataTimeToLocal(row.id) "/>
+                           :formatter="(row: GisFileData) => Common.dataTimeToLocal(row.id) "
+/>
           <el-table-column prop="name" label="名称" min-width="120" />
           <el-table-column prop="crs" label="坐标系" width="100" />
           <el-table-column label="要素类型" min-width="120">
@@ -306,15 +306,6 @@ defineExpose({
 
 .gis-data-reader-tabs {
   height: calc(100%);
-}
-
-.gis-data-reader-footer {
-  text-align: right;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 0 20px;
 }
 
 .gis-data-reader-container :deep(.el-upload--text.is-drag),

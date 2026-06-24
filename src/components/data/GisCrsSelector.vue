@@ -11,7 +11,6 @@ import { computed, ref } from 'vue'
 
 import GisCrs from '~/components/data/GisCrs'
 import { CrsBounds, CrsInfo } from '~/components/data/GisProjectedBounds'
-import { CrsCategory } from '~/enums'
 import { registerProj4Def } from '~/components/gismap/proj4Defs'
 import CrsInfoRender from '~/components/renders/CrsInfoRender.vue'
 
@@ -199,7 +198,7 @@ const handleConfirm = () => {
           <el-icon><search /></el-icon>
         </template>
       </el-input>
-      <el-select v-model="categoryFilter" class="crs-category-select" v-if="mode === 'all' || mode === 'compatible'">
+      <el-select v-if="mode === 'all' || mode === 'compatible'" v-model="categoryFilter" class="crs-category-select">
         <el-option label="全部" value="all" />
         <el-option label="地理" value="geographic" />
         <el-option label="投影" value="projected" />

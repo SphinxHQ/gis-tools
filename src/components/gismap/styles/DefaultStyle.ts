@@ -18,7 +18,6 @@ export default function createDefaultStyle(): Record<string, Style[]> {
     const white = [255, 255, 255, 1];
     // 语义色
     const pointColor = [37, 99, 235, 0.4];        // 点=蓝
-    const pointColorSolid = [37, 99, 235, 0.85];
     const lineColor = [22, 163, 74, 0.85];        // 线=绿
     const polygonFill = [234, 88, 12, 0.15];      // 面填充=橙
     const polygonStroke = [234, 88, 12, 0.85];    // 面描边=橙

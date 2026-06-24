@@ -15,8 +15,8 @@ import { logger } from '~/common/logger'
 import GisCrs from '~/components/data/GisCrs'
 import GisDataInfo from '~/components/data/GisDataInfo'
 import { CrsInfo } from '~/components/data/GisProjectedBounds'
+import { useGisDataStore } from '~/composables/gisDataStore'
 import { CrsCategory } from '~/enums'
-import { useGisDataStore, CrsVersionSnapshot } from '~/composables/gisDataStore'
 
 const props = defineProps({
   data: {
@@ -298,8 +298,7 @@ const addTransformVersion = (targetCrs: CrsInfo, sourceVer: CrsVersion) => {
       transformedClone.name = `${sourceName} → EPSG:${targetCrs.epsgCode}`
       // 标志位防止 addDataset 触发 props.data 变化重置转换路径
       isTransforming.value = true
-      const newDatasetId = addDataset(transformedClone, activeSourceId.value ?? undefined)
-      ver.datasetId = newDatasetId
+      ver.datasetId = addDataset(transformedClone, activeSourceId.value ?? undefined)
       // 保存转换路径到当前数据集
       saveVersionsToDataset()
       // nextTick 后恢复，确保 watch 已跳过重置

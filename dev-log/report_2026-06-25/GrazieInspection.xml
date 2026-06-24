@@ -1,0 +1,86 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/Common.ts</file>
+  <line>70</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/Common.ts" />
+  <problem_class id="GrazieInspection" severity="GRAMMAR_ERROR" attribute_key="GRAMMAR_ERROR">Grammar</problem_class>
+  <description>Use 'an' instead of 'a' if the following word starts with a vowel sound, e.g. 'an article', 'an hour'.</description>
+  <highlighted_element>a</highlighted_element>
+  <language>TypeScript</language>
+  <offset>16</offset>
+  <length>1</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/Common.ts</file>
+  <line>115</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/Common.ts" />
+  <problem_class id="GrazieInspection" severity="GRAMMAR_ERROR" attribute_key="GRAMMAR_ERROR">Grammar</problem_class>
+  <description>Did you mean 'maybe' (= perhaps)?</description>
+  <highlighted_element>may be</highlighted_element>
+  <language>TypeScript</language>
+  <offset>36</offset>
+  <length>6</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/GisAdvancedAnalysis.ts</file>
+  <line>405</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/GisAdvancedAnalysis.ts" />
+  <problem_class id="GrazieInspection" severity="GRAMMAR_ERROR" attribute_key="GRAMMAR_ERROR">Grammar</problem_class>
+  <description>The standard spelling is 'TypeScript'</description>
+  <highlighted_element>typescript</highlighted_element>
+  <language>TypeScript</language>
+  <offset>9</offset>
+  <length>10</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/GisAdvancedAnalysis.ts</file>
+  <line>906</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/GisAdvancedAnalysis.ts" />
+  <problem_class id="GrazieInspection" severity="GRAMMAR_ERROR" attribute_key="GRAMMAR_ERROR">Grammar</problem_class>
+  <description>The standard spelling is 'TypeScript'</description>
+  <highlighted_element>typescript</highlighted_element>
+  <language>TypeScript</language>
+  <offset>9</offset>
+  <length>10</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/UIHelper.ts</file>
+  <line>17</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/UIHelper.ts" />
+  <problem_class id="GrazieInspection" severity="GRAMMAR_ERROR" attribute_key="GRAMMAR_ERROR">Grammar</problem_class>
+  <description>Unpaired symbol: ')' seems to be missing</description>
+  <highlighted_element>(</highlighted_element>
+  <language>TypeScript</language>
+  <offset>32</offset>
+  <length>1</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/common/UIHelper.ts</file>
+  <line>17</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/common/UIHelper.ts" />
+  <problem_class id="GrazieInspection" severity="GRAMMAR_ERROR" attribute_key="GRAMMAR_ERROR">Grammar</problem_class>
+  <description>Unpaired symbol: '}' seems to be missing</description>
+  <highlighted_element>{</highlighted_element>
+  <language>TypeScript</language>
+  <offset>46</offset>
+  <length>1</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/editor/GeoStrEditor.vue</file>
+  <line>52</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/editor/GeoStrEditor.vue" />
+  <problem_class id="GrazieInspection" severity="GRAMMAR_ERROR" attribute_key="GRAMMAR_ERROR">Grammar</problem_class>
+  <description>If a new sentence starts here, add a space and start with an uppercase letter.</description>
+  <highlighted_element>value</highlighted_element>
+  <language>TypeScript</language>
+  <offset>17</offset>
+  <length>5</length>
+</problem>
+</problems>

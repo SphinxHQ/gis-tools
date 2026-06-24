@@ -4,6 +4,8 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-04-13
  */
+import type * as GeoJSON from 'geojson';
+
 import Common from "~/common/Common";
 import {logger} from "~/common/logger";
 import {DataFormat} from "~/components/data/DataFormat";

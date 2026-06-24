@@ -1,0 +1,22 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/ExfPaser.js</file>
+  <line>166</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/ExfPaser.js" />
+  <problem_class id="JSEqualityComparisonWithCoercion" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Equality operator may cause type coercion</problem_class>
+  <description>Comparison  may cause unexpected type coercion</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/ExfPaser.js</file>
+  <line>271</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/ExfPaser.js" />
+  <problem_class id="JSEqualityComparisonWithCoercion" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Equality operator may cause type coercion</problem_class>
+  <description>Comparison  may cause unexpected type coercion</description>
+  <highlighted_element />
+  <language />
+</problem>
+</problems>

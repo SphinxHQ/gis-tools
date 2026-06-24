@@ -14,7 +14,6 @@ import MultiPoint from 'ol/geom/MultiPoint';
 import MultiPolygon from 'ol/geom/MultiPolygon';
 import Polygon from 'ol/geom/Polygon';
 import { Circle, Fill, Stroke, Style } from 'ol/style';
-import type { StyleLike } from 'ol/style/Style';
 
 import { logger } from '~/common/logger';
 

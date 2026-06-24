@@ -127,7 +127,7 @@ export default class LocalDb {
         })
     }
 
-    queryById(id: number): Promise<GisFileData> {
+    /* queryById(id: number): Promise<GisFileData> {
         return new Promise<GisFileData>((resolve, reject) => {
             this._inited.then(() => {
                 const objectStore: IDBObjectStore = this.getIDBObjectStore('readonly');
@@ -141,7 +141,7 @@ export default class LocalDb {
                 }
             })
         })
-    }
+    } */
 
     listAll(): Promise<GisFileData[]> {
         return new Promise<GisFileData[]>((resolve, reject) => {

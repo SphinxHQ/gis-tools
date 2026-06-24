@@ -13,13 +13,13 @@
  */
 import { computed } from 'vue'
 
-import pointIcon from '~/assets/geo-icons/point.svg'
-import multipointIcon from '~/assets/geo-icons/multipoint.svg'
+import collectionIcon from '~/assets/geo-icons/collection.svg'
 import lineIcon from '~/assets/geo-icons/line.svg'
 import multilineIcon from '~/assets/geo-icons/multiline.svg'
-import polygonIcon from '~/assets/geo-icons/polygon.svg'
+import multipointIcon from '~/assets/geo-icons/multipoint.svg'
 import multipolygonIcon from '~/assets/geo-icons/multipolygon.svg'
-import collectionIcon from '~/assets/geo-icons/collection.svg'
+import pointIcon from '~/assets/geo-icons/point.svg'
+import polygonIcon from '~/assets/geo-icons/polygon.svg'
 
 const props = withDefaults(defineProps<{
   /** Geometry type string (e.g., 'Point', 'Polygon') */

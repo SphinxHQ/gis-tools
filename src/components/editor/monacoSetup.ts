@@ -10,9 +10,6 @@
  */
 import type { editor as MonacoEditorNS } from 'monaco-editor/esm/vs/editor/editor.api'
 
-import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
-import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
-
 let monacoEditor: typeof MonacoEditorNS | null = null
 let setupPromise: Promise<void> | null = null
 
@@ -27,12 +24,12 @@ export async function setupMonaco() {
   setupPromise = (async () => {
     // 注册 Worker
     self.MonacoEnvironment = {
-      getWorker(_moduleId: string, label: string) {
+      /* getWorker(_moduleId: string, label: string) {
         if (label === 'json') {
           return new JsonWorker()
         }
         return new EditorWorker()
-      },
+      }, */
     }
 
     const mod = await import('monaco-editor/esm/vs/editor/editor.api')

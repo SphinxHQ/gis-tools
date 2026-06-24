@@ -11,31 +11,23 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 /** Breakpoint size categories */
 export type Breakpoint = 'xl' | 'lg' | 'md' | 'sm'
 
-/**
- * Reactive breakpoint state
- */
+/*
+// Reactive breakpoint state
 export interface BreakpointState {
-  /** Current breakpoint */
+  // Current breakpoint
   current: Breakpoint
-  /** Whether the viewport is mobile (sm) */
+  // Whether the viewport is mobile (sm)
   isMobile: boolean
-  /** Whether the viewport is tablet (md) */
+  // Whether the viewport is tablet (md)
   isTablet: boolean
-  /** Whether the viewport is desktop (xl or lg) */
+  // Whether the viewport is desktop (xl or lg)
   isDesktop: boolean
-  /** Panel width in pixels for the current breakpoint */
+  // Panel width in pixels for the current breakpoint
   panelWidth: number
-  /** Collapsed panel width in pixels */
+  // Collapsed panel width in pixels
   panelCollapsedWidth: number
 }
-
-/** Breakpoint pixel ranges */
-const BREAKPOINTS: Record<Breakpoint, { min: number; max: number }> = {
-  xl: { min: 1280, max: Number.MAX_SAFE_INTEGER },
-  lg: { min: 1024, max: 1279 },
-  md: { min: 768, max: 1023 },
-  sm: { min: 0, max: 767 },
-}
+*/
 
 /** Panel widths per breakpoint */
 const PANEL_WIDTH: Record<Breakpoint, number> = {

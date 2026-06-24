@@ -5,8 +5,8 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-06-24
  */
+import type * as GeoJSON from 'geojson'
 import { ref, watch, onBeforeUnmount, nextTick, type Ref } from 'vue'
-import type { Feature as GeoFeature } from 'geojson'
 
 import Common from '~/common/Common'
 import { logger } from '~/common/logger'
@@ -90,7 +90,7 @@ export function useMapController(options: MapControllerOptions) {
         instanceId: instanceId.value,
         featuresCount: data.value!.features.length
       })
-      eventBus.emit(`${instanceId.value}`, addFeaturesEvent)
+      void eventBus.emit(`${instanceId.value}`, addFeaturesEvent)
     })
   }
 
@@ -109,7 +109,7 @@ export function useMapController(options: MapControllerOptions) {
         properties: {} as GeoJSON.GeoJsonProperties,
       } satisfies GeoJSON.Feature
     }))
-    eventBus.emit(`${instanceId.value}`, addFeaturesEvent)
+    void eventBus.emit(`${instanceId.value}`, addFeaturesEvent)
   }
 
   const setupMapReadyListener = () => {
@@ -135,8 +135,8 @@ export function useMapController(options: MapControllerOptions) {
   const stopEditMode = () => {
     if (isInEditMode.value && instanceId.value) {
       isInEditMode.value = false
-      eventBus.emit(`${instanceId.value}`, new GisMapStopModifyEvent())
-      eventBus.emit(`${instanceId.value}`, { event_type: 'map-event:clear-edit-shadow', options: {}, params: [] })
+      void eventBus.emit(`${instanceId.value}`, new GisMapStopModifyEvent())
+      void eventBus.emit(`${instanceId.value}`, { event_type: 'map-event:clear-edit-shadow', options: {}, params: [] })
       renderMapFeatures()
     }
   }

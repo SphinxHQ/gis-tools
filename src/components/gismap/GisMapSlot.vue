@@ -6,7 +6,7 @@
 @date 2026-06-24
 -->
 <template>
-  <div class="map-slot" v-show="visible">
+  <div v-show="visible" class="map-slot">
     <gis-map-tianditu
       :map-name="mapName"
       :options="{ projection: epsgCode }"
@@ -20,13 +20,13 @@
 
 <script setup lang="ts">
 import { Loading } from '@element-plus/icons-vue'
+import type { Feature as GeoFeature } from 'geojson'
 import { computed, ref, watch, onBeforeUnmount, nextTick } from 'vue'
 
 import GisDataInfo from '~/components/data/GisDataInfo'
 import GisMapTianditu from '~/components/gismap/GisMapTianditu.vue'
-import { eventBus } from '~/composables/eventBus'
 import { GisMapAddFeaturesEvent, GisMapflashFeaturesEvent, GisMapStopModifyEvent } from '~/components/gismap/events/GisMapEvents'
-import type { Feature as GeoFeature } from 'geojson'
+import { eventBus } from '~/composables/eventBus'
 
 const props = defineProps<{
   datasetId: string

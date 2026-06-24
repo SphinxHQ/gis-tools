@@ -47,14 +47,6 @@ const sharedGlobals = {
   require: 'readonly',
   __dirname: 'readonly',
   import: 'readonly',
-  vi: 'readonly',
-  describe: 'readonly',
-  it: 'readonly',
-  expect: 'readonly',
-  beforeEach: 'readonly',
-  afterEach: 'readonly',
-  beforeAll: 'readonly',
-  afterAll: 'readonly',
 }
 
 const sharedRules = {

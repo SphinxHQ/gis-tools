@@ -137,9 +137,9 @@ export function formatPoint(point: number[], precision: number = 6): string {
     return point.map(p => Number(p).toFixed(precision)).join(', ');
 }
 
-export function formatTransformResult(result: TransformResult): string {
+/* export function formatTransformResult(result: TransformResult): string {
     if (!result.success) {
         return `转换失败: ${result.error}`;
     }
     return `${formatPoint(result.sourcePoint)} → ${formatPoint(result.targetPoint)}`;
-}
+} */

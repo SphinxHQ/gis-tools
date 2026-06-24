@@ -6,13 +6,13 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-06-24
  */
-import { computed } from 'vue'
 import { Location, DataLine, Histogram, Coordinate } from '@element-plus/icons-vue'
+import { computed } from 'vue'
 
 import GisDataInfo from '~/components/data/GisDataInfo'
 import CrsInfoRender from '~/components/renders/CrsInfoRender.vue'
-import VertexCountRender from '~/components/renders/VertexCountRender.vue'
 import GeoTypeRender from '~/components/renders/GeoTypeRender.vue'
+import VertexCountRender from '~/components/renders/VertexCountRender.vue'
 
 const props = defineProps({
   data: {
@@ -32,10 +32,6 @@ const props = defineProps({
 const emit = defineEmits<{
   'navigate-chain': [epsgCode: number]
 }>()
-
-const hasFeatures = computed(() => {
-  return props.data?.features?.length > 0
-})
 
 const hasValidCrs = computed(() => {
   const crs = props.data?.crs
@@ -61,7 +57,7 @@ const isCompact = computed(() => props.mode === 'compact')
     <!-- 要素数量 -->
     <div class="status-item">
       <el-icon :size="14"><DataLine /></el-icon>
-      <span class="status-label" v-if="!isCompact">要素</span>
+      <span v-if="!isCompact" class="status-label">要素</span>
       <span class="status-value">{{ props.data?.features?.length ?? 0 }}</span>
     </div>
 
@@ -84,7 +80,7 @@ const isCompact = computed(() => props.mode === 'compact')
     <!-- 总顶点数 -->
     <div class="status-item">
       <el-icon :size="14"><Histogram /></el-icon>
-      <span class="status-label" v-if="!isCompact">顶点</span>
+      <span v-if="!isCompact" class="status-label">顶点</span>
       <VertexCountRender :count="totalVertexCount" />
     </div>
 

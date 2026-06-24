@@ -29,7 +29,6 @@ export default class GisCrs {
     epsgCode: number;
     proj4Def: proj4.ProjectionDefinition;
     crsInfo: CrsInfo;
-    private static Empty: GisCrs = new GisCrs(0);
 
     constructor(epsgCode: number) {
         if (epsgCode <= 0) {

@@ -14,26 +14,25 @@
  * 底部按钮：更新(写回原数据) / 另存(生成新档案) / 取消/重置(丢弃副本)
  * 双向同步：地图 Modify 拖拽 ↔ 节点列表
  */
-import * as turf from '@turf/turf'
 import {
   Edit, Crop, Grid, Delete, Rank,
   RefreshRight, RefreshLeft, Position as IconPosition,
   CopyDocument, Scissor, Operation, Back
 } from '@element-plus/icons-vue'
+import * as turf from '@turf/turf'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import type { Feature as GeoFeature } from 'geojson'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import Common from '~/common/Common'
 import GeomUtils from '~/common/GeomUtils'
 import { logger } from '~/common/logger'
 import GisDataInfo from '~/components/data/GisDataInfo'
-import GeoTypeIconRender from '~/components/renders/GeoTypeIconRender.vue'
 import {
   GisMapStartModifyEvent, GisMapStopModifyEvent,
   GisMapUpdateEditFeatureEvent, GisMapflashFeaturesEvent,
   GisMapAddFeaturesEvent
 } from '~/components/gismap/events/GisMapEvents'
+import GeoTypeIconRender from '~/components/renders/GeoTypeIconRender.vue'
 import { eventBus } from '~/composables/eventBus'
 
 const props = defineProps<{
@@ -107,9 +106,9 @@ const hoveredVertexIdx = ref<number | null>(null)
 // 手风琴当前展开项：'vertex' 节点编辑 | 'props' 属性编辑
 const activeEditSection = ref<'vertex' | 'props'>('vertex')
 
-function extractVertices(feature: GeoJSON.Feature): VertexItem[] {
+function extractVertices(feature: GeoJSON.Feature | null): VertexItem[] {
   const result: VertexItem[] = []
-  if (!feature.geometry) return result
+  if (!feature?.geometry) return result
   const geo = feature.geometry
   let gi = 0
   const pushV = (c: number[], ri: number, ci: number) => { result.push({ index: gi++, ringIdx: ri, coordIdx: ci, coordinates: [...c], id: Common.uuid() }) }
@@ -124,7 +123,7 @@ function extractVertices(feature: GeoJSON.Feature): VertexItem[] {
 
 // ==================== 属性编辑 ====================
 const editingProps = ref<Record<string, unknown>>({})
-function loadProperties(f: GeoJSON.Feature) { editingProps.value = { ...(f.properties || {}) } }
+function loadProperties(f: GeoJSON.Feature | null) { if (f) editingProps.value = { ...(f.properties || {}) } }
 function applyPropertiesToFeature() { if (editingFeature.value) editingFeature.value.properties = { ...editingProps.value } }
 
 // ==================== 要素列表（基于副本） ====================
@@ -220,25 +219,13 @@ function syncToMap() {
   eventBus.emit(`${props.instanceId}`, new GisMapUpdateEditFeatureEvent(editingFeature.value))
 }
 
-/** 展示影子图层（离开要素列表时） */
-function showShadowOnMap() {
-  if (!props.instanceId || !hasEdits.value) return
-  eventBus.emit(`${props.instanceId}`, { event_type: 'map-event:show-edit-shadow', options: {}, params: [JSON.parse(JSON.stringify(workingFeatures.value))] })
-}
-
-/** 清除影子图层（进入要素列表时） */
-function clearShadowOnMap() {
-  if (!props.instanceId) return
-  eventBus.emit(`${props.instanceId}`, { event_type: 'map-event:clear-edit-shadow', options: {}, params: [] })
-}
-
 /**
  * 将双份数据渲染到地图：编辑数据源 + 影子数据源
  * 进入要素列表时调用：隐藏输入数据源，显示编辑层+影子层
  */
 function renderEditAndShadowLayers() {
   if (!props.instanceId) return
-  console.log('[FeatureEditor] renderEditAndShadowLayers called', { instanceId: props.instanceId, workingCount: workingFeatures.value.length, refCount: referenceFeatures.value.length })
+  logger.info('[FeatureEditor] renderEditAndShadowLayers called', { instanceId: props.instanceId, workingCount: workingFeatures.value.length, refCount: referenceFeatures.value.length })
   try {
     // 隐藏输入数据源
     eventBus.emit(`${props.instanceId}`, { event_type: 'map-event:set-layer-visibility', options: {}, params: ['vector-input', false] })
@@ -248,9 +235,9 @@ function renderEditAndShadowLayers() {
     // 影子数据源：显示对照副本
     const shadowEvent = new GisMapAddFeaturesEvent(referenceFeatures.value, { layerName: 'vector-shadow', clear: true })
     eventBus.emit(`${props.instanceId}`, shadowEvent)
-    console.log('[FeatureEditor] renderEditAndShadowLayers completed')
+    logger.info('[FeatureEditor] renderEditAndShadowLayers completed')
   } catch (e) {
-    console.error('[FeatureEditor] renderEditAndShadowLayers error:', e)
+    logger.error('[FeatureEditor] renderEditAndShadowLayers error:', e)
   }
 }
 
@@ -374,7 +361,7 @@ function handleSplit() {
       const originalPoly = targetFeature.geometry.type === 'MultiPolygon'
         ? turf.multiPolygon((targetFeature.geometry as GeoJSON.MultiPolygon).coordinates)
         : turf.polygon((targetFeature.geometry as GeoJSON.Polygon).coordinates)
-      const diff = turf.difference(turf.featureCollection([originalPoly, bufferedLine as turf.Feature<turf.Polygon>]))
+      const diff = turf.difference(turf.featureCollection([originalPoly, bufferedLine as any]))
       if (!diff || !diff.geometry) { ElMessage.warning('分割结果为空，切割线可能未穿过面'); return }
       const newFeatures: GeoJSON.Feature[] = []
       if (diff.geometry.type === 'MultiPolygon') {
@@ -404,11 +391,11 @@ function handleMerge() {
   const hasLine = selectedFeatures.some(f => f.geometry?.type === 'LineString' || f.geometry?.type === 'MultiLineString')
   if (hasPolygon && hasLine) { ElMessage.warning('不能合并面和线'); return }
   try {
-    let result: turf.Feature | null = null
+    let result: GeoJSON.Feature | null = null
     if (hasPolygon) {
-      result = selectedFeatures.reduce<turf.Feature | null>((acc, f) => {
-        if (!acc) return f as turf.Feature
-        return turf.union(turf.featureCollection([acc, f as turf.Feature]))
+      result = selectedFeatures.reduce<GeoJSON.Feature | null>((acc, f) => {
+        if (!acc) return f as GeoJSON.Feature
+        return turf.union(turf.featureCollection([acc, f as any]))
       }, null)
     } else if (hasLine) {
       const allCoords: number[][] = []
@@ -438,7 +425,7 @@ function handleBuffer() {
   }).then(({ value }) => {
     try {
       pushHistory()
-      const buffered = turf.buffer(editingFeature.value as turf.Feature, parseFloat(value), { units: 'meters' })
+      const buffered = turf.buffer(editingFeature.value as GeoJSON.Feature, parseFloat(value), { units: 'meters' })
       if (buffered) { buffered.properties = editingFeature.value!.properties; editingFeature.value = buffered as GeoJSON.Feature; vertices.value = extractVertices(editingFeature.value); syncToMap(); ElMessage.success('缓冲完成') }
     } catch (e) { logger.error('缓冲失败:', e); ElMessage.error('缓冲分析失败') }
   }).catch(() => {})
@@ -450,7 +437,7 @@ function handleClip() {
   cleanupDrawHandler()
   if (props.instanceId) { eventBus.emit(`${props.instanceId}`, { event_type: 'map-event:draw-tool', options: {}, params: [{ type: 'Polygon', cleanBefore: true, once: true, keep: false, allowHole: false }] }) }
   const h = (_opt: unknown, data: unknown) => {
-    try { const cf = JSON.parse(data as string) as GeoJSON.Feature; if (!cf.geometry) return; pushHistory(); const r = turf.intersect(turf.featureCollection([editingFeature.value as turf.Feature, cf as turf.Feature])); if (r) { r.properties = editingFeature.value!.properties; editingFeature.value = r as unknown as GeoJSON.Feature; vertices.value = extractVertices(editingFeature.value); syncToMap(); ElMessage.success('裁剪完成') } else { ElMessage.warning('裁剪结果为空') } } catch (e) { logger.error('裁剪失败:', e); ElMessage.error('裁剪失败') }
+    try { const cf = JSON.parse(data as string) as GeoJSON.Feature; if (!cf.geometry) return; pushHistory(); const r = turf.intersect(turf.featureCollection([editingFeature.value as any, cf as any])); if (r) { r.properties = editingFeature.value!.properties; editingFeature.value = r as unknown as GeoJSON.Feature; vertices.value = extractVertices(editingFeature.value); syncToMap(); ElMessage.success('裁剪完成') } else { ElMessage.warning('裁剪结果为空') } } catch (e) { logger.error('裁剪失败:', e); ElMessage.error('裁剪失败') }
     cleanupDrawHandler()
   }
   currentDrawHandler = h
@@ -463,7 +450,7 @@ function handleErase() {
   cleanupDrawHandler()
   if (props.instanceId) { eventBus.emit(`${props.instanceId}`, { event_type: 'map-event:draw-tool', options: {}, params: [{ type: 'Polygon', cleanBefore: true, once: true, keep: false, allowHole: false }] }) }
   const h = (_opt: unknown, data: unknown) => {
-    try { const ef = JSON.parse(data as string) as GeoJSON.Feature; if (!ef.geometry) return; pushHistory(); const r = turf.difference(turf.featureCollection([editingFeature.value as turf.Feature, ef as turf.Feature])); if (r) { r.properties = editingFeature.value!.properties; editingFeature.value = r as unknown as GeoJSON.Feature; vertices.value = extractVertices(editingFeature.value); syncToMap(); ElMessage.success('擦除完成') } else { ElMessage.warning('擦除结果为空') } } catch (e) { logger.error('擦除失败:', e); ElMessage.error('擦除失败') }
+    try { const ef = JSON.parse(data as string) as GeoJSON.Feature; if (!ef.geometry) return; pushHistory(); const r = turf.difference(turf.featureCollection([editingFeature.value as any, ef as any])); if (r) { r.properties = editingFeature.value!.properties; editingFeature.value = r as unknown as GeoJSON.Feature; vertices.value = extractVertices(editingFeature.value); syncToMap(); ElMessage.success('擦除完成') } else { ElMessage.warning('擦除结果为空') } } catch (e) { logger.error('擦除失败:', e); ElMessage.error('擦除失败') }
     cleanupDrawHandler()
   }
   currentDrawHandler = h
@@ -472,7 +459,7 @@ function handleErase() {
 
 function handleConvexHull() {
   if (!editingFeature.value) return
-  try { pushHistory(); const hull = turf.convex(editingFeature.value as turf.Feature); if (hull) { hull.properties = editingFeature.value!.properties; editingFeature.value = hull as unknown as GeoJSON.Feature; vertices.value = extractVertices(editingFeature.value); syncToMap(); ElMessage.success('凸包生成完成') } else { ElMessage.warning('无法生成凸包') } } catch (e) { logger.error('凸包失败:', e); ElMessage.error('凸包生成失败') }
+  try { pushHistory(); const hull = turf.convex(editingFeature.value as GeoJSON.Feature); if (hull) { hull.properties = editingFeature.value!.properties; editingFeature.value = hull as unknown as GeoJSON.Feature; vertices.value = extractVertices(editingFeature.value); syncToMap(); ElMessage.success('凸包生成完成') } else { ElMessage.warning('无法生成凸包') } } catch (e) { logger.error('凸包失败:', e); ElMessage.error('凸包生成失败') }
 }
 
 // ==================== 撤销/重做 ====================
@@ -522,7 +509,7 @@ onBeforeUnmount(() => {
 /** 外部调用：激活编辑器（进入要素列表tab时） */
 function activate() {
   isEditorActive.value = true
-  console.log('[FeatureEditor] activate called', { workingCount: workingFeatures.value.length, dataCount: props.data.features?.length ?? 0 })
+  logger.info('[FeatureEditor] activate called', { workingCount: workingFeatures.value.length, dataCount: props.data.features?.length ?? 0 })
   // 初始化数据副本（如果还没有的话）
   if (workingFeatures.value.length === 0 && (props.data.features?.length ?? 0) > 0) {
     initBothCopies()
@@ -534,7 +521,7 @@ function activate() {
 /** 外部调用：停用编辑器（离开要素列表tab时） */
 function deactivate() {
   isEditorActive.value = false
-  console.log('[FeatureEditor] deactivate called')
+  logger.info('[FeatureEditor] deactivate called')
   // 清空编辑和影子数据源，恢复输入数据源
   restoreInputLayer()
 }
@@ -580,18 +567,18 @@ defineExpose({ hasEdits, workingFeatures, activate, deactivate })
         <span class="header-title">要素列表</span>
       </div>
       <div class="toolbar">
-        <el-button text size="small" :disabled="!hasPolygonFeature" @click="handleSplit" title="分割：画线切割面要素"><el-icon><Scissor /></el-icon> 分割</el-button>
-        <el-button text size="small" :disabled="selectedCount < 2" @click="handleMerge" title="合并：将勾选的多个要素合并"><el-icon><Operation /></el-icon> 合并{{ selectedCount > 0 ? `(${selectedCount})` : '' }}</el-button>
+        <el-button text size="small" :disabled="!hasPolygonFeature" title="分割：画线切割面要素" @click="handleSplit"><el-icon><Scissor /></el-icon> 分割</el-button>
+        <el-button text size="small" :disabled="selectedCount < 2" title="合并：将勾选的多个要素合并" @click="handleMerge"><el-icon><Operation /></el-icon> 合并{{ selectedCount > 0 ? `(${selectedCount})` : '' }}</el-button>
       </div>
       <div class="feature-list">
         <div v-for="item in featureList" :key="item.idx" class="feature-item" :class="{ selected: item.selected }" @click="clickFeatureRow(item.idx)">
-          <el-checkbox :model-value="item.selected" @change="toggleFeatureSelect(item.idx)" class="feature-check" @click.stop />
+          <el-checkbox :model-value="item.selected" class="feature-check" @change="toggleFeatureSelect(item.idx)" @click.stop />
           <div class="feature-item-body">
             <GeoTypeIconRender :type="item.type" :size="14" />
             <span class="feature-label">{{ item.label }}</span>
             <el-tag size="small" effect="plain" round>{{ geoTypeName(item.type) }}</el-tag>
           </div>
-          <el-button text size="small" type="primary" @click.stop="selectFeature(item.idx)" title="编辑"><el-icon><Edit /></el-icon></el-button>
+          <el-button text size="small" type="primary" title="编辑" @click.stop="selectFeature(item.idx)"><el-icon><Edit /></el-icon></el-button>
         </div>
         <div v-if="featureList.length === 0" class="empty-tip">暂无可编辑的要素</div>
       </div>
@@ -605,19 +592,19 @@ defineExpose({ hasEdits, workingFeatures, activate, deactivate })
     <!-- ============ 页面2：编辑面板 ============ -->
     <template v-else>
       <div class="editor-header">
-        <el-button text size="small" @click="backToFeatureList" class="back-btn"><el-icon><Back /></el-icon> 返回列表</el-button>
+        <el-button text size="small" class="back-btn" @click="backToFeatureList"><el-icon><Back /></el-icon> 返回列表</el-button>
         <span class="header-title">{{ geoTypeName(editingFeature?.geometry?.type) }}</span>
         <el-tag v-if="geoInfo" size="small" type="info" effect="plain">{{ geoInfo.vertexCount }} 节点</el-tag>
       </div>
       <div class="toolbar">
-        <el-button text size="small" :disabled="!canUndo" @click="handleUndo" title="撤销"><el-icon><RefreshLeft /></el-icon></el-button>
-        <el-button text size="small" :disabled="!canRedo" @click="handleRedo" title="重做"><el-icon><RefreshRight /></el-icon></el-button>
+        <el-button text size="small" :disabled="!canUndo" title="撤销" @click="handleUndo"><el-icon><RefreshLeft /></el-icon></el-button>
+        <el-button text size="small" :disabled="!canRedo" title="重做" @click="handleRedo"><el-icon><RefreshRight /></el-icon></el-button>
         <el-divider direction="vertical" />
-        <el-button text size="small" @click="handleBuffer" title="缓冲"><el-icon><Rank /></el-icon></el-button>
-        <el-button text size="small" :disabled="!isPolygonType" @click="handleClip" title="裁剪"><el-icon><Crop /></el-icon></el-button>
-        <el-button text size="small" :disabled="!isPolygonType" @click="handleErase" title="擦除"><el-icon><Delete /></el-icon></el-button>
+        <el-button text size="small" title="缓冲" @click="handleBuffer"><el-icon><Rank /></el-icon></el-button>
+        <el-button text size="small" :disabled="!isPolygonType" title="裁剪" @click="handleClip"><el-icon><Crop /></el-icon></el-button>
+        <el-button text size="small" :disabled="!isPolygonType" title="擦除" @click="handleErase"><el-icon><Delete /></el-icon></el-button>
         <el-divider direction="vertical" />
-        <el-button text size="small" @click="handleConvexHull" title="凸包"><el-icon><Grid /></el-icon></el-button>
+        <el-button text size="small" title="凸包" @click="handleConvexHull"><el-icon><Grid /></el-icon></el-button>
       </div>
       <el-collapse v-model="activeEditSection" accordion class="edit-collapse">
         <el-collapse-item name="vertex" title="节点编辑">
@@ -630,16 +617,16 @@ defineExpose({ hasEdits, workingFeatures, activate, deactivate })
               <span class="col-x"><el-input-number v-model="v.coordinates[0]" size="small" :controls="false" :precision="6" @change="updateVertex(vi, v.coordinates[0], v.coordinates[1])" /></span>
               <span class="col-y"><el-input-number v-model="v.coordinates[1]" size="small" :controls="false" :precision="6" @change="updateVertex(vi, v.coordinates[0], v.coordinates[1])" /></span>
               <span class="col-action">
-                <el-button text size="small" @click="locateVertex(v)" title="定位"><el-icon><IconPosition /></el-icon></el-button>
-                <el-button text size="small" @click="addVertex(vi)" title="插入"><el-icon><CopyDocument /></el-icon></el-button>
-                <el-button text size="small" type="danger" @click="deleteVertex(vi)" title="删除"><el-icon><Delete /></el-icon></el-button>
+                <el-button text size="small" title="定位" @click="locateVertex(v)"><el-icon><IconPosition /></el-icon></el-button>
+                <el-button text size="small" title="插入" @click="addVertex(vi)"><el-icon><CopyDocument /></el-icon></el-button>
+                <el-button text size="small" type="danger" title="删除" @click="deleteVertex(vi)"><el-icon><Delete /></el-icon></el-button>
               </span>
             </div>
           </div>
         </el-collapse-item>
         <el-collapse-item name="props" title="属性编辑">
           <div class="props-editor">
-            <div v-for="([key, val], pi) in propEntries" :key="pi" class="prop-row">
+            <div v-for="([key], pi) in propEntries" :key="pi" class="prop-row">
               <span class="prop-key">{{ key }}</span>
               <el-input v-model="editingProps[key as string]" size="small" @change="applyPropertiesToFeature" />
             </div>

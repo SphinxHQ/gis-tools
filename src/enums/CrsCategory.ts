@@ -35,10 +35,12 @@ export class CrsCategory {
     return this.values().find(item => item.value === value);
   }
 
-  /** 完整描述，如「投影坐标系」「地理坐标系」 */
+  /*
+  // 完整描述，如「投影坐标系」「地理坐标系」
   get fullLabel(): string {
     return `${this.label}坐标系`;
   }
+  */
 
   toString(): string {
     return `CrsCategory.${this.value}`;

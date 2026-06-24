@@ -20,6 +20,6 @@ declare module 'proj4' {
 }
 
 declare module 'wkx' {
-  export function parseWkt(wkt: string): { toGeoJSON(): GeoJSON.GeoJsonObject }
-  export function parseWkb(wkb: ArrayBuffer | Uint8Array): { toGeoJSON(): GeoJSON.GeoJsonObject }
+  /* export function parseWkt(wkt: string): { toGeoJSON(): GeoJSON.GeoJsonObject } */
+  /* export function parseWkb(wkb: ArrayBuffer | Uint8Array): { toGeoJSON(): GeoJSON.GeoJsonObject } */
 }

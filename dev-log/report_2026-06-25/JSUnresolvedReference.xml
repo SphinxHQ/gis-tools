@@ -1,0 +1,22 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/ExfPaser.js</file>
+  <line>196</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/ExfPaser.js" />
+  <problem_class id="JSUnresolvedReference" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Unresolved reference</problem_class>
+  <description>Unresolved variable tableFilter</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/ExfPaser.js</file>
+  <line>204</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/ExfPaser.js" />
+  <problem_class id="JSUnresolvedReference" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Unresolved reference</problem_class>
+  <description>Unresolved variable exfLayerName</description>
+  <highlighted_element />
+  <language />
+</problem>
+</problems>

@@ -10,6 +10,7 @@ import type { editor as MonacoEditorNS } from 'monaco-editor/esm/vs/editor/edito
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { isActuallyDark } from '~/composables/dark'
+
 import { getMonacoEditor, setupMonaco } from './monacoSetup'
 
 const props = withDefaults(defineProps<{

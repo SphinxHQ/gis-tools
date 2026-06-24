@@ -470,16 +470,17 @@ export function checkHoleInsideShellComplete(shell: Position[], hole: Position[]
     }
 }
 
-/**
+/*
  * 检查孔洞是否在外环内部（简化版，向后兼容）
  *
  * @param shell 外环坐标
  * @param hole 孔洞坐标
  * @returns true 表示孔洞在外环内部
- */
+ *
 export function checkHoleInsideShell(shell: Position[], hole: Position[]): boolean {
     return checkHoleInsideShellComplete(shell, hole).isInside;
 }
+*/
 
 /**
  * 检查孔洞之间是否重叠或相交
@@ -638,13 +639,13 @@ export function isRingClockwise(ring: Position[]): boolean {
     return calculateSignedArea(ring) < 0;
 }
 
-/**
+/*
  * 综合几何验证
  *
  * @param geometry 几何对象
  * @param options 验证选项
  * @returns 验证结果
- */
+ *
 export function validateGeometryComprehensive(
     geometry: Geometry | GeometryCollection,
     options: GeometryValidationOptions = {}
@@ -800,20 +801,21 @@ export function validateGeometryComprehensive(
         warnings
     };
 }
+*/
 
-/**
+/*
  * 修复几何问题（尽可能自动修复）
  *
  * @param geometry 几何对象
  * @param options 修复选项
  * @returns 修复后的几何对象和修复说明
- */
+ *
 export function repairGeometry(
     geometry: Geometry,
     options: {
-        /** 期望外环顺时针方向，默认 true */
+        /** 期望外环顺时针方向，默认 true *\/
         shellClockwise?: boolean;
-        /** 环闭合容差，默认使用 DEFAULT_OPTIONS.ringClosedTolerance */
+        /** 环闭合容差，默认使用 DEFAULT_OPTIONS.ringClosedTolerance *\/
         ringClosedTolerance?: number;
     } = {}
 ): { geometry: Geometry; repairs: string[]; warnings: string[] } {
@@ -857,7 +859,7 @@ export function repairGeometry(
     // 处理 MultiPolygon
     if (geometry.type === 'MultiPolygon') {
         const coords = geometry.coordinates.map((polygon, polygonIndex) => {
-            const repairedPolygon = polygon.map((ring, ringIndex) => {
+            return polygon.map((ring, ringIndex) => {
                 let repairedRing = [...ring];
 
                 // 修复未闭合的环
@@ -884,8 +886,6 @@ export function repairGeometry(
 
                 return repairedRing;
             });
-
-            return repairedPolygon;
         });
 
         return { geometry: { ...geometry, coordinates: coords }, repairs, warnings };
@@ -894,6 +894,7 @@ export function repairGeometry(
     // 其他类型不处理
     return { geometry, repairs, warnings };
 }
+*/
 
 export function assertValidCoordinate(coord: unknown, options: { strictZeroCoordinate?: boolean } = {}): asserts coord is Position {
     const result = validateCoordinate(coord, '', options)

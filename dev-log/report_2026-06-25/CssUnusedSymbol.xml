@@ -1,0 +1,842 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/src/App.vue</file>
+  <line>134</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/App.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-dialog__header is never used</description>
+  <highlighted_element>.el-dialog__header</highlighted_element>
+  <language>PostCSS</language>
+  <offset>21</offset>
+  <length>18</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/App.vue</file>
+  <line>139</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/App.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-dialog__body is never used</description>
+  <highlighted_element>.el-dialog__body</highlighted_element>
+  <language>PostCSS</language>
+  <offset>21</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/App.vue</file>
+  <line>145</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/App.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-dialog__footer is never used</description>
+  <highlighted_element>.el-dialog__footer</highlighted_element>
+  <language>PostCSS</language>
+  <offset>21</offset>
+  <length>18</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/App.vue</file>
+  <line>149</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/App.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-dialog__title is never used</description>
+  <highlighted_element>.el-dialog__title</highlighted_element>
+  <language>PostCSS</language>
+  <offset>21</offset>
+  <length>17</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/App.vue</file>
+  <line>158</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/App.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-drawer__body is never used</description>
+  <highlighted_element>.el-drawer__body</highlighted_element>
+  <language>PostCSS</language>
+  <offset>2</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/App.vue</file>
+  <line>162</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/App.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-drawer__header is never used</description>
+  <highlighted_element>.el-drawer__header</highlighted_element>
+  <language>PostCSS</language>
+  <offset>2</offset>
+  <length>18</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/assets/index.css</file>
+  <line>1</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/assets/index.css" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-tabs__new-tab is never used</description>
+  <highlighted_element>.el-tabs__new-tab</highlighted_element>
+  <language>CSS</language>
+  <offset>26</offset>
+  <length>17</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/assets/index.css</file>
+  <line>6</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/assets/index.css" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-tabs__header is never used</description>
+  <highlighted_element>.el-tabs__header</highlighted_element>
+  <language>CSS</language>
+  <offset>13</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/assets/index.css</file>
+  <line>9</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/assets/index.css" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-switch__label is never used</description>
+  <highlighted_element>.el-switch__label</highlighted_element>
+  <language>CSS</language>
+  <offset>0</offset>
+  <length>17</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisCrsSelector.vue</file>
+  <line>389</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisCrsSelector.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-descriptions__label is never used</description>
+  <highlighted_element>.el-descriptions__label</highlighted_element>
+  <language>PostCSS</language>
+  <offset>-27</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisCrsSelector.vue</file>
+  <line>417</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisCrsSelector.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-input__wrapper is never used</description>
+  <highlighted_element>.el-input__wrapper</highlighted_element>
+  <language>PostCSS</language>
+  <offset>-22</offset>
+  <length>18</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisCrsSelector.vue</file>
+  <line>425</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisCrsSelector.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-scrollbar__bar is never used</description>
+  <highlighted_element>.el-scrollbar__bar</highlighted_element>
+  <language>PostCSS</language>
+  <offset>-22</offset>
+  <length>18</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisCrsSelector.vue</file>
+  <line>457</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisCrsSelector.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-descriptions__label is never used</description>
+  <highlighted_element>.el-descriptions__label</highlighted_element>
+  <language>PostCSS</language>
+  <offset>-26</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisCrsSelector.vue</file>
+  <line>458</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisCrsSelector.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-descriptions__content is never used</description>
+  <highlighted_element>.el-descriptions__content</highlighted_element>
+  <language>PostCSS</language>
+  <offset>-29</offset>
+  <length>25</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisCrsTransform.vue</file>
+  <line>274</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisCrsTransform.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-form-item__content is never used</description>
+  <highlighted_element>.el-form-item__content</highlighted_element>
+  <language>PostCSS</language>
+  <offset>26</offset>
+  <length>22</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisData.vue</file>
+  <line>460</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisData.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector top-bar-logo is never used</description>
+  <highlighted_element>.top-bar-logo</highlighted_element>
+  <language>PostCSS</language>
+  <offset>-16</offset>
+  <length>13</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisData.vue</file>
+  <line>497</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisData.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector dataset-badge is never used</description>
+  <highlighted_element>.dataset-badge</highlighted_element>
+  <language>PostCSS</language>
+  <offset>-17</offset>
+  <length>14</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisData.vue</file>
+  <line>505</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisData.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-radio-button__inner is never used</description>
+  <highlighted_element>.el-radio-button__inner</highlighted_element>
+  <language>PostCSS</language>
+  <offset>-27</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataImportDialog.vue</file>
+  <line>122</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataImportDialog.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-dialog__body is never used</description>
+  <highlighted_element>.el-dialog__body</highlighted_element>
+  <language>PostCSS</language>
+  <offset>15</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataImportDialog.vue</file>
+  <line>137</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataImportDialog.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-dialog__header is never used</description>
+  <highlighted_element>.el-dialog__header</highlighted_element>
+  <language>PostCSS</language>
+  <offset>36</offset>
+  <length>18</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataImportDialog.vue</file>
+  <line>142</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataImportDialog.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-dialog__body is never used</description>
+  <highlighted_element>.el-dialog__body</highlighted_element>
+  <language>PostCSS</language>
+  <offset>36</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataImportDialog.vue</file>
+  <line>150</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataImportDialog.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-dialog__footer is never used</description>
+  <highlighted_element>.el-dialog__footer</highlighted_element>
+  <language>PostCSS</language>
+  <offset>36</offset>
+  <length>18</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataPanel.vue</file>
+  <line>167</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataPanel.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-segmented__item-label is never used</description>
+  <highlighted_element>.el-segmented__item-label</highlighted_element>
+  <language>PostCSS</language>
+  <offset>22</offset>
+  <length>25</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataReader.vue</file>
+  <line>311</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataReader.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector gis-data-reader-footer is never used</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataReader.vue</file>
+  <line>320</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataReader.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-upload--text is never used</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataReader.vue</file>
+  <line>320</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataReader.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector is-drag is never used</description>
+  <highlighted_element>.gis-data-reader-container</highlighted_element>
+  <language>PostCSS</language>
+  <offset>0</offset>
+  <length>26</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataReader.vue</file>
+  <line>321</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataReader.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-upload-dragger is never used</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataReader.vue</file>
+  <line>333</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataReader.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-tabs--border-card is never used</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataReader.vue</file>
+  <line>352</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataReader.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-textarea__inner is never used</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisDataValidator.vue</file>
+  <line>488</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisDataValidator.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector label2 is never used</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue</file>
+  <line>678</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-collapse-item is never used</description>
+  <highlighted_element>.edit-collapse</highlighted_element>
+  <language>PostCSS</language>
+  <offset>0</offset>
+  <length>14</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue</file>
+  <line>679</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-collapse-item is never used</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue</file>
+  <line>680</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-collapse-item__header is never used</description>
+  <highlighted_element>.edit-collapse</highlighted_element>
+  <language>PostCSS</language>
+  <offset>0</offset>
+  <length>14</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue</file>
+  <line>681</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-collapse-item__wrap is never used</description>
+  <highlighted_element>.edit-collapse</highlighted_element>
+  <language>PostCSS</language>
+  <offset>0</offset>
+  <length>14</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue</file>
+  <line>682</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-collapse-item__content is never used</description>
+  <highlighted_element>.vertex-list-header</highlighted_element>
+  <language>PostCSS</language>
+  <offset>1</offset>
+  <length>19</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue</file>
+  <line>692</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-input__inner is never used</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue</file>
+  <line>692</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-input__inner is never used</description>
+  <highlighted_element>.col-action</highlighted_element>
+  <language>PostCSS</language>
+  <offset>0</offset>
+  <length>11</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue</file>
+  <line>700</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureEditor.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-input__inner is never used</description>
+  <highlighted_element>.empty-props</highlighted_element>
+  <language>PostCSS</language>
+  <offset>0</offset>
+  <length>12</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/GisFeatureTree.vue</file>
+  <line>646</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/GisFeatureTree.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector label2 is never used</description>
+  <highlighted_element />
+  <language />
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/MapDrawer.vue</file>
+  <line>268</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/MapDrawer.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-badge__content is never used</description>
+  <highlighted_element>.el-badge__content</highlighted_element>
+  <language>PostCSS</language>
+  <offset>23</offset>
+  <length>18</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/data/MapDrawer.vue</file>
+  <line>272</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/data/MapDrawer.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-drawer__body is never used</description>
+  <highlighted_element>.el-drawer__body</highlighted_element>
+  <language>PostCSS</language>
+  <offset>17</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue</file>
+  <line>307</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector vertical is never used</description>
+  <highlighted_element>.vertical</highlighted_element>
+  <language>PostCSS</language>
+  <offset>12</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue</file>
+  <line>323</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector vertical is never used</description>
+  <highlighted_element>.vertical</highlighted_element>
+  <language>PostCSS</language>
+  <offset>17</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue</file>
+  <line>326</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector split-panel-divider is never used</description>
+  <highlighted_element>.split-panel-divider</highlighted_element>
+  <language>PostCSS</language>
+  <offset>0</offset>
+  <length>20</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue</file>
+  <line>331</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector split-panel-divider is never used</description>
+  <highlighted_element>.split-panel-divider</highlighted_element>
+  <language>PostCSS</language>
+  <offset>0</offset>
+  <length>20</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue</file>
+  <line>338</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector split-panel-divider is never used</description>
+  <highlighted_element>.split-panel-divider</highlighted_element>
+  <language>PostCSS</language>
+  <offset>0</offset>
+  <length>20</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue</file>
+  <line>338</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/layouts/SplitPanel.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector vertical is never used</description>
+  <highlighted_element>.vertical</highlighted_element>
+  <language>PostCSS</language>
+  <offset>20</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/components/renders/CrsInfoRender.vue</file>
+  <line>153</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/components/renders/CrsInfoRender.vue" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector crs-info-render-label is never used</description>
+  <highlighted_element>.crs-info-render-label</highlighted_element>
+  <language>PostCSS</language>
+  <offset>0</offset>
+  <length>22</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>8</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-input__inner is never used</description>
+  <highlighted_element>.el-input__inner</highlighted_element>
+  <language>SCSS</language>
+  <offset>0</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>8</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-textarea__inner is never used</description>
+  <highlighted_element>.el-textarea__inner</highlighted_element>
+  <language>SCSS</language>
+  <offset>18</offset>
+  <length>19</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>21</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-descriptions__label is never used</description>
+  <highlighted_element>.el-descriptions__label</highlighted_element>
+  <language>SCSS</language>
+  <offset>0</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>107</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector splitpanes__pane is never used</description>
+  <highlighted_element>.splitpanes__pane</highlighted_element>
+  <language>SCSS</language>
+  <offset>26</offset>
+  <length>17</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>111</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector splitpanes__splitter is never used</description>
+  <highlighted_element>.splitpanes__splitter</highlighted_element>
+  <language>SCSS</language>
+  <offset>26</offset>
+  <length>21</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>115</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector splitpanes__splitter is never used</description>
+  <highlighted_element>.splitpanes__splitter</highlighted_element>
+  <language>SCSS</language>
+  <offset>36</offset>
+  <length>21</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>116</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector splitpanes__splitter is never used</description>
+  <highlighted_element>.splitpanes__splitter</highlighted_element>
+  <language>SCSS</language>
+  <offset>37</offset>
+  <length>21</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>117</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector splitpanes__splitter is never used</description>
+  <highlighted_element>.splitpanes__splitter</highlighted_element>
+  <language>SCSS</language>
+  <offset>38</offset>
+  <length>21</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>118</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector splitpanes__splitter is never used</description>
+  <highlighted_element>.splitpanes__splitter</highlighted_element>
+  <language>SCSS</language>
+  <offset>39</offset>
+  <length>21</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>122</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector splitpanes__splitter is never used</description>
+  <highlighted_element>.splitpanes__splitter</highlighted_element>
+  <language>SCSS</language>
+  <offset>26</offset>
+  <length>21</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>123</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector splitpanes__splitter is never used</description>
+  <highlighted_element>.splitpanes__splitter</highlighted_element>
+  <language>SCSS</language>
+  <offset>26</offset>
+  <length>21</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>127</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector splitpanes__splitter is never used</description>
+  <highlighted_element>.splitpanes__splitter</highlighted_element>
+  <language>SCSS</language>
+  <offset>26</offset>
+  <length>21</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>128</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector splitpanes__splitter is never used</description>
+  <highlighted_element>.splitpanes__splitter</highlighted_element>
+  <language>SCSS</language>
+  <offset>26</offset>
+  <length>21</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>157</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-cascader is never used</description>
+  <highlighted_element>.el-cascader</highlighted_element>
+  <language>SCSS</language>
+  <offset>13</offset>
+  <length>12</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>160</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-input__wrapper is never used</description>
+  <highlighted_element>.el-input__wrapper</highlighted_element>
+  <language>SCSS</language>
+  <offset>13</offset>
+  <length>18</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>166</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-input__wrapper is never used</description>
+  <highlighted_element>.el-input__wrapper</highlighted_element>
+  <language>SCSS</language>
+  <offset>13</offset>
+  <length>18</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>170</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-input__inner is never used</description>
+  <highlighted_element>.el-input__inner</highlighted_element>
+  <language>SCSS</language>
+  <offset>13</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/src/styles/index.scss</file>
+  <line>171</line>
+  <module>gis-tools</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/src/styles/index.scss" />
+  <problem_class id="CssUnusedSymbol" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">Unused selector</problem_class>
+  <hints />
+  <description>Selector el-cascader__placeholder is never used</description>
+  <highlighted_element>.el-cascader__placeholder</highlighted_element>
+  <language>SCSS</language>
+  <offset>13</offset>
+  <length>25</length>
+</problem>
+</problems>
