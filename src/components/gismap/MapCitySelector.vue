@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file Map city selector component
+ * @description Provides a searchable dropdown for selecting Chinese cities and flying
+ *              the map to the selected city's coordinates with an appropriate zoom level.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import {markRaw, onMounted, Ref, ref} from "vue";
 
 import {GisMapAddFeaturesEvent, GisMapFlyToEvent} from "~/components/gismap/events/GisMapEvents";

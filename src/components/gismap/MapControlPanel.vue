@@ -1,3 +1,10 @@
+<!--
+@file Map control panel component
+@description Provides map control buttons including city selector, CRS selector popover,
+             draw tools, and zoom controls. Located in the top-right area of the map.
+@author yuanyu <yuanyu@supermap.com>
+@date 2026-04-13
+-->
 <template>
   <div class="map-control-panel">
     <div class="gismap-btns-wrap">

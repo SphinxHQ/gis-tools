@@ -1,3 +1,10 @@
+<!--
+@file GisMap slot component
+@description A map slot wrapper that hosts a GisMapTianditu instance with loading state,
+             visibility control, and CRS code binding. Used in the main data view.
+@author yuanyu <yuanyu@supermap.com>
+@date 2026-06-24
+-->
 <template>
   <div class="map-slot" v-show="visible">
     <gis-map-tianditu
