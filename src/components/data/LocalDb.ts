@@ -1,3 +1,10 @@
+/**
+ * @file Local database (IndexedDB) wrapper
+ * @description Provides an IndexedDB-based local storage for GIS file data with
+ *              CRUD operations, history management, and structured data persistence.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import {GisError, GisErrorCode} from "~/common/GisError";
 import {logger} from "~/common/logger";
 
@@ -6,7 +13,11 @@ const DB_VERSION = 1;
 const DB_OBJECT_NAME = 'GisFileData';
 const DB_OBJECT_PK = 'id';
 
+/**
+ * Represents a stored file data record in IndexedDB
+ */
 export class GisFileData {
+    /** Primary key */
     id: number = 0;
     name: string = '';
     content: ArrayBuffer | string = '';

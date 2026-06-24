@@ -1,12 +1,24 @@
+/**
+ * @file Tip logger
+ * @description Provides a tip/notification logging system with severity levels (INFO/WARN/ERROR),
+ *              event-based dispatch, and Vue component instance binding for UI notifications.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import {ComponentInternalInstance} from "vue";
 
 import EventBase from "~/event/EventBase";
 
+/** Tip severity levels */
 export enum TipLevel{
+    /** Informational tip */
     INFO,
+    /** Warning tip */
     WARN,
+    /** Error tip */
     ERROR
 }
+/** Represents a single tip log entry */
 export class TipLog{
     date: Date;
     level: TipLevel;

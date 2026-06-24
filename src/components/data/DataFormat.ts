@@ -1,3 +1,11 @@
+/**
+ * @file Data format registry and parsing
+ * @description Central data format module that aggregates all supported spatial data format parsers
+ *              (GeoJSON, WKT, WKB, Shapefile, ShapeZip, DXF, EXF, Exchange, ResponseBase, Base64)
+ *              and provides a unified parsing interface via SimpleDataFormat.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import {GisError, GisErrorCode} from "~/common/GisError";
 import {DxfDataFormat} from "~/components/data/DxfDataFormat";
 import {ExchangeDataFormat} from "~/components/data/ExchangeDataFormat";

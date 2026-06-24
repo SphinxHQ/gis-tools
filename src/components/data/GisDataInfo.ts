@@ -1,3 +1,10 @@
+/**
+ * @file GIS data info class
+ * @description Core data model class for GIS datasets, managing features, CRS, data type,
+ *              name, and source information. Provides feature CRUD, append, and validation operations.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import * as GeoJSON from 'geojson';
 
 import {GisError, GisErrorCode} from "~/common/GisError";

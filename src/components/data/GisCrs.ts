@@ -1,3 +1,11 @@
+/**
+ * @file GIS CRS (Coordinate Reference System) class
+ * @description Provides CRS identification, recognition, and transformation logic.
+ *              Supports automatic recognition of geographic/projected CRS by coordinate value ranges,
+ *              Gauss-Kruger zone calculation, and proj4-based coordinate transformation.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import * as GeoJSON from 'geojson';
 import proj4 from "proj4";
 
