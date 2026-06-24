@@ -1,3 +1,11 @@
+/**
+ * @file Tianditu basemap configuration
+ * @description Provides configuration for Tianditu (TianDiTu) basemap services including
+ *              basemap types (vector/imagery), layer URLs, API key rotation with probe-based
+ *              failover, and availability checking. Supports multi-key fallback via localStorage.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-22
+ */
 import Common from '~/common/Common'
 import { logger } from '~/common/logger'
 

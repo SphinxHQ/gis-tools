@@ -1,3 +1,11 @@
+/**
+ * @file GisMap core class
+ * @description The main OpenLayers-based map class providing feature management, layer control,
+ *              draw/modify interactions, coordinate transformation, styling, and event dispatch.
+ *              Serves as the central map engine for the GIS Tools application.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-06
+ */
 import "ol/ol.css";
 import {Map as olMap, View as olView} from "ol";
 import Feature from "ol/Feature";

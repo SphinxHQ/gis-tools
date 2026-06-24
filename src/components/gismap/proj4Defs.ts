@@ -1,3 +1,11 @@
+/**
+ * @file Proj4 coordinate system definitions
+ * @description Registers all Chinese coordinate reference systems (CGCS2000, Beijing54, Xian80)
+ *              including 3-degree and 6-degree Gauss-Kruger zones, geographic CRS, and Web Mercator.
+ *              Sets projection extents for OpenLayers reprojection and exposes proj4 globally.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-06
+ */
 import {applyTransform} from 'ol/extent';
 import {get as getProjection, getTransform} from 'ol/proj';
 import {register} from 'ol/proj/proj4';
@@ -8,16 +16,17 @@ import {CrsBounds} from '../data/GisProjectedBounds';
 declare const self: Window & typeof globalThis;
 
 /**
- * @description:
- * @param {string} name
- * @param {string} str
- * @return {*}
+ * Register a proj4 definition string under the given name
+ * @param name - EPSG code string (e.g., "EPSG:4527")
+ * @param str - Proj4 definition string
  */
 const addProj = function (name: string, str: string) {
     proj4.defs(name, str);
 }
 /**
- * 动态注册 proj4 定义（用于运行时添加 CrsBounds 中没有的 CRS）
+ * Dynamically register a proj4 definition at runtime
+ * @param epsgCode - Numeric EPSG code
+ * @param defString - Proj4 definition string
  */
 export const registerProj4Def = (epsgCode: number, defString: string) => {
     const key = `EPSG:${epsgCode}`;
@@ -26,6 +35,11 @@ export const registerProj4Def = (epsgCode: number, defString: string) => {
     }
 }
 
+/**
+ * Initialize all proj4 definitions and register with OpenLayers.
+ * Registers Xian 80 (3°/6° zones), Beijing 54 (3° zones), CGCS2000 (3°/6° zones),
+ * geographic CRS (4490/4214/4610), and sets projection extents for OL reprojection.
+ */
 export const proj4Init = () => {
     //西安80坐标系 3度分带 带号25~45
     let srid = 2349

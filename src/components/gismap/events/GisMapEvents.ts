@@ -1,7 +1,15 @@
+/**
+ * @file GisMap event definitions
+ * @description Defines all map-related event types and event classes for the event bus,
+ *              including draw tool, feature add/remove, fly-to/zoom-to, flash, modify, and notify events.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2024-08-06
+ */
 import * as GeoJSON from 'geojson';
 import { Ref } from "vue";
 
 import { GisEvent } from "~/composables/eventBus";
+/** Map event type identifiers */
 export const Types = {
     DRAWTOOL: "map-event:draw-tool",
     CLEANDRAW: "map-event:clean-draw",
