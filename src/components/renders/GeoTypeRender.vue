@@ -15,12 +15,15 @@ import GeomUtils from '~/common/GeomUtils'
 import GeoTypeIconRender from './GeoTypeIconRender.vue'
 
 const props = withDefaults(defineProps<{
+  /** Geometry type string (e.g., 'Point', 'Polygon') */
   type?: string
+  /** Icon size in pixels */
   size?: number
 }>(), {
   size: 14,
 })
 
+/** Computed Chinese name for the geometry type */
 const name = computed(() => props.type ? GeomUtils.getTypeName(props.type) : '未知')
 </script>
 

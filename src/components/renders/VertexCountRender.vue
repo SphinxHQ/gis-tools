@@ -13,18 +13,22 @@ import { computed } from 'vue'
  * 默认 max=20000，即 20000 顶点为纯红
  */
 const props = withDefaults(defineProps<{
+  /** Vertex count to display */
   count: number
+  /** Maximum count for the red end of the gradient */
   max?: number
 }>(), {
   max: 20000,
 })
 
+/** Text color interpolated from green (0) to red (max) */
 const color = computed(() => {
   const ratio = Math.min(props.count / props.max, 1)
   const hue = 120 * (1 - ratio)
   return `hsl(${hue}, 70%, 45%)`
 })
 
+/** Background color (lighter variant) for the tag */
 const bgColor = computed(() => {
   const ratio = Math.min(props.count / props.max, 1)
   const hue = 120 * (1 - ratio)

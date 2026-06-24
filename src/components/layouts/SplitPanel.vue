@@ -8,52 +8,71 @@
 
 import {computed, getCurrentInstance, onMounted, onUnmounted, reactive, ref, watch} from "vue";
 
+/** Slot item state for tracking panel sizes during drag */
 interface SlotItem {
+  /** Size before drag started */
   originSize: number
+  /** Current computed size */
   size?: number
+  /** Whether this slot has a fixed (static) size */
   static?: boolean
 }
 
 let curInstance: ReturnType<typeof getCurrentInstance>;
 const props = defineProps({
+  /** Layout direction: 'horizontal' or 'vertical' */
   direction: {
     type: String,
     default: 'horizontal',
     validator: (value: string) => ['horizontal', 'vertical'].includes(value)
   },
+  /** Number of panel slots */
   length: {
     type: Number,
     default: 2,
     validator: (value: number) => value >= 2
   },
+  /** Divider thickness in pixels */
   dividerSize: {
     type: Number,
     default: 3
   },
+  /** Minimum slot size in pixels */
   minSize: {
     type: Number,
     default: 100
   },
+  /** Callback when slot sizes change */
   onChange: {
     type: Function,
     default: () => {
     }
   },
+  /** Initial size ratios for each slot (number, 'px' string, or '%' string) */
   ratios: {
     type: Array,
     default: () => [],
   }
 })
+/** Computed event key for mouse position based on direction */
 const eKey = computed(() => {
   return props.direction === 'horizontal' ? 'clientX' : 'clientY'
 })
+/** Computed CSS property key for slot sizing based on direction */
 const sKey = computed(() => {
   return props.direction === 'horizontal' ? 'width' : 'height'
 })
 
+/** Local copy of ratios that may be updated during drag */
 const localRatios = ref<(number | string)[]>([]);
 
+/** Drag event handlers for divider interaction */
 const handles = {
+  /**
+   * Start dragging a divider
+   * @param e - Mouse down event
+   * @param index - Divider index (slot index on the left/top)
+   */
   onDragStart: (e: MouseEvent, index: number) => {
     dragState.dividerIndex = index;
     dragState.origin = e[eKey.value];
@@ -66,27 +85,39 @@ const handles = {
     slotCurrent.originSize = slotCurrent.size ?? 0;
     slotNext.originSize = slotNext.size ?? 0;
   },
+  /** End dragging and reset cursor */
   onDragEnd: () => {
     dragState.dragging = false;
     dragState.relative = 0;
     document.body.style.cursor = '';
   },
+  /** Handle mouse movement during drag */
   onMove: (e: MouseEvent) => {
     if (dragState.dragging) {
       dragState.relative = e[eKey.value] - dragState.origin;
     }
   },
 }
+/** Reactive slot size state keyed by slot index */
 const slotState = reactive<Record<string, SlotItem>>({});
+/** Reactive drag state tracking divider index, origin position, and relative offset */
 const dragState = reactive({
+  /** Full available space for slots */
   fullSpace: -1,
+  /** Mouse position at drag start */
   origin: 0,
+  /** Relative mouse offset from drag origin */
   relative: 0,
+  /** Index of the divider being dragged */
   dividerIndex: -1,
+  /** Whether a drag is in progress */
   dragging: false,
 })
 
+/** Refs to slot DOM elements for applying size */
 const slotElements = ref<HTMLElement[]>([]);
+
+/** Apply computed slot sizes to DOM elements during drag */
 const slotsRender = () => {
   if (dragState.dragging) {
     const dragEffect = slotState[`slot-${dragState.dividerIndex}`];
@@ -123,6 +154,7 @@ const slotsRender = () => {
     }
   }
 }
+/** Initialize slot states and ratios from props */
 const initSlots = () => {
   if (props.ratios.length === 0) {
     localRatios.value = Array.from({length: props.length}, () => props.minSize);
@@ -141,6 +173,7 @@ const initSlots = () => {
     slotsRender()
   }, 0)
 }
+/** Compute slot sizes from ratios (supports number, 'px', and '%' ratios) */
 const updateMax = () => {
   const isNumRatio = localRatios.value.every(x => typeof x === 'number')
   const isStringRatio = localRatios.value.every(item => typeof item === 'string')

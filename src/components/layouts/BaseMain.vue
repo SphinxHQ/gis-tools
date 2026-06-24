@@ -29,30 +29,44 @@ import { computed, ref } from 'vue';
 import Common from '~/common/Common';
 
 
-//slider
+// Slider configuration
 const saveKey_slider = 'sliderInfo';
+/** Minimum left panel width in pixels */
 const minLeftWidth = 400;
+/** Minimum bottom panel height in pixels */
 const minBottomHeight = 200;
+/** Slider (divider) width in pixels */
 const sliderWidth = ref(2);
+
+/** Persisted slider state for localStorage */
 interface SliderInfo {
-    leftWidth_base: number,
-    leftWidth_fix: number,
-    bottomHeight_base: number,
-    bottomHeight_fix: number,
+  /** Base left panel width (committed after drag ends) */
+  leftWidth_base: number,
+  /** Left panel width offset during active drag */
+  leftWidth_fix: number,
+  /** Base bottom panel height (committed after drag ends) */
+  bottomHeight_base: number,
+  /** Bottom panel height offset during active drag */
+  bottomHeight_fix: number,
 }
+
 const leftWidth_base = ref(minLeftWidth);
 const leftWidth_fix = ref(0);
 
 const bottomHeight_base = ref(minBottomHeight);
 const bottomHeight_fix = ref(0);
 
+/** Computed total left panel width (base + drag offset) */
 const leftWidth = computed<number>(() => {
     return leftWidth_base.value + leftWidth_fix.value
 })
 
+/** Computed total bottom panel height (base + drag offset) */
 const bottomHeight = computed<number>(() => {
     return bottomHeight_base.value + bottomHeight_fix.value
 })
+
+/** Get current slider state as a snapshot */
 const getSlider = (): SliderInfo => {
     return {
         leftWidth_base: leftWidth_base.value,
@@ -61,31 +75,38 @@ const getSlider = (): SliderInfo => {
         bottomHeight_fix: bottomHeight_fix.value,
     }
 }
+/** Apply slider state from a snapshot */
 const setSlider = (sliderInfo: SliderInfo) => {
     leftWidth_base.value = sliderInfo.leftWidth_base
     leftWidth_fix.value = sliderInfo.leftWidth_fix
     bottomHeight_base.value = sliderInfo.bottomHeight_base
     bottomHeight_fix.value = sliderInfo.bottomHeight_fix
 }
+/** Persist slider state to localStorage */
 const saveSlider = () => {
     const sliderInfo = getSlider();
     Common.saveLocal(saveKey_slider, sliderInfo);
 }
+/** Restore slider state from localStorage */
 const loadSlider = () => {
     try {
         const sliderInfo = Common.loadLocal(saveKey_slider) as SliderInfo;
         setSlider(sliderInfo);
     } catch (_e) { }
 }
+/** Mouse position at the start of a drag */
 let sliderOrigin = {
     x: 0,
     y: 0
 }
+/** Active drag direction flags: h=horizontal, v=vertical */
 let sliderStatus = {
     v: 0,
     h: 0,
 }
+/** Slider drag event handlers */
 const sliderHandles = {
+  /** Start horizontal (left panel) drag */
     hStart: (e: MouseEvent) => {
         e.preventDefault()
         e.stopPropagation()
@@ -96,6 +117,7 @@ const sliderHandles = {
         sliderStatus.h = 1;
         window.addEventListener('mousemove', sliderHandles.move)
     },
+  /** Start vertical (bottom panel) drag */
     vStart: (e: MouseEvent) => {
         e.preventDefault()
         e.stopPropagation()
@@ -106,6 +128,7 @@ const sliderHandles = {
         sliderStatus.v = 1;
         window.addEventListener('mousemove', sliderHandles.move)
     },
+    /** Handle mouse movement during drag */
     move: (e: MouseEvent) => {
         e.preventDefault()
         e.stopPropagation()
@@ -123,8 +146,10 @@ const sliderHandles = {
         }
 
     },
+    /** End drag and commit position */
     stop: () => {
     },
+    /** End all drags: commit offsets to base values and persist */
     stopAll: () => {
 
         window.removeEventListener('mousemove', sliderHandles.move)

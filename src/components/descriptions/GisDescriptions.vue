@@ -11,28 +11,35 @@ import {computed} from "vue";
 import GisDataInfo from "~/components/data/GisDataInfo";
 import { GisCrsInfo} from "~/components/data/GisProjectedBounds";
 
+/** Description item with label and value for el-descriptions rendering */
 interface DescriptionItem {
+  /** Display label */
   label: string;
+  /** Display value */
   value: unknown;
 }
 
 const props = defineProps({
+  /** Data object to display (GisCrsInfo, GisDataInfo, or plain object) */
   data: {
     type: Object,
     default: () => {
       return {}
     }
   },
+  /** Label column width */
   labelWidth:{
     type: String,
     default: '120px'
   },
+  /** Number of description columns */
   column:{
     type: Number,
     default: 1
   }
 })
 
+/** Computed description items based on data type (GisCrsInfo, GisDataInfo, or generic object) */
 const _data = computed(() => {
   const items: DescriptionItem[] = [];
   const data = props.data;

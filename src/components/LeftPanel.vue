@@ -28,20 +28,35 @@ import { eventBus } from '~/composables/eventBus';
 
 import { GisMapDrawEvent, GisMapCleanDrawEvent , GisMapAddFeaturesEvent, Types as MapTypes } from './gismap/events/GisMapEvents';
 
+/** GeoJSON input text for adding geometry to map */
 const inputGeo = ref<string>('')
+/** Whether to clear existing features before drawing */
 const cleanBefore = ref<boolean>(true)
+/** Whether to stop after one drawing session */
 const once = ref<boolean>(false)
+/** Whether to keep the drawn feature on the map */
 const keep = ref<boolean>(true)
+
+/**
+ * Emit a draw tool event to the map
+ * @param type - Geometry type to draw
+ */
 const handleDrawTool = (type: ('Polygon' | 'Point' | 'LineString' | 'None')) => {
     eventBus.emit('main',new GisMapDrawEvent({ type, cleanBefore, once,keep }))
 }
+
+/** Emit a clean draw event to clear drawn features */
 const handleCleanDraw = () => {
     eventBus.emit('main',new GisMapCleanDrawEvent())
 }
+
+/** Parse the GeoJSON input and add it as features to the map */
 const handleAddGeometry = ()=>{
      const fs = [JSON.parse(inputGeo.value)  as GeoJSON.Feature];
     eventBus.emit('main',new GisMapAddFeaturesEvent(fs))
 }
+
+/** Listen for draw-end events to update the GeoJSON input */
 onMounted(() => {
     eventBus.on('main',MapTypes.DRAWEND, async (data: any) => {
         inputGeo.value = data

@@ -17,8 +17,12 @@
 import { ref } from 'vue';
 
 import { eventBus } from '~/composables/eventBus';
+
+/** Log message list displayed in the bottom panel */
 const logs = ref<string[]>([]);
- eventBus.on('main','console-log', (...args: any[]) => {
+
+/** Listen to console-log events from the event bus and append messages to the log list */
+eventBus.on('main','console-log', (...args: any[]) => {
     if(args?.length>0){
         args.forEach((item:any)=>{
             try{

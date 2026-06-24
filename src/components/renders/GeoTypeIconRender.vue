@@ -22,12 +22,15 @@ import multipolygonIcon from '~/assets/geo-icons/multipolygon.svg'
 import collectionIcon from '~/assets/geo-icons/collection.svg'
 
 const props = withDefaults(defineProps<{
+  /** Geometry type string (e.g., 'Point', 'Polygon') */
   type?: string
+  /** Icon size in pixels */
   size?: number
 }>(), {
   size: 14,
 })
 
+/** Map from geometry type to its SVG icon URL */
 const ICON_MAP: Record<string, string> = {
   Point: pointIcon,
   MultiPoint: multipointIcon,
@@ -38,6 +41,7 @@ const ICON_MAP: Record<string, string> = {
   GeometryCollection: collectionIcon,
 }
 
+/** Computed icon source URL, defaults to collection icon for unknown types */
  const src = computed(() => props.type ? (ICON_MAP[props.type] ?? collectionIcon) : collectionIcon)
 </script>
 

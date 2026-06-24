@@ -13,10 +13,15 @@ import { isActuallyDark } from '~/composables/dark'
 import { getMonacoEditor, setupMonaco } from './monacoSetup'
 
 const props = withDefaults(defineProps<{
+  /** Editor content value (string or array of lines) */
   value?: string | string[]
+  /** Whether the editor is read-only */
   readOnly?: boolean
+  /** Monaco language identifier (e.g., 'json', 'wkt', 'geojson') */
   language?: string
+  /** Whether to auto-format JSON content */
   format?: boolean
+  /** Whether to show the minimap */
   minimap?: boolean
 }>(), {
   value: '',
@@ -27,26 +32,41 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
+  /** Emitted when editor content changes in non-readOnly mode */
   input: [value: string]
 }>()
 
+/** Editor container element ref */
 const editorContainer = ref<HTMLElement>()
+/** Loading state while Monaco initializes */
 const loading = ref(true)
 
+/** Monaco editor instance */
 let editor: MonacoEditorNS.IStandaloneCodeEditor | null = null
+/** ResizeObserver for editor container */
 let resizeObserver: ResizeObserver | null = null
+/** Flag to skip the next change event when setting value programmatically */
 let ignoreNextChange = false
 
+/**
+ * Convert props.value to display string (join array with newlines)
+ * @returns String value for the editor
+ */
 const displayValue = () => {
   if (Array.isArray(props.value)) return props.value.join('\n')
   return props.value ?? ''
 }
 
+/**
+ * Ensure Monaco is loaded and return the editor module
+ * @returns Monaco editor namespace
+ */
 async function ensureMonaco() {
   await setupMonaco()
   return getMonacoEditor()
 }
 
+/** Create Monaco editor instance on mount with GIS-aware theme and language configuration */
 onMounted(async () => {
   if (!editorContainer.value) return
 
