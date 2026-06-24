@@ -70,13 +70,13 @@
       opacity: 0;
     }
 
-    /* canvas 固定 280×380 逻辑像素，居中于黄金分割点（0.382 屏高） */
+    /* canvas 固定 280×380 逻辑像素，居中于视觉舒适区（约 28% 屏高，略高于黄金分割） */
     #entry-loader-canvas {
       display: block;
       width: 280px;
       height: 380px;
-      margin-top: calc(38.2dvh - 110px);
-      margin-top: calc(38.2vh - 110px);
+      margin-top: calc(28dvh - 60px);
+      margin-top: calc(28vh - 60px);
     }
   </style>
   <!--__ENTRY_LOADER_MANIFEST__-->

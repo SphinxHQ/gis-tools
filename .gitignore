@@ -27,7 +27,8 @@ qodana.yaml
 *-output.txt
 
 # Docs
-docs/
+docs/*
+!docs/dev-tasks/
 
 # Env
 .env.development

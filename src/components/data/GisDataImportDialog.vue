@@ -125,6 +125,13 @@ const showTextConfirm = computed(() => {
   padding: 0 20px;
 }
 
+/* 桌面端弹窗宽度限制（≥768px 时最大宽度 880px，确保 table 6 列不拥挤） */
+@media (min-width: 768px) {
+  .el-overlay-dialog .import-dialog.el-dialog {
+    max-width: 880px;
+  }
+}
+
 /* 移动端导入弹窗：隐藏 header，完全铺满，所有 padding 清零 */
 @media (max-width: 767px) {
   .el-overlay-dialog .import-dialog.el-dialog {

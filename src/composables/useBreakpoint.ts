@@ -8,8 +8,8 @@
  */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-/** Breakpoint size categories */
-export type Breakpoint = 'xl' | 'lg' | 'md' | 'sm'
+/** Breakpoint size categories (5-level: xs/sm/md/lg/xl) */
+export type Breakpoint = 'xl' | 'lg' | 'md' | 'sm' | 'xs'
 
 /*
 // Reactive breakpoint state
@@ -33,16 +33,18 @@ export interface BreakpointState {
 const PANEL_WIDTH: Record<Breakpoint, number> = {
   xl: 520,
   lg: 520,
-  md: 0,
+  md: 320,
   sm: 0,
+  xs: 0,
 }
 
 /** Collapsed panel widths per breakpoint */
 const PANEL_COLLAPSED_WIDTH: Record<Breakpoint, number> = {
   xl: 48,
   lg: 48,
-  md: 0,
+  md: 48,
   sm: 0,
+  xs: 0,
 }
 
 /**
@@ -54,7 +56,8 @@ function resolveBreakpoint(width: number): Breakpoint {
   if (width >= 1280) return 'xl'
   if (width >= 1024) return 'lg'
   if (width >= 768) return 'md'
-  return 'sm'
+  if (width >= 576) return 'sm'
+  return 'xs'
 }
 
 const globalWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1280)
@@ -102,13 +105,14 @@ export function useBreakpoint() {
   })
 
   const current = computed<Breakpoint>(() => globalBreakpoint.value)
-  const isMobile = computed(() => globalBreakpoint.value === 'sm')
+  const isMobile = computed(() => globalBreakpoint.value === 'sm' || globalBreakpoint.value === 'xs')
   const isTablet = computed(() => globalBreakpoint.value === 'md')
   const isDesktop = computed(() => globalBreakpoint.value === 'xl' || globalBreakpoint.value === 'lg')
   const panelWidth = computed(() => PANEL_WIDTH[globalBreakpoint.value])
   const panelCollapsedWidth = computed(() => PANEL_COLLAPSED_WIDTH[globalBreakpoint.value])
   const showLeftPanel = computed(() => PANEL_WIDTH[globalBreakpoint.value] > 0)
-  const showMobileNav = computed(() => globalBreakpoint.value === 'sm')
+  const showBottomNav = computed(() => globalBreakpoint.value === 'xs' || globalBreakpoint.value === 'sm')
+  const showMobileNav = showBottomNav // 向后兼容别名
 
   return {
     current,
@@ -118,6 +122,7 @@ export function useBreakpoint() {
     panelWidth,
     panelCollapsedWidth,
     showLeftPanel,
+    showBottomNav,
     showMobileNav,
     width: computed(() => globalWidth.value),
   }

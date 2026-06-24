@@ -7,6 +7,7 @@
  */
 import "ol/ol.css";
 import { Map as olMap, View as olView } from "ol";
+import { defaults as defaultControls } from "ol/control/defaults";
 
 import { GisMapOption } from "./GisMap";
 
@@ -26,6 +27,8 @@ export default {
         }
         return new olMap({
             target: mapTarget,
+            // 禁用默认控件（放大缩小按钮、旋转等），所有交互通过自定义工具条实现
+            controls: defaultControls({ zoom: false, rotate: false, attribution: false }),
             view: new olView(Object.assign(Object.assign(defaultOptions, options)))
         });
     },

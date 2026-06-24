@@ -191,6 +191,7 @@ const hasActiveData = computed(() => !!activeData.value?.features?.length)
   display: flex;
   align-items: center;
   justify-content: space-around;
+  width: 100%;
   height: 56px;
   background: var(--el-bg-color);
   border-top: 1px solid var(--el-border-color-lighter);
