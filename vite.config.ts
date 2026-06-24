@@ -167,6 +167,10 @@ export default defineConfig({
         theme_color: '#1d1e1f',
         background_color: '#1d1e1f',
         display: 'standalone',
+        // 显式声明 start_url 和 scope，确保 PWA 注册路径与 share_target.action 一致
+        // 已安装的 PWA 缓存旧 manifest，新增 share_target 后需用户重装 PWA 才能注册分享目标
+        start_url: '/gis-tools/',
+        scope: '/gis-tools/',
         icons: [
           {
             src: 'pwa-192x192.png',

@@ -229,6 +229,7 @@ defineExpose({
             :limit="0"
             :on-change="handleFileChanged"
             :auto-upload="false"
+            accept=".geojson,.json,.wkt,.txt,.csv,.shp,.zip,.dxf,.exf,.wkb,application/json,application/zip,application/octet-stream,text/plain,text/csv,application/dxf"
         >
           <div class="upload-info">
             <el-icon class="el-icon--upload">
