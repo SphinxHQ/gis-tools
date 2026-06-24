@@ -1,3 +1,10 @@
+/**
+ * @file Shapefile data format parser
+ * @description Parses Shapefile (.shp) binary data into GisDataInfo datasets
+ *              using the @sphinx_hq/shapefile-parser library.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import {ShapefileParser} from '@sphinx_hq/shapefile-parser';
 import * as GeoJSON from 'geojson';
 

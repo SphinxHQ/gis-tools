@@ -1,3 +1,9 @@
+/**
+ * @file WKB data format parser
+ * @description Parses WKB (Well-Known Binary) data into GisDataInfo datasets using the wkx library.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import * as Wkx from "wkx";
 
 import {GisError, GisErrorCode} from "~/common/GisError";

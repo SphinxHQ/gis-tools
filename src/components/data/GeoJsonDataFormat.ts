@@ -1,3 +1,10 @@
+/**
+ * @file GeoJSON data format parser
+ * @description Parses GeoJSON strings and objects into GisDataInfo datasets,
+ *              supporting Feature, FeatureCollection, and Geometry inputs.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import * as GeoJSON from 'geojson';
 import {markRaw} from "vue";
 

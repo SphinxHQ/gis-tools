@@ -1,3 +1,9 @@
+/**
+ * @file WKT data format parser
+ * @description Parses WKT (Well-Known Text) strings into GisDataInfo datasets using the wkx library.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import * as Wkx from "wkx";
 
 import Common from "~/common/Common";

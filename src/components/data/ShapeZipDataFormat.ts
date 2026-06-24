@@ -1,3 +1,10 @@
+/**
+ * @file ShapeZip data format parser
+ * @description Parses zipped Shapefile (.zip containing .shp/.dbf/.shx) into GisDataInfo datasets
+ *              using the @sphinx_hq/shapefile-parser library with JSZip for archive extraction.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import {ShapefileParser} from '@sphinx_hq/shapefile-parser';
 import * as GeoJSON from 'geojson';
 
