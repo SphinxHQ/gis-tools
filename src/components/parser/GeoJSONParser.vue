@@ -17,25 +17,35 @@ import {eventBus} from "~/composables/eventBus";
 import {GisMapAddFeaturesEvent} from "../gismap/events/GisMapEvents";
 
 const props = defineProps({
+  /** Map instance name for emitting events */
   mapName: {
     type: String,
     default: 'main'
   }
 })
 
+/** GeoJSON text input */
 const geojsonInput = ref('')
+/** Validation error message */
 const validationError = ref('')
+/** Whether the input has passed validation */
 const isValid = ref(false)
+/** Parsed GeoJSON features from successful validation */
 const parsedFeatures = ref<GeoJSON.Feature[]>([])
+/** Whether validation is in progress */
 const isValidating = ref(false)
 
+/** Whether there is any text input */
 const hasInput = computed(() => geojsonInput.value.trim().length > 0)
+/** Whether features have been parsed */
 const hasParsed = computed(() => parsedFeatures.value.length > 0)
+/** Unique geometry types found in parsed features */
 const geometryTypes = computed(() => {
   if (!hasParsed.value) return []
   return [...new Set(parsedFeatures.value.map(f => f.geometry.type))]
 })
 
+/** Validate the GeoJSON input: parse JSON, check structure, and extract features */
 const handleValidate = () => {
   validationError.value = ''
   isValid.value = false
@@ -107,6 +117,7 @@ const handleValidate = () => {
   })
 }
 
+/** Format the JSON input with 2-space indentation */
 const handleFormat = () => {
   try {
     const obj = JSON.parse(geojsonInput.value)
@@ -116,6 +127,7 @@ const handleFormat = () => {
   }
 }
 
+/** Add parsed features to the map via event bus */
 const handleAddToMap = () => {
   if (parsedFeatures.value.length > 0) {
     const addFeaturesEvent = new GisMapAddFeaturesEvent(parsedFeatures.value, {clear: true})
@@ -124,6 +136,7 @@ const handleAddToMap = () => {
   }
 }
 
+/** Clear all input and validation state */
 const handleClear = () => {
   geojsonInput.value = ''
   validationError.value = ''
@@ -131,6 +144,7 @@ const handleClear = () => {
   parsedFeatures.value = []
 }
 
+/** Load a sample GeoJSON string for the given geometry type */
 const handleSample = (type: string) => {
   const samples: Record<string, string> = {
     'Point': '{"type":"Feature","geometry":{"type":"Point","coordinates":[116.4,39.9]},"properties":{}}',

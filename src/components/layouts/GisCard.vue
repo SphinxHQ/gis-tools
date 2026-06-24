@@ -9,12 +9,15 @@
 import {getCurrentInstance, onMounted, ref} from "vue";
 
 defineProps({
+  /** Card title displayed in the header */
   title: {
     type: String,
     default: ''
   }
 })
+/** Root element ref */
 const el = ref();
+/** Container div ref */
 const div = ref();
 
 onMounted(() => {

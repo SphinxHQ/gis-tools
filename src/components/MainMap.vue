@@ -13,6 +13,7 @@
  */
 
 defineProps({
+  /** Map instance identifier */
   mapName: {
     type: String,
     default: () => {

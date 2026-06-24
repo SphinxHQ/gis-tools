@@ -17,28 +17,38 @@ import {eventBus} from "~/composables/eventBus";
 import {GisMapAddFeaturesEvent} from "../gismap/events/GisMapEvents";
 
 const props = defineProps({
+  /** Map instance name for emitting events */
   mapName: {
     type: String,
     default: 'main'
   }
 })
 
+/** WKT text input */
 const wktInput = ref('')
+/** Parse error message */
 const parseError = ref('')
+/** Parsed GeoJSON features from successful parse */
 const parsedFeatures = ref<GeoJSON.Feature[]>([])
+/** Whether parsing is in progress */
 const isParsing = ref(false)
 
+/** Whether there is any text input */
 const hasInput = computed(() => wktInput.value.trim().length > 0)
+/** Whether features have been parsed */
 const hasParsed = computed(() => parsedFeatures.value.length > 0)
+/** Unique geometry types found in parsed features */
 const geometryTypes = computed(() => {
   if (!hasParsed.value) return []
   return [...new Set(parsedFeatures.value.map(f => f.geometry.type))]
 })
+/** Total coordinate count across all parsed features */
 const coordinateCount = computed(() => {
   if (!hasParsed.value) return 0
   return parsedFeatures.value.reduce((sum, f) => sum + GeomUtils.getCoordinatesCount(f as Record<string, unknown>), 0)
 })
 
+/** Parse the WKT input and extract features */
 const handleParse = () => {
   parseError.value = ''
   parsedFeatures.value = []
