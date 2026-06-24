@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file GIS data import dialog
+ * @description A dialog for importing spatial data files with format selection,
+ *              encoding options, and dataset naming.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-13
+ */
 import { computed, ref } from 'vue'
 
 import GisDataInfo from '~/components/data/GisDataInfo'

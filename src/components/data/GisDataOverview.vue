@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file GIS data overview component
+ * @description Displays a summary overview of a dataset including feature count,
+ *              geometry type distribution, coordinate range, and CRS info.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-24
+ */
 import { computed } from 'vue'
 import { Location, DataLine, Histogram, Coordinate } from '@element-plus/icons-vue'
 

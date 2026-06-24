@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file GIS data panel component
+ * @description The bottom data panel showing dataset details with tabs for overview,
+ *              features, validation, and export.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-24
+ */
 import { ref, watch, computed } from 'vue'
 import { Compass, MapLocation, CircleCheck, Download } from '@element-plus/icons-vue'
 

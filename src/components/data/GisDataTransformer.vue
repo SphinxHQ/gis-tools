@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file GIS data transformer component
+ * @description Provides batch coordinate transformation for dataset features with
+ *              source/target CRS selection, progress tracking, and version management.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-04-13
+ */
 import { ElMessageBox } from 'element-plus'
 import proj4 from 'proj4'
 import { computed, ref, watch, nextTick } from 'vue'

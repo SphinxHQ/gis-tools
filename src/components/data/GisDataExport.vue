@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * @file GIS data export component
+ * @description Provides data export functionality supporting GeoJSON, WKT, Shapefile (zip),
+ *              and clipboard copy with format selection and CRS transformation.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-24
+ */
 import { ShapefileParser, GeoJSONFeatureCollection } from "@sphinx_hq/shapefile-parser";
 import { ElMessage } from "element-plus";
 import { Download } from "@element-plus/icons-vue";
