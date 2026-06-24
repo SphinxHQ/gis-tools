@@ -1,17 +1,32 @@
+/**
+ * @file GIS data store
+ * @description Central reactive store for GIS datasets, managing dataset entries,
+ *              CRS transform versions, active version selection, and dataset lifecycle.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-13
+ */
 import { computed, ref } from 'vue'
 
 import Common from '~/common/Common'
 import GisDataInfo from '~/components/data/GisDataInfo'
 
+/**
+ * Represents a dataset entry in the store
+ */
 export interface GisDataSetEntry {
+  /** Unique dataset id */
   id: string
+  /** Display name */
   name: string
+  /** Underlying GisDataInfo instance */
   data: GisDataInfo
+  /** Source identifier */
   sourceId: string
+  /** Records of appended sources */
   appendedFrom?: { name: string; count: number }[]
-  /** 转换路径版本数据（持久化，切换数据集时保留） */
+  /** Transform path version data (persisted, preserved on dataset switch) */
   transformVersions?: CrsVersionSnapshot[]
-  /** 当前活跃版本名 */
+  /** Currently active version name */
   activeVersionName?: string
 }
 

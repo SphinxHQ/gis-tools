@@ -1,16 +1,35 @@
+/**
+ * @file Breakpoint composable
+ * @description Provides reactive responsive breakpoint detection (xl/lg/md/sm) with
+ *              shared resize listener management. Returns computed state for current
+ *              breakpoint, device type flags, and panel width configuration.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-24
+ */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
+/** Breakpoint size categories */
 export type Breakpoint = 'xl' | 'lg' | 'md' | 'sm'
 
+/**
+ * Reactive breakpoint state
+ */
 export interface BreakpointState {
+  /** Current breakpoint */
   current: Breakpoint
+  /** Whether the viewport is mobile (sm) */
   isMobile: boolean
+  /** Whether the viewport is tablet (md) */
   isTablet: boolean
+  /** Whether the viewport is desktop (xl or lg) */
   isDesktop: boolean
+  /** Panel width in pixels for the current breakpoint */
   panelWidth: number
+  /** Collapsed panel width in pixels */
   panelCollapsedWidth: number
 }
 
+/** Breakpoint pixel ranges */
 const BREAKPOINTS: Record<Breakpoint, { min: number; max: number }> = {
   xl: { min: 1280, max: Number.MAX_SAFE_INTEGER },
   lg: { min: 1024, max: 1279 },
@@ -18,6 +37,7 @@ const BREAKPOINTS: Record<Breakpoint, { min: number; max: number }> = {
   sm: { min: 0, max: 767 },
 }
 
+/** Panel widths per breakpoint */
 const PANEL_WIDTH: Record<Breakpoint, number> = {
   xl: 520,
   lg: 520,
@@ -25,6 +45,7 @@ const PANEL_WIDTH: Record<Breakpoint, number> = {
   sm: 0,
 }
 
+/** Collapsed panel widths per breakpoint */
 const PANEL_COLLAPSED_WIDTH: Record<Breakpoint, number> = {
   xl: 48,
   lg: 48,
@@ -32,6 +53,11 @@ const PANEL_COLLAPSED_WIDTH: Record<Breakpoint, number> = {
   sm: 0,
 }
 
+/**
+ * Resolve a viewport width to a breakpoint category
+ * @param width - Viewport width in pixels
+ * @returns The matching breakpoint
+ */
 function resolveBreakpoint(width: number): Breakpoint {
   if (width >= 1280) return 'xl'
   if (width >= 1024) return 'lg'
@@ -45,6 +71,7 @@ const globalBreakpoint = ref<Breakpoint>(resolveBreakpoint(globalWidth.value))
 let listenerCount = 0
 let resizeHandler: (() => void) | null = null
 
+/** Ensure the global resize listener is attached */
 function ensureResizeListener() {
   if (resizeHandler) return
   resizeHandler = () => {
@@ -54,6 +81,7 @@ function ensureResizeListener() {
   window.addEventListener('resize', resizeHandler, { passive: true })
 }
 
+/** Remove the resize listener if no consumers remain */
 function maybeRemoveResizeListener() {
   if (listenerCount > 0) return
   if (resizeHandler) {
@@ -62,6 +90,10 @@ function maybeRemoveResizeListener() {
   }
 }
 
+/**
+ * Composable for reactive breakpoint detection
+ * @returns Reactive breakpoint state and computed flags
+ */
 export function useBreakpoint() {
   ensureResizeListener()
   listenerCount++
