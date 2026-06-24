@@ -1,3 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44">
-  <polygon points="22,5 39,17 33,39 11,39 5,17" fill="rgba(234,88,12,0.18)" stroke="#ea580c" stroke-width="3.5" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
+  <rect width="44" height="44" fill="#1d1e1f"/>
+  <polygon points="22,9 35,17 30,35 14,35 9,17" fill="rgba(234,88,12,0.15)" stroke="#ea580c" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="22" cy="9" r="3" fill="#ea580c"/>
+  <circle cx="35" cy="17" r="3" fill="#ea580c"/>
+  <circle cx="30" cy="35" r="3" fill="#ea580c"/>
+  <circle cx="14" cy="35" r="3" fill="#ea580c"/>
+  <circle cx="9" cy="17" r="3" fill="#ea580c"/>
 </svg>
