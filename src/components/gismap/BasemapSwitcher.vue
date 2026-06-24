@@ -1,4 +1,12 @@
 <script setup lang="ts">
+/**
+ * @file Basemap switcher component
+ * @description Provides a UI for switching between Tianditu basemaps (vector/imagery).
+ *              Checks Tianditu service availability on mount and offers a local fallback
+ *              when the service is unreachable.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-22
+ */
 import { computed, onMounted, ref } from 'vue'
 
 import { logger } from '~/common/logger'

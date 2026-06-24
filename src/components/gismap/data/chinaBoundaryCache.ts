@@ -1,11 +1,19 @@
+/**
+ * @file China boundary cache
+ * @description Generates and caches China boundary overlay images (dataURL) by projection.
+ *              Uses china.json and china-city.json boundary data rendered to a canvas
+ *              with projection-appropriate coordinate transforms.
+ * @author yuanyu <yuanyu@supermap.com>
+ * @date 2026-06-13
+ */
 import chinaCityData from './china-city.json';
 import chinaData from './china.json';
 
-/** 中国地理范围 [minLon, minLat, maxLon, maxLat] */
+/** China geographic extent [minLon, minLat, maxLon, maxLat] */
 const CHINA_EXTENT: [number, number, number, number] = [73.5, 3, 136, 54];
 const CANVAS_WIDTH = 4096;
 
-/** 按 projection 缓存：projection → dataURL */
+/** Cache by projection: projection → dataURL */
 const cacheMap = new Map<string, string>();
 
 function toCanvasXY(lon: number, lat: number, scaleX: number, scaleY: number): [number, number] {

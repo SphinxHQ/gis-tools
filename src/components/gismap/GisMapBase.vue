@@ -1,3 +1,11 @@
+<!--
+@file GisMap base component
+@description The base map component providing the OpenLayers map container, mouse coordinate
+             display, feature properties popup, and map type slot. Used as the foundation
+             for GisMapBlank, GisMapSlot, and GisMapTianditu variants.
+@author yuanyu <yuanyu@supermap.com>
+@date 2026-04-13
+-->
 <template>
   <div class="main-map-container">
     <div v-if="featureProps" class="fea-props">
