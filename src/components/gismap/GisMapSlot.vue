@@ -42,6 +42,7 @@ const emit = defineEmits<{
 
 // 每个地图实例有独立的 mapName（基于 datasetId）
 const mapName = computed(() => `map_${props.datasetId}`)
+// 规则 R2：地图 projection 直接来源于数据集 data.crs.epsgCode，深度绑定
 const epsgCode = computed(() => props.data?.crs?.epsgCode)
 const mapReady = ref(false)
 const isInEditMode = ref(false)

@@ -51,6 +51,7 @@ const { updateDataset, addDataset, activeId, activeSourceId } = useGisDataStore(
 // 编辑变更跟踪
 const hasUnsavedChanges = ref(false)
 
+// 规则 R5：要素编辑只改 features，不改 crs，更不影响地图坐标系
 // 变更操作后提示：更新当前数据集 or 另存为新数据集（同源）
 const promptUpdateOrSaveAs = async () => {
   if (!hasUnsavedChanges.value) return

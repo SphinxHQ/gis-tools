@@ -29,7 +29,7 @@ const emit = defineEmits<{
   'active-data-change': [data: GisDataInfo, transformChain: number[]]
 }>()
 
-const { addDataset, updateDataset, activeId, activeSourceId, datasets } = useGisDataStore()
+const { addDataset, activeId, activeSourceId, datasets } = useGisDataStore()
 
 const originData = ref<GisDataInfo>(new GisDataInfo())
 
@@ -178,19 +178,28 @@ const navigateToChainStep = (epsgCode: number) => {
   if (ver) activeVersionName.value = ver.name
 }
 
+/**
+ * 重新计算所有非 origin 版本的 data（基于 originData 转换）。
+ *
+ * - 规则 R2（数据-坐标系与地图深度绑定）：每个版本的 data.crs 必须与其 crs（CrsInfo）一致
+ * - 规则 R3（地图坐标系不变性）：转换失败时不应让 activeVersion 指向 data 与 crs 不一致的版本
+ * - 返回值语义：全部版本转换成功返回 true，任一失败返回 false
+ *   调用方应根据返回值决定是否回退 activeVersionName 到 origin
+ */
 const reloadVersionsData = (): boolean => {
-  let lastSuccess = true
+  let allSuccess = true
   crsVersions.value.forEach((item, idx) => {
     if (idx > 0) {
       item.data = GisDataInfo.clone(originData.value)
       const success = transformData(item.data, item.crs)
-      // 记录最后一个版本（新添加的）的转换结果
-      if (idx === crsVersions.value.length - 1) {
-        lastSuccess = success
+      if (!success) {
+        allSuccess = false
+        // 转换失败：item.data 退回 origin clone（crs 仍是 origin 的，与 item.crs 不一致）
+        // 调用方应回退 activeVersionName 到 origin，避免显示不一致的版本
       }
     }
   })
-  return lastSuccess
+  return allSuccess
 }
 
 // 监听 props.data 变化（转换期间跳过，防止 addDataset/updateDataset 触发重置）
@@ -236,11 +245,17 @@ watch(() => props.data, (newData) => {
       datasetId: snap.datasetId,
       transformChain: snap.transformChain,
     }))
-    // origin 版本的 data 直接用当前数据
-    crsVersions.value[0].data = data
-    // 重新计算转换后版本的 data
-    reloadVersionsData()
-    activeVersionName.value = newEntry.activeVersionName || 'origin'
+    // 规则 R2/R3：origin 版本的 data 用深拷贝，避免 props.data 引用污染
+    // （外部 updateDataset 等修改不应影响已恢复的转换路径数据）
+    crsVersions.value[0].data = GisDataInfo.clone(data)
+    // 重新计算转换后版本的 data；失败时回退 activeVersionName 到 origin
+    const reloadSuccess = reloadVersionsData()
+    if (reloadSuccess) {
+      activeVersionName.value = newEntry.activeVersionName || 'origin'
+    } else {
+      // 转换失败：回退到 origin，避免显示 data 与 crs 不一致的版本
+      activeVersionName.value = 'origin'
+    }
   } else {
     // 无保存的转换路径，重置为 origin
     crsVersions.value = [{
@@ -269,6 +284,7 @@ watch(activeVersionName, () => {
   emitActiveDataChange()
 })
 
+// 规则 R4：转换必然生成新数据集（同源），原数据集保持不变
 const addTransformVersion = (targetCrs: CrsInfo, sourceVer: CrsVersion) => {
   const family = GisCrs.familyName(targetCrs)
   const label = `${family} EPSG:${targetCrs.epsgCode}`
@@ -337,39 +353,48 @@ const handleTransformSelect = (crs: CrsInfo) => {
   }
 }
 
+/**
+ * 重设坐标系：基于当前活跃版本数据生成一份声明了新 crs 的新数据集。
+ *
+ * - 规则 R3（地图坐标系不变性）：原数据集的 crs 与对应地图 projection 保持不变，
+ *   任何"修改数据集 crs"的操作都必须通过生成新数据集实现。
+ * - 规则 R4（重设生成新数据）：重设必然生成新数据集（同源），原数据集保持不变。
+ * - 与 addTransformVersion 不同：重设不进行坐标数值转换，仅声明新 crs
+ *   （用于修正原数据 crs 声明错误的场景）。
+ * - 新数据集作为独立节点，不继承原数据集的转换路径（用户可后续按需在其上继续转换）。
+ */
 const handleResetCrs = (crs: CrsInfo) => {
   resetCrsDialogVisible.value = false
-  if (activeVersion.value) {
-    activeVersion.value.data.crs = new GisCrs(crs.epsgCode)
-    if (activeVersion.value.data.descriptions) {
-      const simpleName = crs.name?.split('/')[0].trim() || '';
-      let crsLabel = '';
-      if (simpleName.includes('2000')) crsLabel = '2000国家大地坐标系';
-      else if (simpleName.includes('54')) crsLabel = '54北京坐标系';
-      else if (simpleName.includes('80')) crsLabel = '西安80坐标系';
-      activeVersion.value.data.descriptions['坐标系'] = crsLabel
-      activeVersion.value.data.descriptions['几度分带'] = (crs.zoneDegree ?? 0) > 0 ? crs.zoneDegree : ''
-      activeVersion.value.data.descriptions['投影类型'] = CrsCategory.fromProjected(crs.projected) === CrsCategory.Projected ? '高斯克吕格' : ''
-      activeVersion.value.data.descriptions['计量单位'] = CrsCategory.fromProjected(crs.projected) === CrsCategory.Projected ? '米' : '度'
-      activeVersion.value.data.descriptions['带号'] = (crs.zoneNumber ?? 0) > 0 ? String(crs.zoneNumber) : ''
-    }
-    if (activeVersion.value.name === 'origin') {
-      originData.value.crs = new GisCrs(crs.epsgCode)
-      crsVersions.value = [crsVersions.value[0]]
-      activeVersionName.value = 'origin'
-    }
-    saveVersionsToDataset()
-    emitActiveDataChange()
+  const sourceVer = activeVersion.value
+  if (!sourceVer || !sourceVer.data) return
 
-    // 重设坐标系：直接更新当前数据集（标志位防止 updateDataset 触发重置）
-    if (activeId.value) {
-      const sourceName = originData.value?.name || '未命名'
-      activeVersion.value.data.name = `${sourceName} (重设 EPSG:${crs.epsgCode})`
-      isTransforming.value = true
-      updateDataset(activeId.value, activeVersion.value.data)
-      nextTick(() => { isTransforming.value = false })
-    }
+  // 1. 深拷贝源数据，避免引用污染原数据集
+  const resetClone = GisDataInfo.clone(sourceVer.data)
+  resetClone.crs = new GisCrs(crs.epsgCode)
+  // 更新 descriptions（坐标系元信息）
+  if (resetClone.descriptions) {
+    const simpleName = crs.name?.split('/')[0].trim() || ''
+    let crsLabel = ''
+    if (simpleName.includes('2000')) crsLabel = '2000国家大地坐标系'
+    else if (simpleName.includes('54')) crsLabel = '54北京坐标系'
+    else if (simpleName.includes('80')) crsLabel = '西安80坐标系'
+    resetClone.descriptions['坐标系'] = crsLabel
+    resetClone.descriptions['几度分带'] = (crs.zoneDegree ?? 0) > 0 ? crs.zoneDegree : ''
+    resetClone.descriptions['投影类型'] = CrsCategory.fromProjected(crs.projected) === CrsCategory.Projected ? '高斯克吕格' : ''
+    resetClone.descriptions['计量单位'] = CrsCategory.fromProjected(crs.projected) === CrsCategory.Projected ? '米' : '度'
+    resetClone.descriptions['带号'] = (crs.zoneNumber ?? 0) > 0 ? String(crs.zoneNumber) : ''
   }
+  const sourceName = originData.value?.name || '未命名'
+  resetClone.name = `${sourceName} (重设 EPSG:${crs.epsgCode})`
+
+  // 2. 创建新数据集（同源），原数据集保持不变 —— 规则 R3、R4
+  //    标志位防止 addDataset 触发 props.data 变化重置转换路径
+  isTransforming.value = true
+  addDataset(resetClone, activeSourceId.value ?? undefined)
+  nextTick(() => { isTransforming.value = false })
+
+  // 3. 不修改原数据集的 crsVersions / activeVersionName
+  //    新数据集切换后由 watch props.data 自然走"无转换路径"分支，重置为 origin
 }
 
 // 当前 CRS 信息
