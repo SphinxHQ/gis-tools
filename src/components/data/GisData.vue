@@ -25,7 +25,7 @@ import { useBreakpoint } from '~/composables/useBreakpoint'
 import { useShareReceiver } from '~/composables/useShareReceiver'
 
 const { datasets, dataSources, activeId, activeDataset, setActive, addDataSource, removeDataset } = useGisDataStore()
-const { isMobile, panelWidth, panelCollapsedWidth, showLeftPanel } = useBreakpoint()
+const { isMobile, isDesktop, panelWidth, panelCollapsedWidth, showLeftPanel } = useBreakpoint()
 
 const importDialogVisible = ref(false)
 
@@ -371,14 +371,13 @@ const handleExitEditMode = () => {
         </div>
       </div>
 
-      <!-- 有数据时的布局 -->
+      <!-- 有数据时的布局：统一弹性布局，CSS 控制响应式显隐（单一代码路径） -->
       <template v-else>
-        <!-- 桌面端：左面板 + 拖拽手柄 + 主内容区 -->
-        <div v-if="showLeftPanel" class="desktop-layout">
-          <!-- 左面板 -->
+        <div class="unified-layout">
+          <!-- 左面板（CSS 控制 ≥768px 显示，<768px 隐藏） -->
           <div class="left-panel" :class="{ collapsed: panelCollapsed }" :style="{ width: currentPanelWidth + 'px' }">
             <div class="panel-header">
-              <span v-if="!panelCollapsed" class="panel-title">数据操作</span>
+              <span v-show="!panelCollapsed" class="panel-title">数据操作</span>
               <el-button text size="small" :title="panelCollapsed ? '展开' : '折叠'"
                 @click="panelCollapsed = !panelCollapsed"
 >
@@ -388,7 +387,7 @@ const handleExitEditMode = () => {
                 </el-icon>
               </el-button>
             </div>
-            <div v-if="!panelCollapsed" class="panel-body">
+            <div v-show="!panelCollapsed" class="panel-body">
               <gis-data-panel :data="activeDataset?.data" :instance-id="activeMapInstanceId" :map-ready="true"
                 @active-data-change="handleActiveDataChange" @read="handleRead" @error="handleError"
                 @enter-edit-mode="handleEnterEditMode" @exit-edit-mode="handleExitEditMode"
@@ -396,8 +395,8 @@ const handleExitEditMode = () => {
             </div>
           </div>
 
-          <!-- 拖拽手柄 -->
-          <div v-if="!panelCollapsed" class="panel-resize-handle" :class="{ dragging: isResizing }"
+          <!-- 拖拽手柄（CSS 控制 ≥768px 显示，<768px 隐藏） -->
+          <div v-show="!panelCollapsed" class="panel-resize-handle" :class="{ dragging: isResizing }"
             @mousedown="startResize"
 />
 
@@ -405,7 +404,7 @@ const handleExitEditMode = () => {
           <div class="content-area"
             :style="{ width: `calc(100% - ${currentPanelWidth}px - ${panelCollapsed ? 0 : 4}px)` }"
 >
-            <!-- 地图（多实例，每个数据集一个，v-show 切换） -->
+            <!-- 地图（多实例，每个数据集一个，v-show 切换；断点切换时不销毁） -->
             <div class="map-container">
               <gis-map-slot v-for="entry in datasets" :key="entry.id"
                 :ref="(el: any) => { if (entry.id === activeId) activeMapSlotRef = el as InstanceType<typeof GisMapSlot> }"
@@ -413,25 +412,12 @@ const handleExitEditMode = () => {
                 :visible="entry.id === activeId"
 />
             </div>
-            <!-- 底部状态栏 -->
-            <gis-data-overview :data="activeData" :transform-chain="activeTransformChain" mode="full" />
+            <!-- 底部状态栏（模板层布局编排：移动端 compact / 桌面端 full） -->
+            <gis-data-overview :data="activeData" :transform-chain="activeTransformChain" :mode="isDesktop ? 'full' : 'compact'" />
           </div>
-        </div>
 
-        <!-- 移动端：地图优先 + 底部状态栏 + 底部导航 -->
-        <div v-else class="mobile-layout">
-          <!-- 地图（全屏，多实例 v-show 切换） -->
-          <div class="map-container mobile-map">
-            <gis-map-slot v-for="entry in datasets" :key="entry.id"
-              :ref="(el: any) => { if (entry.id === activeId) activeMapSlotRef = el as InstanceType<typeof GisMapSlot> }"
-              :dataset-id="entry.id" :data="getDatasetActiveData(entry.id, entry.data)"
-              :visible="entry.id === activeId"
-/>
-          </div>
-          <!-- 底部简略状态栏 -->
-          <gis-data-overview :data="activeData" :transform-chain="activeTransformChain" mode="compact" />
-          <!-- 底部导航 -->
-          <gis-mobile-nav :data="activeDataset?.data" :instance-id="activeMapInstanceId" :map-ready="true"
+          <!-- 移动端底部导航（CSS 控制 <768px 显示，≥768px 隐藏） -->
+          <gis-mobile-nav class="mobile-nav-area" :data="activeDataset?.data" :instance-id="activeMapInstanceId" :map-ready="true"
             @open-import="importDialogVisible = true" @active-data-change="handleActiveDataChange" @read="handleRead"
             @error="handleError" @enter-edit-mode="handleEnterEditMode" @exit-edit-mode="handleExitEditMode"
 />
@@ -565,8 +551,8 @@ const handleExitEditMode = () => {
   font-weight: 500;
 }
 
-/* 桌面端布局 */
-.desktop-layout {
+/* 统一弹性布局（替代原 desktop-layout + mobile-layout 双套结构） */
+.unified-layout {
   width: 100%;
   height: 100%;
   display: flex;
@@ -642,25 +628,81 @@ const handleExitEditMode = () => {
   position: relative;
 }
 
-/* 移动端布局 */
-.mobile-layout {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+/* 移动端底部导航区域（默认隐藏，<768px 显示） */
+.mobile-nav-area {
+  display: none;
 }
 
-.mobile-map {
-  flex: 1;
+/* 响应式断点适配（5 级断点：xs<576 / sm 576-767 / md 768-1023 / lg 1024-1279 / xl≥1280） */
+
+/* 平板端顶栏高度（md: 768-1023px） */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .top-bar {
+    height: 44px;
+  }
 }
 
-/* 移动端顶栏调整 */
-.gis-data-page.is-mobile .top-bar {
-  height: 36px;
-  padding: 0 8px;
+/* 中小屏适配（<768px）：左面板隐藏（验收项5：≥768px 显示） */
+@media (max-width: 767px) {
+  .left-panel {
+    display: none;
+  }
+
+  /* 主内容区全宽 */
+  .content-area {
+    width: 100% !important;
+  }
 }
 
+/* 拖拽手柄仅在 ≥1024px 可用（验收项6：平板端固定宽度不可拖拽） */
+@media (max-width: 1023px) {
+  .panel-resize-handle {
+    display: none;
+  }
+}
+
+/* 移动端适配（xs + sm: <768px）：纵向布局 + 底部导航 */
+@media (max-width: 767px) {
+  /* 统一布局改为纵向排列（地图在上，底部导航在下） */
+  .unified-layout {
+    flex-direction: column;
+  }
+
+  /* 底部导航显示：固定高度（tabBar 56px + 安全区），避免在 column 布局中占满剩余空间 */
+  .mobile-nav-area {
+    display: flex;
+    width: 100%;
+    flex-shrink: 0;
+    flex-grow: 0;
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    overflow: hidden;
+  }
+
+  /* 顶栏高度 48px + 安全区适配（触控热区 ≥48dp） */
+  .top-bar {
+    height: calc(48px + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  /* 移动端隐藏主题切换（空间不足，移至设置中） */
+  .theme-switch {
+    display: none;
+  }
+
+  /* 移动端顶栏按钮只显示图标（隐藏文字 span，保留图标 span） */
+  .top-bar-right .el-button > span:last-child {
+    display: none;
+  }
+
+  /* 移动端数据集徽章只显示图标 */
+  .dataset-badge-btn > span:last-child {
+    display: none;
+  }
+}
+
+/* 移动端顶栏文字调整 */
 .gis-data-page.is-mobile .top-bar-title {
   font-size: 12px;
   letter-spacing: 0.2px;

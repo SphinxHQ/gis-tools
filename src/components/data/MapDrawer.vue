@@ -1,46 +1,36 @@
 <script setup lang="ts">
 /**
  * @file Map drawer component
- * @description A collapsible drawer panel for the map view with layer visibility controls,
- *              basemap switching, and map interaction tools.
+ * @description 绘制地图容器：地图区域 + 统一工具条（MapControlPanel）。
+ *              所有交互功能集中在工具条，地图区域只保留底图。
+ *              遵循单一代码路径原则：桌面端与移动端共享同一套 DOM 和业务逻辑。
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-04-13
  */
-import {View, Hide, Delete, Fold, Expand} from '@element-plus/icons-vue'
+import {getCurrentInstance, onBeforeUnmount, onMounted, ref} from "vue";
 import {ElMessageBox} from "element-plus";
-import {computed, getCurrentInstance, onBeforeUnmount, onMounted, ref} from "vue";
 
 import GeomUtils from "~/common/GeomUtils";
 import {GisMapRemoveDrawFeatureEvent, GisMapToggleDrawFeatureVisibleEvent, Types} from "~/components/gismap/events/GisMapEvents";
 import {GisMapLayer} from "~/components/gismap/layer/GisLayer";
 import {eventBus} from "~/composables/eventBus";
-import {useBreakpoint} from "~/composables/useBreakpoint";
 
 const mapName = `mapDraw-${Math.random().toString(36).slice(2)}`
 const emit = defineEmits<{
   'change': []
   'submit': [features: Record<string, unknown>[], crsEpsg: number]
 }>()
+
+/** 已绘制要素列表（由 eventBus 监听绘制结束事件自动更新） */
 const featureList = ref<Array<{id: string; type: string; feature: Record<string, unknown>; hidden?: boolean}>>([])
-const elHeight = ref(0)
 const mapProjection = ref<number>(4490)
 const mapKey = ref(0) // 用于强制重建地图组件
 
-const { isMobile } = useBreakpoint()
-
-// 侧栏折叠状态（桌面端）
-const sidebarCollapsed = ref(false)
-// 抽屉状态（移动端）
-const drawerVisible = ref(false)
-
-const sidebarWidth = computed(() => {
-  if (isMobile.value) return 0
-  return sidebarCollapsed.value ? 48 : 200
-})
-
 const resizeObserver = new ResizeObserver(entries => {
   for (const entry of entries) {
-    elHeight.value = entry.contentRect.height;
+    // 容器尺寸变化时通知 OpenLayers 地图更新尺寸（tab 切换、窗口缩放等场景）
+    void entry
+    window.dispatchEvent(new Event('resize'))
   }
 })
 onMounted(()=>{
@@ -51,7 +41,9 @@ onBeforeUnmount(()=>{
   resizeObserver.disconnect();
 })
 
-const handle  =(option: any, name: string, layer?: GisMapLayer) => {
+/** eventBus 通知处理：绘制结束/清除时同步更新 featureList */
+const handle = (option: unknown, name: string, layer?: GisMapLayer) => {
+  void option
   if (name === 'GisMap::drawTool::drawend' || name === 'GisMap::cleanSource') {
     featureList.value.splice(0);
     const allFeatures = layer?.features;
@@ -65,18 +57,18 @@ const handle  =(option: any, name: string, layer?: GisMapLayer) => {
     }
   }
 }
-eventBus.on(mapName, Types.NOTIFY, handle )
+eventBus.on(mapName, Types.NOTIFY, handle)
 onBeforeUnmount(()=>{
-  eventBus.off(mapName, Types.NOTIFY, handle )
+  eventBus.off(mapName, Types.NOTIFY, handle)
 })
 
-// 移除绘制要素
+/** 移除绘制要素（由工具条列表 popover 触发） */
 const handleRemove = (id: string) => {
   featureList.value = featureList.value.filter(x => x.id !== id)
   eventBus.emit(mapName, new GisMapRemoveDrawFeatureEvent(id))
 }
 
-// 隐藏/显示绘制要素
+/** 隐藏/显示绘制要素（由工具条列表 popover 触发） */
 const handleToggleVisible = (id: string) => {
   const item = featureList.value.find(x => x.id === id)
   if (!item) return
@@ -84,6 +76,7 @@ const handleToggleVisible = (id: string) => {
   eventBus.emit(mapName, new GisMapToggleDrawFeatureVisibleEvent(id, !item.hidden))
 }
 
+/** 切换坐标系（由工具条坐标系按钮触发） */
 const handleCrsChange = async (epsgCode: number) => {
   if (featureList.value.length > 0) {
     try {
@@ -100,93 +93,33 @@ const handleCrsChange = async (epsgCode: number) => {
   mapKey.value++ // 强制重建地图
 }
 
+/** 提交绘制结果（由工具条列表 popover 的确定按钮触发） */
 const handleSubmit = () => {
   emit('submit', featureList.value.map(x=>x.feature), mapProjection.value)
-  if (isMobile.value) drawerVisible.value = false
 }
 </script>
 
 <template>
   <div class="map-drawer">
-    <!-- 桌面端：可折叠侧栏 -->
-    <div v-if="!isMobile" class="md-left" :class="{ collapsed: sidebarCollapsed }" :style="{ width: sidebarWidth + 'px' }">
-      <div class="md-left-header">
-        <span v-if="!sidebarCollapsed" class="md-left-title">绘制要素</span>
-        <el-button text size="small" :title="sidebarCollapsed ? '展开' : '折叠'" @click="sidebarCollapsed = !sidebarCollapsed">
-          <el-icon><Expand v-if="sidebarCollapsed" /><Fold v-else /></el-icon>
-        </el-button>
-      </div>
-      <div v-if="!sidebarCollapsed" class="md-left-top">
-        <el-table :height="elHeight - 80" :data="featureList" size="small">
-          <el-table-column type="index" label="序号" width="50" />
-          <el-table-column prop="type" label="类型" width="50" />
-          <el-table-column label="操作" min-width="80">
-            <template #default="{ row }">
-              <el-button text size="small" :title="row.hidden ? '显示' : '隐藏'" @click="handleToggleVisible(row.id)">
-                <el-icon><View v-if="row.hidden" /><Hide v-else /></el-icon>
-              </el-button>
-              <el-button text size="small" type="danger" title="移除" @click="handleRemove(row.id)">
-                <el-icon><Delete /></el-icon>
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-      <div v-if="!sidebarCollapsed" class="md-left-bottom">
-        <el-button type="primary" :disabled="featureList?.length===0" size="small" @click="handleSubmit">确定</el-button>
-      </div>
-    </div>
-
-    <!-- 移动端：抽屉按钮（图标按钮，位于城市下拉框左侧） -->
-    <div v-else class="md-mobile-trigger">
-      <el-badge :value="featureList.length" :hidden="featureList.length === 0" class="md-mobile-badge">
-        <el-button type="primary" size="small" circle title="要素列表" @click="drawerVisible = true">
-          <el-icon><Fold /></el-icon>
-        </el-button>
-      </el-badge>
-    </div>
-
-    <!-- 移动端：抽屉 -->
-    <el-drawer
-      v-if="isMobile"
-      v-model="drawerVisible"
-      direction="ltr"
-      size="280px"
-      title="绘制要素"
-      class="md-drawer"
-    >
-      <el-table :data="featureList" size="small">
-        <el-table-column type="index" label="序号" width="50" />
-        <el-table-column prop="type" label="类型" width="50" />
-        <el-table-column label="操作" min-width="80">
-          <template #default="{ row }">
-            <el-button text size="small" :title="row.hidden ? '显示' : '隐藏'" @click="handleToggleVisible(row.id)">
-              <el-icon><View v-if="row.hidden" /><Hide v-else /></el-icon>
-            </el-button>
-            <el-button text size="small" type="danger" title="移除" @click="handleRemove(row.id)">
-              <el-icon><Delete /></el-icon>
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <template #footer>
-        <el-button type="primary" :disabled="featureList?.length===0" style="width: 100%" @click="handleSubmit">确定</el-button>
-      </template>
-    </el-drawer>
-
-    <!-- 地图区域 -->
-    <div class="md-right" :style="{ width: isMobile ? '100%' : `calc(100% - ${sidebarWidth}px)` }">
-      <map-control-panel :map-name="mapName"
-                         style="position: absolute; left: 0; top:0; z-index: 2;"
-                         @crs-change="handleCrsChange"
+    <!-- 地图区域（底图 + 工具条） -->
+    <div class="md-right">
+      <!-- 统一工具条：图形列表、城市选择、坐标系、绘制功能层叠按钮 -->
+      <map-control-panel
+        :map-name="mapName"
+        :feature-list="featureList"
+        style="position: absolute; left: 0; top: 0; z-index: 2;"
+        @crs-change="handleCrsChange"
+        @remove-feature="handleRemove"
+        @toggle-feature-visible="handleToggleVisible"
+        @submit="handleSubmit"
       />
-      <gis-map-tianditu :key="mapKey" :map-name="mapName" :options="{ projection: mapProjection }" style="position: absolute; left: 0; top:0; z-index: 1;" />
+      <!-- 天地图底图 -->
+      <gis-map-tianditu :key="mapKey" :map-name="mapName" :options="{ projection: mapProjection }" style="position: absolute; left: 0; top: 0; z-index: 1;" />
     </div>
   </div>
 </template>
 
 <style scoped>
-
 .map-drawer {
   width: 100%;
   height: 100%;
@@ -197,79 +130,10 @@ const handleSubmit = () => {
   position: relative;
 }
 
-.md-left {
-  height: 100%;
-  box-sizing: border-box;
-  border-right: 1px solid #DDD;
-  transition: width 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-}
-
-.md-left.collapsed {
-  background: var(--el-fill-color-lighter);
-}
-
-.md-left-header {
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 8px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-  box-sizing: border-box;
-}
-
-.md-left.collapsed .md-left-header {
-  justify-content: center;
-  padding: 0;
-}
-
-.md-left-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-
-.md-left-top {
-  flex: 1;
-  width: 100%;
-  box-sizing: border-box;
-  border-bottom: 1px solid #DDD;
-  overflow: hidden;
-}
-
-.md-left-bottom {
-  height: 40px;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 4px;
-}
-.md-left-bottom button{
-  width: 100%;
-  height: 100%;
-}
-
 .md-right {
+  flex: 1;
   height: 100%;
   box-sizing: border-box;
   position: relative;
-  transition: width 0.2s ease;
-}
-
-.md-mobile-trigger {
-  position: absolute;
-  top: 6px;
-  left: 4px;
-  z-index: 3;
-}
-
-.md-mobile-badge :deep(.el-badge__content) {
-  z-index: 4;
-}
-
-.md-drawer :deep(.el-drawer__body) {
-  padding: 8px;
 }
 </style>
