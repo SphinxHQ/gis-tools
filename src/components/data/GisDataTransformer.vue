@@ -29,7 +29,7 @@ const emit = defineEmits<{
   'active-data-change': [data: GisDataInfo, transformChain: number[]]
 }>()
 
-const { addDataset, activeId, activeSourceId, datasets } = useGisDataStore()
+const { addDataset, activeId, activeSourceId, datasets, setActive } = useGisDataStore()
 
 const originData = ref<GisDataInfo>(new GisDataInfo())
 
@@ -175,7 +175,22 @@ const emitActiveDataChange = () => {
 
 const navigateToChainStep = (epsgCode: number) => {
   const ver = findVersionByEpsg(epsgCode)
-  if (ver) activeVersionName.value = ver.name
+  if (ver) switchToVersion(ver)
+}
+
+/**
+ * 切换到指定版本（规则 R1：版本切换伴随数据集切换，地图跟随切换）。
+ *
+ * - 若版本对应不同数据集（转换生成的新数据集），调用 setActive 切换数据集，
+ *   watch props.data 会从新数据集恢复转换路径并设置 activeVersionName
+ * - 若版本属于当前数据集（如 origin），仅更新 activeVersionName
+ */
+const switchToVersion = (ver: CrsVersion) => {
+  if (ver.datasetId && ver.datasetId !== activeId.value) {
+    setActive(ver.datasetId)
+  } else {
+    activeVersionName.value = ver.name
+  }
 }
 
 /**
@@ -527,7 +542,8 @@ const pathLayout = computed(() => {
 // 点击路径节点：切换活跃版本（仅存活节点可点击）
 const handlePathNodeClick = (node: PathNode) => {
   if (!node.isAlive) return
-  activeVersionName.value = node.name
+  const ver = crsVersions.value.find(v => v.name === node.name)
+  if (ver) switchToVersion(ver)
 }
 </script>
 
