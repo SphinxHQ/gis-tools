@@ -152,21 +152,8 @@ const startResize = (e: MouseEvent | TouchEvent) => {
 const activeData = ref<GisDataInfo>(new GisDataInfo())
 const activeTransformChain = ref<number[]>([])
 
-/**
- * 每个数据集的活跃数据（转换后），用于多地图实例渲染。
- *
- * - 规则 R2（数据-坐标系与地图深度绑定）：地图 projection 直接来源于此活跃数据的 crs.epsgCode
- * - 生命周期必须与数据集对齐：数据集删除时清理缓存，避免 GisMapSlot 渲染到陈旧 crs 数据
- */
-const datasetActiveDataMap = ref<Map<string, GisDataInfo>>(new Map())
-
 // 地图实例引用（用于编辑模式等操作）
 const activeMapSlotRef = ref<InstanceType<typeof GisMapSlot> | null>(null)
-
-// 获取数据集的活跃数据（优先转换后，否则原始）
-const getDatasetActiveData = (entryId: string, entryData: GisDataInfo): GisDataInfo => {
-  return datasetActiveDataMap.value.get(entryId) ?? entryData
-}
 
 // 监听活跃数据集变化
 watch(activeDataset, (dataset) => {
@@ -179,30 +166,12 @@ watch(activeDataset, (dataset) => {
   }
 }, { immediate: true })
 
-/**
- * 数据集生命周期对齐：数据集被删除时同步清理活跃数据缓存。
- *
- * - 规则 R2（数据-坐标系与地图深度绑定）：避免缓存陈旧导致 GisMapSlot 渲染到
- *   已删除数据集的旧 crs 数据，造成数据坐标系与地图坐标系不一致
- * - 仅监听 datasets 的 id 数组变化（删除场景），不监听 data 字段变化
- *   （updateDataset 场景由 GisDataTransformer 的 isTransforming 标志位控制，无需在此同步）
- */
-watch(() => datasets.value.map(d => d.id), (newIds, oldIds) => {
-  if (!oldIds) return
-  const removed = oldIds.filter(id => !newIds.includes(id))
-  if (removed.length > 0) {
-    removed.forEach(id => datasetActiveDataMap.value.delete(id))
-  }
-}, { deep: true })
-
 // 处理 GisDataPanel 的活跃数据变化
+// 规则 R1/R3：数据集完全独立隔离，转换预览不污染原数据集地图
+// （activeData 仅用于面板元信息展示，不影响 GisMapSlot 的 data 绑定）
 const handleActiveDataChange = (data: GisDataInfo, transformChain: number[]) => {
   activeData.value = data
   activeTransformChain.value = transformChain
-  // 保存转换后数据到对应数据集的 map
-  if (activeId.value) {
-    datasetActiveDataMap.value.set(activeId.value, data)
-  }
 }
 
 // 处理数据读取
@@ -504,7 +473,7 @@ const handleSheetHeightChange = (heightPx: number) => {
               <!-- 规则 R1：每个数据集对应独立地图实例，v-show 切换；切换数据集必然伴随地图切换 -->
               <gis-map-slot v-for="entry in datasets" :key="entry.id"
                 :ref="(el: any) => { if (entry.id === activeId) activeMapSlotRef = el as InstanceType<typeof GisMapSlot> }"
-                :dataset-id="entry.id" :data="getDatasetActiveData(entry.id, entry.data)"
+                :dataset-id="entry.id" :data="entry.data"
                 :visible="entry.id === activeId"
 />
             </div>
