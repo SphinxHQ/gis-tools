@@ -296,6 +296,76 @@ export class GisMap extends EventBase {
     }
 
     /**
+     * 启用要素长按检测（长按 500ms 触发 FeatureLongPress 事件）
+     * 移动距离 >10px 自动取消（避免误触发）
+     * 用于数据查看场景：长按要素显示属性气泡
+     */
+    initFeatureLongPress(): void {
+        const map = this.olMap;
+        if (!map) return;
+
+        let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+        let startPixel: [number, number] | null = null;
+        const LONG_PRESS_DURATION = 500;
+        const MOVE_TOLERANCE = 10;
+
+        const clearTimer = () => {
+            if (longPressTimer !== null) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            startPixel = null;
+        };
+
+        const onPointerDown = (e: unknown) => {
+            const event = e as { pixel: [number, number] };
+            startPixel = event.pixel;
+            longPressTimer = setTimeout(() => {
+                longPressTimer = null;
+                // 长按结束时查询当前像素下的要素
+                map.forEachFeatureAtPixel(event.pixel, (f) => {
+                    const feature = f as { get: (k: string) => unknown };
+                    if (feature.get('_crsExtentBox')) return false;
+                    if (!feature.get('_selectable')) return false;
+                    // 派发 FeatureLongPress 事件，携带要素和像素位置
+                    this.dispatchEvent('FeatureLongPress', { feature: f, pixel: event.pixel });
+                    return true;
+                }, {
+                    layerFilter: (layer) => !layer.get('_crsExtentLayer'),
+                });
+            }, LONG_PRESS_DURATION);
+        };
+
+        const onPointerMove = (e: unknown) => {
+            if (longPressTimer === null || startPixel === null) return;
+            const event = e as { pixel: [number, number] };
+            const dx = event.pixel[0] - startPixel[0];
+            const dy = event.pixel[1] - startPixel[1];
+            if (dx * dx + dy * dy > MOVE_TOLERANCE * MOVE_TOLERANCE) {
+                clearTimer();
+            }
+        };
+
+        // OL 事件类型不包含 pointerdown/up/drag，用 as 断言注册
+        const mapWithEvents = map as unknown as {
+            on: (type: string, listener: (e: unknown) => void) => void;
+            un: (type: string, listener: (e: unknown) => void) => void;
+        };
+        mapWithEvents.on('pointerdown', onPointerDown);
+        mapWithEvents.on('pointermove', onPointerMove);
+        mapWithEvents.on('pointerup', clearTimer);
+        mapWithEvents.on('pointerdrag', clearTimer);
+
+        this.cleanupFunctions.push(() => {
+            mapWithEvents.un('pointerdown', onPointerDown);
+            mapWithEvents.un('pointermove', onPointerMove);
+            mapWithEvents.un('pointerup', clearTimer);
+            mapWithEvents.un('pointerdrag', clearTimer);
+            clearTimer();
+        });
+    }
+
+    /**
      * 启用 feature 的 pointermove 交互（hover 高亮、FeatureOver 事件）
      * 给图层的所有 feature 打上 _selectable 标记
      * @param layer OL 图层
@@ -1088,6 +1158,7 @@ export class BaseTianDiTuMap extends GisMap {
         }
 
         this.initMapPointermove();
+        this.initFeatureLongPress();
         logger.info('BaseTianDiTuMap initialized:', mapName, _projection);
     }
 }
@@ -1130,6 +1201,7 @@ export class BlankMap extends GisMap {
             this.olView.fit(projExtent, { padding: [20, 20, 20, 20] });
         }
         this.initMapPointermove();
+        this.initFeatureLongPress();
         logger.info('BlankMap initialized:', mapName, _projection);
     }
 }

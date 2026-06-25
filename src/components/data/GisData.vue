@@ -23,9 +23,57 @@ import { themeMode } from '~/composables/dark'
 import { useGisDataStore } from '~/composables/gisDataStore'
 import { useBreakpoint } from '~/composables/useBreakpoint'
 import { useShareReceiver } from '~/composables/useShareReceiver'
+import { useDragGesture } from '~/composables/useTouchGesture'
+import { useDeviceCapabilities } from '~/composables/useDeviceCapabilities'
 
 const { datasets, dataSources, activeId, activeDataset, setActive, addDataSource, removeDataset } = useGisDataStore()
 const { isMobile, isDesktop, panelWidth, panelCollapsedWidth, showLeftPanel } = useBreakpoint()
+// 设备能力检测：左滑仅在触屏设备启用（桌面端保留删除按钮）
+const { hasTouch } = useDeviceCapabilities()
+
+// 左滑状态：记录当前展开左滑操作的数据集 id（同时仅一个展开）
+const swipedDatasetId = ref<string | null>(null)
+// 左滑手势处理（仅触屏设备，内联实现以携带 entryId 上下文）
+// 水平/垂直位移判定：水平位移主导且超过 48px 才触发左滑，否则放行垂直滚动
+const onCardTouchStart = (e: TouchEvent) => {
+  if (e.touches.length !== 1) return
+  const t = e.touches[0]
+  const el = e.currentTarget as HTMLElement
+  el.dataset.swipeStartX = String(t.clientX)
+  el.dataset.swipeStartY = String(t.clientY)
+  el.dataset.swipeHorizontal = '0'
+}
+const onCardTouchMove = (e: TouchEvent) => {
+  if (e.touches.length !== 1) return
+  const el = e.currentTarget as HTMLElement
+  const startX = parseFloat(el.dataset.swipeStartX || '0')
+  const startY = parseFloat(el.dataset.swipeStartY || '0')
+  const t = e.touches[0]
+  const deltaX = t.clientX - startX
+  const deltaY = t.clientY - startY
+  // 水平位移主导时 preventDefault，避免阻断（同时不阻断垂直滚动）
+  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 8) {
+    el.dataset.swipeHorizontal = '1'
+    e.preventDefault()
+  }
+}
+const onCardTouchEnd = (e: TouchEvent, entryId: string) => {
+  const el = e.currentTarget as HTMLElement
+  const horizontal = el.dataset.swipeHorizontal === '1'
+  const startX = parseFloat(el.dataset.swipeStartX || '0')
+  const t = e.changedTouches[0]
+  const deltaX = t.clientX - startX
+  // 清理标记
+  delete el.dataset.swipeStartX
+  delete el.dataset.swipeStartY
+  delete el.dataset.swipeHorizontal
+  // 左滑超过 48px 展开操作；否则收起
+  if (horizontal && deltaX < -48) {
+    swipedDatasetId.value = entryId
+  } else if (horizontal && Math.abs(deltaX) < 48) {
+    swipedDatasetId.value = null
+  }
+}
 
 const importDialogVisible = ref(false)
 
@@ -71,8 +119,6 @@ const panelCollapsed = ref(false)
 
 // 用户拖拽调整的面板宽度（覆盖断点默认值）
 const userPanelWidth = ref<number | null>(null)
-const isResizing = ref(false)
-
 const currentPanelWidth = computed(() => {
   if (!showLeftPanel.value) return 0
   if (panelCollapsed.value) return panelCollapsedWidth.value
@@ -83,29 +129,23 @@ const currentPanelWidth = computed(() => {
 const MIN_PANEL_WIDTH = 220
 const MAX_PANEL_WIDTH = 600
 
-const startResize = (e: MouseEvent) => {
-  e.preventDefault()
-  isResizing.value = true
-  const startX = e.clientX
-  const startWidth = currentPanelWidth.value
-
-  const onMouseMove = (ev: MouseEvent) => {
-    const delta = ev.clientX - startX
-    userPanelWidth.value = Math.min(MAX_PANEL_WIDTH, Math.max(MIN_PANEL_WIDTH, startWidth + delta))
-  }
-
-  const onMouseUp = () => {
-    isResizing.value = false
-    document.removeEventListener('mousemove', onMouseMove)
-    document.removeEventListener('mouseup', onMouseUp)
+// 使用通用拖拽手势 hook：统一处理 MouseEvent + TouchEvent
+// 桌面端鼠标拖拽行为保持不变，移动端/触屏设备新增触控拖拽
+const { isDragging, startDrag } = useDragGesture(
+  ({ deltaX }) => {
+    userPanelWidth.value = Math.min(MAX_PANEL_WIDTH, Math.max(MIN_PANEL_WIDTH, startWidthForDrag + deltaX))
+  },
+  () => {
     document.body.style.cursor = ''
     document.body.style.userSelect = ''
-  }
-
-  document.body.style.cursor = 'col-resize'
-  document.body.style.userSelect = 'none'
-  document.addEventListener('mousemove', onMouseMove)
-  document.addEventListener('mouseup', onMouseUp)
+  },
+)
+// 拖拽起点宽度（闭包外持有，供 onMove 回调读取）
+let startWidthForDrag = 0
+// 适配原有 startResize 签名：记录起点宽度后委托给 startDrag
+const startResize = (e: MouseEvent | TouchEvent) => {
+  startWidthForDrag = currentPanelWidth.value
+  startDrag(e)
 }
 
 // 当前活跃数据（经过 CRS 转换后的）
@@ -322,28 +362,46 @@ const handleExitEditMode = () => {
           </div>
           <!-- 数据集卡片 -->
           <div class="dataset-cards">
-            <div v-for="entry in source.datasets" :key="entry.id" class="dataset-card"
-              :class="{ 'is-active': entry.id === activeId }" @click="setActive(entry.id)"
+            <div v-for="entry in source.datasets" :key="entry.id" class="dataset-card-wrapper"
+              :class="{ 'swipe-open': swipedDatasetId === entry.id, 'touch-enabled': hasTouch }"
+              @click="swipedDatasetId === entry.id ? (swipedDatasetId = null) : null"
 >
-              <div class="dataset-card-header">
-                <el-icon class="dataset-card-icon">
-                  <MapLocation />
-                </el-icon>
-                <span class="dataset-card-name">{{ entry.name }}</span>
-                <el-icon class="dataset-card-delete" title="删除"
+              <!-- 左滑露出的操作层（仅触屏设备显示） -->
+              <div v-if="hasTouch" class="dataset-card-actions">
+                <button class="swipe-action-btn swipe-delete" title="删除"
                   @click.stop="handleSourceDatasetRemove(entry.id, $event)"
 >
-                  <Delete />
-                </el-icon>
+                  <el-icon><Delete /></el-icon>
+                  <span>删除</span>
+                </button>
               </div>
-              <div class="dataset-card-meta">
-                <el-tag size="small" type="info" effect="plain">{{ getDatasetCrs(entry.data) }}</el-tag>
-                <span class="dataset-card-stat">{{ entry.data?.features?.length ?? 0 }} 要素</span>
-                <el-tooltip v-if="entry.appendedFrom && entry.appendedFrom.length > 0"
-                  :content="entry.appendedFrom.map(a => `从「${a.name}」追加了 ${a.count} 个要素`).join('；')" placement="top"
+              <div class="dataset-card"
+                :class="{ 'is-active': entry.id === activeId }"
+                @click="setActive(entry.id)"
+                @touchstart="hasTouch && onCardTouchStart($event)"
+                @touchmove="hasTouch && onCardTouchMove($event)"
+                @touchend="hasTouch && onCardTouchEnd($event, entry.id)"
 >
-                  <el-tag size="small" type="warning" effect="dark">已追加</el-tag>
-                </el-tooltip>
+                <div class="dataset-card-header">
+                  <el-icon class="dataset-card-icon">
+                    <MapLocation />
+                  </el-icon>
+                  <span class="dataset-card-name">{{ entry.name }}</span>
+                  <el-icon v-if="!hasTouch" class="dataset-card-delete" title="删除"
+                    @click.stop="handleSourceDatasetRemove(entry.id, $event)"
+>
+                    <Delete />
+                  </el-icon>
+                </div>
+                <div class="dataset-card-meta">
+                  <el-tag size="small" type="info" effect="plain">{{ getDatasetCrs(entry.data) }}</el-tag>
+                  <span class="dataset-card-stat">{{ entry.data?.features?.length ?? 0 }} 要素</span>
+                  <el-tooltip v-if="entry.appendedFrom && entry.appendedFrom.length > 0"
+                    :content="entry.appendedFrom.map(a => `从「${a.name}」追加了 ${a.count} 个要素`).join('；')" placement="top"
+>
+                    <el-tag size="small" type="warning" effect="dark">已追加</el-tag>
+                  </el-tooltip>
+                </div>
               </div>
             </div>
           </div>
@@ -396,8 +454,9 @@ const handleExitEditMode = () => {
           </div>
 
           <!-- 拖拽手柄（CSS 控制 ≥768px 显示，<768px 隐藏） -->
-          <div v-show="!panelCollapsed" class="panel-resize-handle" :class="{ dragging: isResizing }"
+          <div v-show="!panelCollapsed" class="panel-resize-handle" :class="{ dragging: isDragging }"
             @mousedown="startResize"
+            @touchstart="startResize"
 />
 
           <!-- 主内容区 -->
@@ -766,6 +825,46 @@ const handleExitEditMode = () => {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+/* 左滑操作容器（仅触屏设备） */
+.dataset-card-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+}
+.dataset-card-wrapper .dataset-card {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dataset-card-wrapper.swipe-open .dataset-card {
+  transform: translateX(-72px);
+}
+.dataset-card-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: stretch;
+  z-index: 0;
+}
+.swipe-action-btn {
+  width: 72px;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 12px;
+  color: #fff;
+  cursor: pointer;
+  background: var(--el-color-danger);
+}
+.swipe-action-btn .el-icon {
+  font-size: 16px;
 }
 
 .dataset-card {
