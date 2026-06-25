@@ -223,7 +223,21 @@ let lastActiveId: string | null = null
 watch(() => props.data, (newData) => {
   if (isTransforming.value) return
 
-  // 保存当前转换路径到旧数据集
+  const data = newData as GisDataInfo
+  const currentId = activeId.value
+
+  // 规则 R1：若新数据集是当前转换路径中的某个版本，仅切换高亮，不重建树
+  // （同源数据集共享转换路径树，切换时只更新高亮位置，树结构保持不变）
+  const existingVer = crsVersions.value.find(v => v.datasetId === currentId)
+  if (existingVer) {
+    existingVer.data = data
+    activeVersionName.value = existingVer.name
+    lastActiveId = currentId
+    emitActiveDataChange()
+    return
+  }
+
+  // 保存当前转换路径到旧数据集（非同源切换才需要保存）
   if (lastActiveId && crsVersions.value.length > 1) {
     const oldEntry = datasets.value.find(d => d.id === lastActiveId)
     if (oldEntry) {
@@ -240,10 +254,8 @@ watch(() => props.data, (newData) => {
     }
   }
 
-  const data = newData as GisDataInfo
   originData.value = data
   const originEpsg = data?.crs?.epsgCode
-  const currentId = activeId.value
   lastActiveId = currentId
 
   // 尝试从新数据集恢复转换路径
