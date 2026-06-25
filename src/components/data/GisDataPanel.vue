@@ -2,18 +2,19 @@
 /**
  * @file GIS data panel component
  * @description The bottom data panel showing dataset details with tabs for overview,
- *              features, validation, and export.
+ *              features, validation, and export. Shares Tab state logic with
+ *              GisMobileNav via useDataPanelTabs composable (single code path).
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-06-24
  */
 import { Compass, MapLocation, CircleCheck, Download } from '@element-plus/icons-vue'
-import { ref, watch, computed } from 'vue'
 
 import GisDataExport from '~/components/data/GisDataExport.vue'
 import GisDataInfo from '~/components/data/GisDataInfo'
 import GisDataTransformer from '~/components/data/GisDataTransformer.vue'
 import GisDataValidator from '~/components/data/GisDataValidator.vue'
 import GisFeatureTree from '~/components/data/GisFeatureTree.vue'
+import { useDataPanelTabs, DATA_PANEL_TAB_OPTIONS } from '~/composables/useDataPanelTabs'
 
 const props = defineProps({
   data: {
@@ -38,41 +39,19 @@ const emit = defineEmits<{
   'error': [err: Error]
 }>()
 
-const activeTab = ref('crs')
+// 复用共享 Tab 状态逻辑（与 GisMobileNav 同一代码路径）
+const {
+  activeTab,
+  activeData,
+  hasData,
+  hasActiveData,
+  handleActiveDataChange,
+  handleEnterEditMode,
+  handleExitEditMode,
+} = useDataPanelTabs(props, emit, 'crs')
 
-const tabOptions = [
-  { value: 'crs', label: '坐标系' },
-  { value: 'feature', label: '要素' },
-  { value: 'validate', label: '校验' },
-  { value: 'export', label: '导出' },
-]
-
-// 当前活跃数据（经过 CRS 转换后的）
-const activeData = ref<GisDataInfo>(props.data)
-const activeTransformChain = ref<number[]>([])
-
-watch(() => props.data, (newData) => {
-  activeData.value = newData
-  activeTransformChain.value = newData?.crs?.epsgCode ? [newData.crs.epsgCode] : []
-}, { immediate: true })
-
-const handleActiveDataChange = (data: GisDataInfo, transformChain: number[]) => {
-  activeData.value = data
-  activeTransformChain.value = transformChain
-  emit('active-data-change', data, transformChain)
-}
-
-const handleEnterEditMode = () => {
-  emit('enter-edit-mode')
-}
-
-const handleExitEditMode = () => {
-  emit('exit-edit-mode')
-}
-
-// 是否有数据
-const hasData = computed(() => !!props.data?.features?.length)
-const hasActiveData = computed(() => !!activeData.value?.features?.length)
+// Tab 选项（来自共享定义）
+const tabOptions = DATA_PANEL_TAB_OPTIONS
 </script>
 
 <template>

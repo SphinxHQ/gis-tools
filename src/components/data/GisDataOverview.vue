@@ -154,7 +154,9 @@ const isCompact = computed(() => props.mode === 'compact')
   gap: 4px;
   color: var(--el-text-color-regular);
   white-space: nowrap;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .status-name {
@@ -163,6 +165,7 @@ const isCompact = computed(() => props.mode === 'compact')
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 .is-compact .status-name {
@@ -240,5 +243,24 @@ const isCompact = computed(() => props.mode === 'compact')
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+/* 移动端（xs/sm <768px）：状态栏进一步精简，避免内容溢出 */
+@media (max-width: 767px) {
+  .gis-data-status-bar.is-compact {
+    gap: 6px;
+    padding: 0 6px;
+  }
+
+  /* 数据名最大宽度收窄 */
+  .is-compact .status-name {
+    max-width: 80px;
+  }
+
+  /* 隐藏几何类型和顶点数（移动端空间不足，保留数据名/要素数/坐标系） */
+  .gis-data-status-bar.is-compact .status-item:nth-child(3),
+  .gis-data-status-bar.is-compact .status-item:nth-child(4) {
+    display: none;
+  }
 }
 </style>
