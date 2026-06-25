@@ -237,6 +237,9 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
 // 当前活跃地图实例 ID（供 GisDataPanel 和 GisMobileNav 使用）
 const activeMapInstanceId = computed(() => activeId.value ? `map_${activeId.value}` : '')
 
+// 移动端抽屉高度（px）：抽屉浮在地图上方时，地图区域需留出底部空间
+const mobileSheetHeight = ref(0)
+
 // 进入/退出编辑模式
 const handleEnterEditMode = () => {
   // 编辑模式由 GisFeatureTree 管理
@@ -244,6 +247,15 @@ const handleEnterEditMode = () => {
 
 const handleExitEditMode = () => {
   activeMapSlotRef.value?.stopEditMode()
+}
+
+/**
+ * 移动端抽屉高度变化：调整地图区域 padding-bottom，
+ * 确保地图内容不被抽屉遮挡（三期布局修复：无遮罩浮层）
+ * @param heightPx - 抽屉高度（px），0 表示抽屉关闭
+ */
+const handleSheetHeightChange = (heightPx: number) => {
+  mobileSheetHeight.value = heightPx
 }
 </script>
 
@@ -461,7 +473,10 @@ const handleExitEditMode = () => {
 
           <!-- 主内容区 -->
           <div class="content-area"
-            :style="{ width: `calc(100% - ${currentPanelWidth}px - ${panelCollapsed ? 0 : 4}px)` }"
+            :style="{
+              width: `calc(100% - ${currentPanelWidth}px - ${panelCollapsed ? 0 : 4}px)`,
+              paddingBottom: isMobile && mobileSheetHeight > 0 ? `${mobileSheetHeight}px` : '0'
+            }"
 >
             <!-- 地图（多实例，每个数据集一个，v-show 切换；断点切换时不销毁） -->
             <div class="map-container">
@@ -479,6 +494,7 @@ const handleExitEditMode = () => {
           <gis-mobile-nav class="mobile-nav-area" :data="activeDataset?.data" :instance-id="activeMapInstanceId" :map-ready="true"
             @open-import="importDialogVisible = true" @active-data-change="handleActiveDataChange" @read="handleRead"
             @error="handleError" @enter-edit-mode="handleEnterEditMode" @exit-edit-mode="handleExitEditMode"
+            @sheet-height-change="handleSheetHeightChange"
 />
         </div>
       </template>

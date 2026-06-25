@@ -27,12 +27,16 @@ const props = withDefaults(defineProps<{
   snapPoints?: number[]
   /** Default snap index when opened */
   defaultSnap?: number
-  /** Whether to show the backdrop overlay */
+  /** Whether to show the backdrop overlay
+   *  默认 false：移动端抽屉浮在地图上方，地图始终可见可操作（三期布局修复） */
   showOverlay?: boolean
+  /** 底部偏移量（px）：让出底部导航栏空间，确保 tabBar 始终可见可点击 */
+  offsetBottom?: number
 }>(), {
   snapPoints: () => [25, 40, 80],
   defaultSnap: 1,
-  showOverlay: true,
+  showOverlay: false,
+  offsetBottom: 0,
 })
 
 const emit = defineEmits<{
@@ -201,6 +205,18 @@ onMounted(() => {
 onBeforeUnmount(() => {
   isDragging.value = false
 })
+
+/**
+ * 外部设置抽屉高度（vh 百分比），用于编辑模式分屏等场景。
+ * 会吸附到最近的 snap point。
+ * @param heightVh - 目标高度百分比（10-95）
+ */
+const setSnap = (heightVh: number) => {
+  animated.value = true
+  currentHeight.value = Math.min(95, Math.max(10, heightVh))
+}
+
+defineExpose({ setSnap, currentHeight })
 </script>
 
 <template>
@@ -221,7 +237,7 @@ onBeforeUnmount(() => {
         ref="sheetRef"
         class="bottom-sheet"
         :class="{ dragging: isDragging, animated: animated }"
-        :style="{ height: `${currentHeight}vh` }"
+        :style="{ height: `${currentHeight}vh`, bottom: `${props.offsetBottom}px` }"
       >
         <!-- 拖拽手柄（视觉 36×4px，热区全宽×32px） -->
         <div
@@ -257,7 +273,7 @@ onBeforeUnmount(() => {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  /* bottom 由 inline style 控制（offsetBottom prop），默认 0 */
   z-index: 2001;
   background: var(--el-bg-color, #fff);
   border-radius: 12px 12px 0 0;

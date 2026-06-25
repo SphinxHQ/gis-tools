@@ -16,7 +16,7 @@
  * @date 2026-06-25
  */
 import { Compass, MapLocation, CircleCheck, Download } from '@element-plus/icons-vue'
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 
 import GisBottomSheet from '~/components/data/GisBottomSheet.vue'
 import GisDataExport from '~/components/data/GisDataExport.vue'
@@ -42,7 +42,7 @@ const props = defineProps({
   }
 })
 
-// 对外 events 接口保持不变
+// 对外 events 接口保持不变（与一期一致）
 const emit = defineEmits<{
   'open-import': []
   'active-data-change': [data: GisDataInfo, transformChain: number[]]
@@ -50,6 +50,8 @@ const emit = defineEmits<{
   'exit-edit-mode': []
   'read': [data: unknown]
   'error': [err: Error]
+  /** 抽屉高度变化（px），供父级调整地图区域 padding-bottom，确保地图不被遮挡 */
+  'sheet-height-change': [heightPx: number]
 }>()
 
 // 复用共享 Tab 状态逻辑（与 GisDataPanel 同一代码路径）
@@ -65,6 +67,8 @@ const {
 
 // Bottom Sheet 可见性
 const sheetVisible = ref(false)
+// Bottom Sheet 组件引用（用于编辑模式分屏切换 snap）
+const bottomSheetRef = ref<InstanceType<typeof GisBottomSheet> | null>(null)
 
 // Tab 定义（图标 + 标签）
 const tabs = [
@@ -81,30 +85,73 @@ const tabs = [
 const handleTabClick = (tabName: DataPanelTab) => {
   if (activeTab.value === tabName && sheetVisible.value) {
     sheetVisible.value = false
+    // 关闭时通知高度归零
+    emit('sheet-height-change', 0)
   } else {
     activeTab.value = tabName
     sheetVisible.value = true
+    // 打开时立即通知当前高度（BottomSheet watch 可能还未触发）
+    nextTick(() => {
+      const heightPx = bottomSheetRef.value?.currentHeight
+        ? Math.round((bottomSheetRef.value.currentHeight / 100) * window.innerHeight)
+        : 0
+      emit('sheet-height-change', heightPx)
+    })
   }
 }
 
 /**
- * Sheet 关闭时重置 activeTab（与一期行为一致）
+ * Sheet 可见性同步：GisBottomSheet 通过 update:visible 通知关闭时，
+ * 必须同步本地 sheetVisible，否则抽屉收不回去（三期修复）。
+ * @param visible - BottomSheet 期望的可见状态
  */
 const handleSheetClose = (visible: boolean) => {
+  sheetVisible.value = visible
   if (!visible) {
     activeTab.value = ''
+    emit('sheet-height-change', 0)
   }
+}
+
+/**
+ * 抽屉高度变化：向上 emit，供 GisData 调整地图区域 padding-bottom，
+ * 确保地图始终可见可操作（三期布局修复）。
+ * @param heightPx - 抽屉当前高度（px）
+ */
+const handleSheetHeightChange = (heightPx: number) => {
+  emit('sheet-height-change', sheetVisible.value ? heightPx : 0)
+}
+
+/**
+ * 进入要素编辑模式：抽屉自动升到 50vh，地图占上半屏，编辑表单占下半屏（上下分屏）。
+ */
+const handleEnterEditModeMobile = () => {
+  handleEnterEditMode()
+  // 切换到分屏高度（50vh），确保地图与编辑表单同时可见
+  bottomSheetRef.value?.setSnap(50)
+}
+
+/**
+ * 退出要素编辑模式：抽屉恢复到默认吸附点（40vh）。
+ */
+const handleExitEditModeMobile = () => {
+  handleExitEditMode()
+  bottomSheetRef.value?.setSnap(40)
 }
 </script>
 
 <template>
   <div class="gis-mobile-nav">
-    <!-- Bottom Sheet（替代 el-drawer） -->
+    <!-- Bottom Sheet（替代 el-drawer，无遮罩浮层不遮挡地图） -->
     <GisBottomSheet
+      ref="bottomSheetRef"
       :visible="sheetVisible"
       :snap-points="[25, 40, 80]"
       :default-snap="1"
+      :show-overlay="false"
+      :offset-bottom="56"
       @update:visible="handleSheetClose"
+      @height-change="handleSheetHeightChange"
     >
       <!-- Tab 内容区：使用 v-show 保留组件状态，避免重挂载 -->
       <div class="sheet-body">
@@ -128,8 +175,8 @@ const handleSheetClose = (visible: boolean) => {
             :data="activeData"
             :instance-id="instanceId"
             :map-ready="mapReady"
-            @enter-edit-mode="handleEnterEditMode"
-            @exit-edit-mode="handleExitEditMode"
+            @enter-edit-mode="handleEnterEditModeMobile"
+            @exit-edit-mode="handleExitEditModeMobile"
           />
           <div v-else class="tab-empty">
             <el-icon :size="32" color="var(--el-text-color-placeholder)"><MapLocation /></el-icon>
