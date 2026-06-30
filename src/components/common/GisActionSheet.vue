@@ -127,10 +127,13 @@ const drawerWithHeader = computed(() => props.withHeader && !!props.title)
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* 限制最大高度，防止小视口下 popover 内容溢出屏幕 */
+  max-height: min(60vh, 480px);
 }
 
 .action-sheet-content.mobile {
   height: 100%;
+  max-height: none;
   padding: 4px 0 8px;
 }
 

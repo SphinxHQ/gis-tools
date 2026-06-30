@@ -570,7 +570,7 @@ const flashGeometries = (geometries: Record<string, unknown>[]) => {
     return {
       type: "Feature" as const,
       geometry: x as unknown as GeoJSON.Geometry,
-      properties: {} as GeoJsonProperties,
+      properties: {} as Record<string, unknown>,
     } satisfies GeoJSON.Feature
   }))
   eventBus.emit(`${props.instanceId}`, addFeaturesEvent)

@@ -17,7 +17,7 @@ import GisDataImportDialog from '~/components/data/GisDataImportDialog.vue'
 import GisDataInfo from '~/components/data/GisDataInfo'
 import GisDataOverview from '~/components/data/GisDataOverview.vue'
 import GisDataPanel from '~/components/data/GisDataPanel.vue'
-import GisMobileNav from '~/components/data/GisMobileNav.vue'
+import GisMobileTabBar from '~/components/data/GisMobileTabBar.vue'
 import HistoryDataList from '~/components/data/HistoryDataList.vue'
 import GisMapSlot from '~/components/gismap/GisMapSlot.vue'
 import ModeIconRender from '~/components/renders/ModeIconRender.vue'
@@ -230,7 +230,7 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   })
 }
 
-// 当前活跃地图实例 ID（供 GisDataPanel 和 GisMobileNav 使用）
+// 当前活跃地图实例 ID（供 GisDataPanel 和 GisMobileTabBar 使用）
 const activeMapInstanceId = computed(() => activeId.value ? `map_${activeId.value}` : '')
 
 // 移动端抽屉高度（px）：抽屉浮在地图上方时，地图区域需留出底部空间
@@ -528,12 +528,10 @@ const handleHistoryRowClick = (row: GisFileData) => {
           </div>
 
           <!-- 移动端底部导航（CSS 控制 <768px 显示，≥768px 隐藏） -->
-          <gis-mobile-nav class="mobile-nav-area" :data="activeDataset?.data" :instance-id="activeMapInstanceId" :map-ready="true"
+          <gis-mobile-tab-bar class="mobile-nav-area" :data="activeDataset?.data" :instance-id="activeMapInstanceId" :map-ready="true"
             @open-import="importDialogVisible = true" @active-data-change="handleActiveDataChange" @read="handleRead"
             @error="handleError" @enter-edit-mode="handleEnterEditMode" @exit-edit-mode="handleExitEditMode"
             @sheet-height-change="handleSheetHeightChange"
-            @sheet-drag-start="handleSheetDragStart"
-            @sheet-drag-end="handleSheetDragEnd"
 />
         </div>
       </template>

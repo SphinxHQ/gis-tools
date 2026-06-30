@@ -6,7 +6,7 @@
 @date 2026-06-24
 -->
 <template>
-  <div v-show="visible" class="map-slot">
+  <div ref="slotRef" v-show="visible" class="map-slot">
     <gis-map-tianditu
       :map-name="mapName"
       :options="{ projection: epsgCode }"
@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import { Loading } from '@element-plus/icons-vue'
 import type { Feature as GeoFeature } from 'geojson'
-import { computed, ref, watch, onBeforeUnmount, nextTick } from 'vue'
+import { computed, ref, watch, onBeforeUnmount, onMounted, nextTick } from 'vue'
 
 import GisDataInfo from '~/components/data/GisDataInfo'
 import GisMapTianditu from '~/components/gismap/GisMapTianditu.vue'
@@ -33,6 +33,8 @@ const props = defineProps<{
   data: GisDataInfo
   visible: boolean
 }>()
+
+const slotRef = ref<HTMLElement | null>(null)
 
 const emit = defineEmits<{
   'map-ready': []
@@ -111,13 +113,31 @@ watch(() => props.data, () => {
 
 // 监听可见性变化，触发地图 resize
 watch(() => props.visible, (visible) => {
-  if (visible && mapReady.value) {
+  if (visible) {
     // v-show 从 hidden 到 visible 时，地图容器可能尺寸为 0
     // 延迟触发 window resize 让 OpenLayers 重新计算尺寸
+    // （移除 mapReady 条件：地图初始化时容器不可见会导致尺寸 0，
+    //   visible 变化时必须始终触发 resize，由 GisMapBase 内部判断是否处理）
     nextTick(() => {
       window.dispatchEvent(new Event('resize'))
     })
   }
+})
+
+// ResizeObserver：监听容器尺寸变化（如断点切换、面板拖拽、抽屉展开），
+// 确保 OpenLayers 地图始终跟随容器尺寸更新（修复移动端 ol-viewport 尺寸为 0 的问题）
+let resizeObserver: ResizeObserver | null = null
+onMounted(() => {
+  if (slotRef.value) {
+    resizeObserver = new ResizeObserver(() => {
+      window.dispatchEvent(new Event('resize'))
+    })
+    resizeObserver.observe(slotRef.value)
+  }
+})
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect()
+  resizeObserver = null
 })
 
 // 初始化

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * @file Mobile navigation component (Phase 2 rewrite)
+ * @file Mobile tab bar component (Phase 2 rewrite, renamed from GisMobileNav)
  * @description Bottom navigation bar for mobile layout. Uses GisBottomSheet instead
  *              of el-drawer for proper snap points and drag affordance. Tab content
  *              uses v-show instead of v-if to preserve component state across switches.
@@ -144,7 +144,7 @@ const handleExitEditModeMobile = () => {
 </script>
 
 <template>
-  <div class="gis-mobile-nav">
+  <div class="gis-mobile-tab-bar">
     <!-- Bottom Sheet（替代 el-drawer，无遮罩浮层不遮挡地图） -->
     <GisBottomSheet
       ref="bottomSheetRef"
@@ -234,7 +234,7 @@ const handleExitEditModeMobile = () => {
 </template>
 
 <style scoped>
-.gis-mobile-nav {
+.gis-mobile-tab-bar {
   width: 100%;
   /* 在父级 .mobile-nav-area (display: flex) 中占满主轴宽度（row 方向） */
   flex: 0 0 auto;

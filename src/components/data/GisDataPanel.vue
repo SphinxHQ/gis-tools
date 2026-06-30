@@ -3,7 +3,7 @@
  * @file GIS data panel component
  * @description The bottom data panel showing dataset details with tabs for overview,
  *              features, validation, and export. Shares Tab state logic with
- *              GisMobileNav via useDataPanelTabs composable (single code path).
+ *              GisMobileTabBar via useDataPanelTabs composable (single code path).
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-06-24
  */
@@ -38,7 +38,7 @@ const emit = defineEmits<{
   'error': [err: Error]
 }>()
 
-// 复用共享 Tab 状态逻辑（与 GisMobileNav 同一代码路径）
+// 复用共享 Tab 状态逻辑（与 GisMobileTabBar 同一代码路径）
 const {
   activeTab,
   activeData,

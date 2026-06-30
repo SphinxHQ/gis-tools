@@ -1,7 +1,7 @@
 /**
  * @file Shared Tab state management for data panels
  * @description Extracts common Tab state logic shared between GisDataPanel (desktop)
- *              and GisMobileNav (mobile), ensuring single source of truth for
+ *              and GisMobileTabBar (mobile), ensuring single source of truth for
  *              activeTab/activeData/transformChain state. Follows DRY principle
  *              and single-code-path rule (no isMobile branching).
  * @author yuanyu <yuanyu@supermap.com>
@@ -28,7 +28,7 @@ export const DATA_PANEL_TAB_OPTIONS: DataPanelTabOption[] = [
   { value: 'export', label: '导出' },
 ]
 
-/** Props accepted by the composable (mirrors GisDataPanel/GisMobileNav props) */
+/** Props accepted by the composable (mirrors GisDataPanel/GisMobileTabBar props) */
 export interface UseDataPanelTabsProps {
   data: GisDataInfo
   instanceId: number | string
@@ -46,7 +46,7 @@ export interface UseDataPanelTabsEmits {
 
 /**
  * Shared Tab state management for data panels.
- * Used by both GisDataPanel (desktop) and GisMobileNav (mobile) to ensure
+ * Used by both GisDataPanel (desktop) and GisMobileTabBar (mobile) to ensure
  * identical state behavior across breakpoints (single code path).
  *
  * @param props - Component props containing data/instanceId/mapReady
