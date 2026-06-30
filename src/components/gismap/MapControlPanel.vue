@@ -10,11 +10,12 @@
     <div class="gismap-btns-wrap">
       <div class="gismap-btns">
         <!-- 1. 图形列表展开按钮（带 badge 显示数量，点击弹出已绘制要素列表） -->
-        <el-popover
-          ref="featureListPopoverRef"
+        <gis-action-sheet
+          v-model:visible="featureListVisible"
+          title="已绘制要素列表"
+          :width="320"
           placement="bottom"
-          :width="featureListPopoverWidth"
-          trigger="click"
+          mobile-size="60%"
         >
           <template #reference>
             <el-badge :value="featureList.length" :hidden="featureList.length === 0" class="feature-list-badge">
@@ -25,32 +26,37 @@
             </el-badge>
           </template>
           <!-- 要素列表 -->
-          <div class="feature-list-content">
-            <el-table :data="featureList" size="small" :max-height="280">
-              <el-table-column type="index" label="#" width="40" />
-              <el-table-column prop="type" label="类型" width="60" />
-              <el-table-column label="操作" min-width="80">
-                <template #default="{ row }">
-                  <el-button text size="small" :title="row.hidden ? '显示' : '隐藏'" @click="emit('toggle-feature-visible', row.id)">
-                    <el-icon><View v-if="row.hidden" /><Hide v-else /></el-icon>
-                  </el-button>
-                  <el-button text size="small" type="danger" title="移除" @click="emit('remove-feature', row.id)">
-                    <el-icon><Delete /></el-icon>
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-            <div class="feature-list-footer">
-              <el-button type="primary" size="small" :disabled="featureList.length === 0" @click="handleSubmit">确定</el-button>
-            </div>
-          </div>
-        </el-popover>
+          <el-table :data="featureList" size="small" :max-height="280">
+            <el-table-column type="index" label="#" width="40" />
+            <el-table-column prop="type" label="类型" width="60" />
+            <el-table-column label="操作" min-width="80">
+              <template #default="{ row }">
+                <el-button text size="small" :title="row.hidden ? '显示' : '隐藏'" @click="emit('toggle-feature-visible', row.id)">
+                  <el-icon><View v-if="row.hidden" /><Hide v-else /></el-icon>
+                </el-button>
+                <el-button text size="small" type="danger" title="移除" @click="emit('remove-feature', row.id)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <template #footer>
+            <el-button type="primary" size="small" :disabled="featureList.length === 0" @click="handleSubmit">确定</el-button>
+          </template>
+        </gis-action-sheet>
 
         <!-- 2. 城市选择下拉框 -->
         <map-city-selector :map-name="mapName" class="city-selector" />
 
         <!-- 3. 坐标系选择按钮（简化文字：仅显示 EPSG:4490，移动端只显示数字） -->
-        <el-popover ref="crsPopoverRef" placement="bottom" :width="crsPopoverWidth" trigger="click" @show="crsSelectorKey++">
+        <gis-action-sheet
+          v-model:visible="crsVisible"
+          title="切换坐标系"
+          :width="640"
+          placement="bottom"
+          mobile-size="80%"
+          @show="crsSelectorKey++"
+        >
           <template #reference>
             <button type="button" class="gismap-btn crs-btn" title="切换坐标系">
               <span class="crs-prefix">EPSG:</span>{{ crsCode }}
@@ -63,7 +69,7 @@
             @change="handleCrsChange"
             @cancel="handleCrsCancel"
           />
-        </el-popover>
+        </gis-action-sheet>
 
         <!-- 4. 绘制功能层叠按钮（点/线/面/结/清 收进 dropdown） -->
         <el-dropdown trigger="click" @command="handleDrawCommand">
@@ -88,14 +94,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
+import { onMounted, onBeforeUnmount, ref } from 'vue';
 import { Fold, View, Hide, Delete, EditPen, ArrowDown } from '@element-plus/icons-vue';
 
 import GisCrsSelector from '~/components/data/GisCrsSelector.vue';
 import { CrsInfo } from '~/components/data/GisProjectedBounds';
+import GisActionSheet from '~/components/common/GisActionSheet.vue';
 import MapCitySelector from "~/components/gismap/MapCitySelector.vue";
 import { eventBus } from '~/composables/eventBus';
-import { useBreakpoint } from '~/composables/useBreakpoint';
 
 import { GisMapDrawEvent, GisMapCleanDrawEvent, Types as MapTypes } from './events/GisMapEvents';
 
@@ -125,21 +131,11 @@ const emit = defineEmits<{
   'submit': []
 }>()
 
-const { isMobile } = useBreakpoint()
-
 const crsCode = ref<number>(4490)
-const crsPopoverRef = ref()
 const crsSelectorKey = ref(0)
-const featureListPopoverRef = ref()
-
-// 响应式 popover 宽度：桌面 640px，移动端 92vw
-const crsPopoverWidth = computed(() => {
-  return window.innerWidth < 768 ? Math.min(window.innerWidth * 0.92, 480) : 640
-})
-// 图形列表 popover 宽度：桌面 320px，移动端 92vw
-const featureListPopoverWidth = computed(() => {
-  return isMobile.value ? Math.min(window.innerWidth * 0.92, 360) : 320
-})
+// GisActionSheet 显隐控制（替代原 el-popover ref）
+const featureListVisible = ref(false)
+const crsVisible = ref(false)
 
 const cleanBefore = ref<boolean>(true)
 const once = ref<boolean>(false)
@@ -165,17 +161,17 @@ const handleCleanDraw = () => {
 const handleCrsChange = (crs: CrsInfo) => {
   crsCode.value = crs.epsgCode
   emit('crs-change', crs.epsgCode)
-  crsPopoverRef.value?.hide?.()
+  crsVisible.value = false
 }
 
 const handleCrsCancel = () => {
-  crsPopoverRef.value?.hide?.()
+  crsVisible.value = false
 }
 
 /** 提交绘制结果 */
 const handleSubmit = () => {
   emit('submit')
-  featureListPopoverRef.value?.hide?.()
+  featureListVisible.value = false
 }
 
 const drawEndHandler = async (data: unknown) => {
@@ -218,16 +214,6 @@ onBeforeUnmount(() => {
 .dropdown-arrow {
   margin-left: 2px;
   font-size: 10px;
-}
-
-/* 图形列表 popover 内容 */
-.feature-list-content {
-  padding: 4px;
-}
-
-.feature-list-footer {
-  margin-top: 8px;
-  text-align: right;
 }
 
 /* 坐标系按钮：禁止换行和压缩，确保完整文字显示 */

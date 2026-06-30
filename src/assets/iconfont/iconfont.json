@@ -1,0 +1,261 @@
+{
+  "id": "5201418",
+  "name": "gis-tools",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "38624311",
+      "name": "database",
+      "font_class": "database",
+      "unicode": "e60e",
+      "unicode_decimal": 58894
+    },
+    {
+      "icon_id": "38625058",
+      "name": "Json",
+      "font_class": "Json",
+      "unicode": "e611",
+      "unicode_decimal": 58897
+    },
+    {
+      "icon_id": "38627842",
+      "name": "Table",
+      "font_class": "Table",
+      "unicode": "e615",
+      "unicode_decimal": 58901
+    },
+    {
+      "icon_id": "38652071",
+      "name": "params",
+      "font_class": "params",
+      "unicode": "e625",
+      "unicode_decimal": 58917
+    },
+    {
+      "icon_id": "38678800",
+      "name": "limit_rate",
+      "font_class": "limit_rate",
+      "unicode": "e633",
+      "unicode_decimal": 58931
+    },
+    {
+      "icon_id": "38678809",
+      "name": "默认",
+      "font_class": "moren",
+      "unicode": "e634",
+      "unicode_decimal": 58932
+    },
+    {
+      "icon_id": "42903485",
+      "name": "mti-GIS调度",
+      "font_class": "mti-GIStiaodu",
+      "unicode": "e9e2",
+      "unicode_decimal": 59874
+    },
+    {
+      "icon_id": "42903487",
+      "name": "mti-测量",
+      "font_class": "mti-celiang",
+      "unicode": "e9e3",
+      "unicode_decimal": 59875
+    },
+    {
+      "icon_id": "42903511",
+      "name": "mti-地图切换",
+      "font_class": "mti-dituqiehuan",
+      "unicode": "e9e4",
+      "unicode_decimal": 59876
+    },
+    {
+      "icon_id": "42903512",
+      "name": "mti-地图编辑",
+      "font_class": "mti-ditubianji",
+      "unicode": "e9e5",
+      "unicode_decimal": 59877
+    },
+    {
+      "icon_id": "42903513",
+      "name": "mti-地理围栏",
+      "font_class": "mti-diliweilan",
+      "unicode": "e9e6",
+      "unicode_decimal": 59878
+    },
+    {
+      "icon_id": "42903514",
+      "name": "mti-二维",
+      "font_class": "mti-erwei",
+      "unicode": "e9e7",
+      "unicode_decimal": 59879
+    },
+    {
+      "icon_id": "42903515",
+      "name": "mti-多边形选",
+      "font_class": "mti-duobianxingxuan",
+      "unicode": "e9e8",
+      "unicode_decimal": 59880
+    },
+    {
+      "icon_id": "42903530",
+      "name": "mti-蜂窝图",
+      "font_class": "mti-fengwotu",
+      "unicode": "e9e9",
+      "unicode_decimal": 59881
+    },
+    {
+      "icon_id": "42903533",
+      "name": "mti-绘制",
+      "font_class": "mti-huizhi",
+      "unicode": "e9ea",
+      "unicode_decimal": 59882
+    },
+    {
+      "icon_id": "42903591",
+      "name": "mti-距离测量",
+      "font_class": "mti-juliceliang",
+      "unicode": "e9eb",
+      "unicode_decimal": 59883
+    },
+    {
+      "icon_id": "42903592",
+      "name": "mti-聚合",
+      "font_class": "mti-jutai",
+      "unicode": "e9ec",
+      "unicode_decimal": 59884
+    },
+    {
+      "icon_id": "42903595",
+      "name": "mti-框选",
+      "font_class": "mti-kuangxuan",
+      "unicode": "e9ed",
+      "unicode_decimal": 59885
+    },
+    {
+      "icon_id": "42903620",
+      "name": "mti-面积测量",
+      "font_class": "mti-mianjiceliang",
+      "unicode": "e9ee",
+      "unicode_decimal": 59886
+    },
+    {
+      "icon_id": "42903697",
+      "name": "mti-散点",
+      "font_class": "mti-sandian",
+      "unicode": "e9ef",
+      "unicode_decimal": 59887
+    },
+    {
+      "icon_id": "42903699",
+      "name": "mti-清除",
+      "font_class": "mti-qingchu",
+      "unicode": "e9f0",
+      "unicode_decimal": 59888
+    },
+    {
+      "icon_id": "42903700",
+      "name": "mti-热力图",
+      "font_class": "mti-relitu",
+      "unicode": "e9f1",
+      "unicode_decimal": 59889
+    },
+    {
+      "icon_id": "42903701",
+      "name": "mti-全屏",
+      "font_class": "mti-quanping",
+      "unicode": "e9f2",
+      "unicode_decimal": 59890
+    },
+    {
+      "icon_id": "42903702",
+      "name": "mti-三维",
+      "font_class": "mti-sanwei",
+      "unicode": "e9f3",
+      "unicode_decimal": 59891
+    },
+    {
+      "icon_id": "42903703",
+      "name": "mti-圈选",
+      "font_class": "mti-quanxuan",
+      "unicode": "e9f4",
+      "unicode_decimal": 59892
+    },
+    {
+      "icon_id": "42903727",
+      "name": "mti-四色图",
+      "font_class": "mti-sisetu",
+      "unicode": "e9f5",
+      "unicode_decimal": 59893
+    },
+    {
+      "icon_id": "42903729",
+      "name": "mti-图层分类",
+      "font_class": "mti-tucengfenlei",
+      "unicode": "e9f6",
+      "unicode_decimal": 59894
+    },
+    {
+      "icon_id": "42903731",
+      "name": "mti-视野内搜索",
+      "font_class": "mti-shiyeneisousuo",
+      "unicode": "e9f7",
+      "unicode_decimal": 59895
+    },
+    {
+      "icon_id": "42904553",
+      "name": "mti-我的定位",
+      "font_class": "mti-wodedingwei",
+      "unicode": "e9f8",
+      "unicode_decimal": 59896
+    },
+    {
+      "icon_id": "42904554",
+      "name": "mti-新增面",
+      "font_class": "mti-xinzengmian",
+      "unicode": "e9f9",
+      "unicode_decimal": 59897
+    },
+    {
+      "icon_id": "42904555",
+      "name": "mti-线选",
+      "font_class": "mti-xianxuan",
+      "unicode": "e9fa",
+      "unicode_decimal": 59898
+    },
+    {
+      "icon_id": "42905542",
+      "name": "mti-选择",
+      "font_class": "mti-xuanze",
+      "unicode": "e9fb",
+      "unicode_decimal": 59899
+    },
+    {
+      "icon_id": "42905543",
+      "name": "mti-新增线",
+      "font_class": "mti-xinzengxian",
+      "unicode": "e9fc",
+      "unicode_decimal": 59900
+    },
+    {
+      "icon_id": "42905544",
+      "name": "mti-样式",
+      "font_class": "mti-yangshi",
+      "unicode": "e9fd",
+      "unicode_decimal": 59901
+    },
+    {
+      "icon_id": "42905745",
+      "name": "mti-鹰眼图",
+      "font_class": "mti-yingyantu",
+      "unicode": "e9fe",
+      "unicode_decimal": 59902
+    },
+    {
+      "icon_id": "42905749",
+      "name": "mti-综合测量",
+      "font_class": "mti-zongheceliang",
+      "unicode": "e9ff",
+      "unicode_decimal": 59903
+    }
+  ]
+}

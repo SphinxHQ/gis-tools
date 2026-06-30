@@ -108,7 +108,7 @@ onBeforeUnmount(() => {
 
 </script>
 <template>
-  <el-config-provider size="small" :z-index="9">
+  <el-config-provider size="small">
     <el-watermark style="height: 100%; width: 100%;" :font="font" :content="[]">
       <router-view />
     </el-watermark>

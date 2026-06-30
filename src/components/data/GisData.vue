@@ -18,13 +18,17 @@ import GisDataInfo from '~/components/data/GisDataInfo'
 import GisDataOverview from '~/components/data/GisDataOverview.vue'
 import GisDataPanel from '~/components/data/GisDataPanel.vue'
 import GisMobileNav from '~/components/data/GisMobileNav.vue'
+import HistoryDataList from '~/components/data/HistoryDataList.vue'
 import GisMapSlot from '~/components/gismap/GisMapSlot.vue'
+import ModeIconRender from '~/components/renders/ModeIconRender.vue'
+import VertexCountRender from '~/components/renders/VertexCountRender.vue'
 import { themeMode } from '~/composables/dark'
 import { useGisDataStore } from '~/composables/gisDataStore'
 import { useBreakpoint } from '~/composables/useBreakpoint'
 import { useShareReceiver } from '~/composables/useShareReceiver'
 import { useDragGesture } from '~/composables/useTouchGesture'
 import { useDeviceCapabilities } from '~/composables/useDeviceCapabilities'
+import { localDb } from '~/composables/localDb'
 
 const { datasets, dataSources, activeId, activeDataset, setActive, addDataSource, removeDataset } = useGisDataStore()
 const { isMobile, isDesktop, panelWidth, panelCollapsedWidth, showLeftPanel } = useBreakpoint()
@@ -81,6 +85,8 @@ const importDialogVisible = ref(false)
 const { init: initShareReceiver } = useShareReceiver()
 onMounted(() => {
   initShareReceiver()
+  loadHistory()
+  localDb.on('changed', loadHistory)
 })
 
 // logo 动画重播：通过改变 key 强制重新挂载 SVG，使 SMIL 动画重新播放
@@ -247,6 +253,47 @@ const handleExitEditMode = () => {
 const handleSheetHeightChange = (heightPx: number) => {
   mobileSheetHeight.value = heightPx
 }
+
+// ===== 历史记录相关 =====
+import type { GisFileData } from '~/components/data/LocalDb'
+
+const historyDatas = ref<GisFileData[]>([])
+const historyLoaded = ref(false)
+
+const loadHistory = () => {
+  if (!localDb.isSupport) {
+    historyLoaded.value = true
+    return
+  }
+  localDb.listAll().then((datas: GisFileData[]) => {
+    historyDatas.value = datas
+    historyLoaded.value = true
+    // 无历史记录时自动打开导入弹窗
+    if (datas.length === 0 && datasets.value.length === 0) {
+      importDialogVisible.value = true
+    }
+  }).catch(() => {
+    historyLoaded.value = true
+  })
+}
+
+const handleHistoryRowClick = (row: GisFileData) => {
+  const content = row.content
+  const dataName = row.name
+  try {
+    const simpleDataFormat = new SimpleDataFormat()
+    simpleDataFormat.read(content as ArrayBuffer | string).then((data: GisDataInfo) => {
+      data.name = dataName
+      handleRead(data)
+    }).catch((e: Error) => {
+      logger.error('历史记录解析失败:', e)
+      handleError(e)
+    })
+  } catch (e) {
+    logger.error('历史记录解析失败:', e)
+    handleError(e as Error)
+  }
+}
 </script>
 
 <template>
@@ -314,17 +361,15 @@ const handleSheetHeightChange = (heightPx: number) => {
       <div class="top-bar-right">
         <el-button size="small" type="primary" @click="importDialogVisible = true">
           <el-icon>
-            <Plus />
+            <UploadFilled />
           </el-icon>
-          <span>导入</span>
+          <span>导入数据</span>
         </el-button>
-        <el-button v-if="datasets.length > 0" size="small" class="dataset-badge-btn"
+        <el-button size="small" class="dataset-badge-btn"
           @click="sourceDrawerVisible = true"
 >
-          <el-icon>
-            <FolderOpened />
-          </el-icon>
-          <span>{{ datasets.length }} 个数据集</span>
+          <ModeIconRender mode="datasource" :size="14" />
+          <span>{{ datasets.length }}</span>
         </el-button>
         <el-radio-group v-model="themeMode" size="small" class="theme-switch">
           <el-radio-button value="auto">
@@ -356,9 +401,7 @@ const handleSheetHeightChange = (heightPx: number) => {
         <div v-for="source in dataSources" :key="source.id" class="source-group">
           <!-- 数据源标题 -->
           <div class="source-group-header">
-            <el-icon class="source-group-icon">
-              <FolderOpened />
-            </el-icon>
+            <ModeIconRender mode="datasource" :size="16" />
             <span class="source-group-title">{{ source.name }}</span>
             <span class="source-group-count">{{ source.datasets.length }}</span>
           </div>
@@ -385,9 +428,7 @@ const handleSheetHeightChange = (heightPx: number) => {
                 @touchend="hasTouch && onCardTouchEnd($event, entry.id)"
 >
                 <div class="dataset-card-header">
-                  <el-icon class="dataset-card-icon">
-                    <MapLocation />
-                  </el-icon>
+                  <ModeIconRender mode="dataset" :size="16" class="dataset-card-icon" />
                   <span class="dataset-card-name">{{ entry.name }}</span>
                   <el-icon v-if="!hasTouch" class="dataset-card-delete" title="删除"
                     @click.stop="handleSourceDatasetRemove(entry.id, $event)"
@@ -413,11 +454,16 @@ const handleSheetHeightChange = (heightPx: number) => {
 
     <!-- 主体内容 -->
     <div class="main-content" @dragover="handleDragOver" @drop="handleDrop">
-      <!-- 空状态 -->
-      <div v-if="datasets.length === 0" class="empty-state" role="button" tabindex="0"
-        @click="importDialogVisible = true" @keydown.enter="importDialogVisible = true"
->
-        <div class="empty-content">
+      <!-- 空状态：显示历史记录列表 -->
+      <div v-if="datasets.length === 0" class="empty-state">
+        <!-- 有历史记录时显示历史记录卡片列表 -->
+        <div v-if="historyLoaded && historyDatas.length > 0" class="history-content">
+          <HistoryDataList :items="historyDatas" @select="handleHistoryRowClick" />
+        </div>
+        <!-- 无历史记录时显示空状态 -->
+        <div v-else class="empty-content" role="button" tabindex="0"
+          @click="importDialogVisible = true" @keydown.enter="importDialogVisible = true"
+        >
           <el-icon :size="44" color="var(--el-color-info-light-3)">
             <upload-filled />
           </el-icon>
@@ -486,6 +532,8 @@ const handleSheetHeightChange = (heightPx: number) => {
             @open-import="importDialogVisible = true" @active-data-change="handleActiveDataChange" @read="handleRead"
             @error="handleError" @enter-edit-mode="handleEnterEditMode" @exit-edit-mode="handleExitEditMode"
             @sheet-height-change="handleSheetHeightChange"
+            @sheet-drag-start="handleSheetDragStart"
+            @sheet-drag-end="handleSheetDragEnd"
 />
         </div>
       </template>
@@ -943,5 +991,22 @@ const handleSheetHeightChange = (heightPx: number) => {
 .dataset-card-stat {
   font-size: 11px;
   color: var(--el-text-color-placeholder);
+}
+
+/* ===== 历史记录内容样式 ===== */
+.history-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+/* 移动端历史记录样式调整 */
+@media (max-width: 767px) {
+  .history-content {
+    padding: 12px;
+  }
 }
 </style>

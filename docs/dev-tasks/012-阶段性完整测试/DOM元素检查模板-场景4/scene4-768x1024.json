@@ -1,0 +1,27 @@
+{
+  "viewport": "768x1024",
+  "scene": "场景4-绘制图形Tab",
+  "timestamp": "2026-06-25",
+  "采集方法": "evaluate_script 组件白名单遍历",
+  "schema": "v1",
+  "count": 76,
+  "key_elements": [
+    {"c": "top-bar", "tag": "DIV", "rect": {"w": 768, "h": 44, "x": 0, "y": 0}, "s": false, "oy": "visible"},
+    {"c": "el-dialog", "tag": "DIV", "rect": {"w": 723, "h": 975, "x": 15, "y": 20}, "s": false, "oy": "visible"},
+    {"c": "el-tabs", "tag": "DIV", "rect": {"w": 651, "h": 863, "x": 51, "y": 76}, "s": false, "oy": "visible"},
+    {"c": "el-tabs__header", "tag": "DIV", "rect": {"w": 651, "h": 39, "x": 51, "y": 76}, "s": true, "oy": "visible"},
+    {"c": "el-tabs__nav", "tag": "DIV", "rect": {"w": 388, "h": 39, "x": 51, "y": 76}, "s": false, "oy": "visible"},
+    {"c": "el-tabs__item", "tag": "DIV", "rect": {"w": 98, "h": 40, "x": 50, "y": 75}, "s": false, "oy": "visible"},
+    {"c": "el-tab-pane", "tag": "DIV", "rect": {"w": 621, "h": 794, "x": 66, "y": 130}, "s": false, "oy": "hidden"},
+    {"c": "map-drawer", "tag": "DIV", "rect": {"w": 621, "h": 794, "x": 66, "y": 130}, "s": false, "oy": "visible"},
+    {"c": "map-control-panel", "tag": "DIV", "rect": {"w": 473, "h": 44, "x": 67, "y": 131}, "s": false, "oy": "visible"},
+    {"c": "el-cascader", "tag": "DIV", "rect": {"w": 206, "h": 24, "x": 170, "y": 146}, "s": false, "oy": "visible"},
+    {"c": "el-dropdown", "tag": "DIV", "rect": {"w": 62, "h": 24, "x": 469, "y": 146}, "s": true, "oy": "visible"},
+    {"c": "main-map-container", "tag": "DIV", "rect": {"w": 619, "h": 792, "x": 67, "y": 131}, "s": false, "oy": "visible"},
+    {"c": "main-map", "tag": "DIV", "rect": {"w": 619, "h": 792, "x": 67, "y": 131}, "s": false, "oy": "visible"},
+    {"c": "crs-btn", "tag": "BUTTON", "rect": {"w": 81, "h": 24, "x": 382, "y": 146}, "s": false, "oy": "hidden"},
+    {"c": "crs-prefix", "tag": "SPAN", "rect": {"w": 37, "h": 14, "x": 391, "y": 151}, "s": false, "oy": "visible"},
+    {"c": "el-button", "tag": "BUTTON", "rect": {"w": 64, "h": 24, "x": 590, "y": 10}, "s": false, "oy": "visible"}
+  ],
+  "all_elements_count": 76
+}

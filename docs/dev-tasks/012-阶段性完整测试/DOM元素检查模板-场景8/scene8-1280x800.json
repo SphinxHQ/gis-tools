@@ -1,0 +1,24 @@
+{
+  "viewport": "1280x800",
+  "scene": "场景8-弹窗与提示",
+  "timestamp": "2026-06-25",
+  "采集方法": "evaluate_script 组件白名单遍历",
+  "schema": "v1",
+  "count": 95,
+  "key_elements": [
+    {"c": "top-bar", "tag": "DIV", "rect": {"w": 1280, "h": 40, "x": 0, "y": 0}, "s": false, "oy": "visible"},
+    {"c": "main-content", "tag": "DIV", "rect": {"w": 1280, "h": 760, "x": 0, "y": 40}, "s": false, "oy": "hidden"},
+    {"c": "left-panel", "tag": "DIV", "rect": {"w": 521, "h": 760, "x": 0, "y": 40}, "s": false, "oy": "hidden"},
+    {"c": "gis-data-panel", "tag": "DIV", "rect": {"w": 520, "h": 723, "x": 0, "y": 77}, "s": false, "oy": "hidden"},
+    {"c": "el-segmented", "tag": "DIV", "rect": {"w": 504, "h": 24, "x": 8, "y": 83}, "s": false, "oy": "visible"},
+    {"c": "gis-data-transformer-panel", "tag": "DIV", "rect": {"w": 520, "h": 686, "x": 0, "y": 114}, "s": false, "oy": "auto"},
+    {"c": "crs-info-card", "tag": "DIV", "rect": {"w": 504, "h": 139, "x": 8, "y": 122}, "s": false, "oy": "visible"},
+    {"c": "crs-info-body", "tag": "DIV", "rect": {"w": 482, "h": 89, "x": 19, "y": 161}, "s": false, "oy": "visible"},
+    {"c": "crs-actions", "tag": "DIV", "rect": {"w": 504, "h": 28, "x": 8, "y": 271}, "s": false, "oy": "visible"},
+    {"c": "map-container", "tag": "DIV", "rect": {"w": 755, "h": 732, "x": 525, "y": 40}, "s": false, "oy": "hidden"},
+    {"c": "main-map", "tag": "DIV", "rect": {"w": 755, "h": 732, "x": 525, "y": 40}, "s": false, "oy": "visible"},
+    {"c": "gis-data-status-bar", "tag": "DIV", "rect": {"w": 755, "h": 28, "x": 525, "y": 772}, "s": false, "oy": "hidden"},
+    {"c": "el-button", "tag": "BUTTON", "rect": {"w": 64, "h": 24, "x": 984, "y": 8}, "s": false, "oy": "visible"}
+  ],
+  "all_elements_count": 95
+}

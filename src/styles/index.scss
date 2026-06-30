@@ -185,6 +185,8 @@ code {
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
   user-select: none;
+  /* 强制不换行：图标+文字/前缀+数字必须保持单行，避免窄视口下溢出 24px 固定高度 */
+  white-space: nowrap;
 }
 
 .gismap-btn:hover:not(.disabled):not(.active) {

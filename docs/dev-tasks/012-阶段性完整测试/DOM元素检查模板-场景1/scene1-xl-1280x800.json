@@ -1,0 +1,19 @@
+{
+  "viewport": "1280x800",
+  "scene": "场景1-页面初始加载",
+  "timestamp": "2026-06-25",
+  "采集方法": "evaluate_script 组件白名单遍历",
+  "count": 10,
+  "elements": [
+    {"component": "unknown", "tag": "DIV", "rect": {"w": 1280, "h": 800, "x": 0, "y": 0}, "scrollable": false, "overflowY": "visible"},
+    {"component": "gis-data-page", "tag": "DIV", "rect": {"w": 1280, "h": 800, "x": 0, "y": 0}, "scrollable": false, "overflowY": "hidden"},
+    {"component": "top-bar", "tag": "DIV", "rect": {"w": 1280, "h": 40, "x": 0, "y": 0}, "scrollable": false, "overflowY": "visible"},
+    {"component": "top-bar-left", "tag": "DIV", "rect": {"w": 127, "h": 22, "x": 12, "y": 9}, "scrollable": false, "overflowY": "visible"},
+    {"component": "top-bar-right", "tag": "DIV", "rect": {"w": 166, "h": 26, "x": 1102, "y": 7}, "scrollable": false, "overflowY": "visible"},
+    {"component": "el-radio-group", "tag": "DIV", "rect": {"w": 94, "h": 26, "x": 1174, "y": 7}, "scrollable": false, "overflowY": "visible"},
+    {"component": "main-content", "tag": "DIV", "rect": {"w": 1280, "h": 760, "x": 0, "y": 40}, "scrollable": false, "overflowY": "hidden"},
+    {"component": "empty-state", "tag": "DIV", "rect": {"w": 1264, "h": 744, "x": 8, "y": 48}, "scrollable": false, "overflowY": "visible"},
+    {"component": "empty-content", "tag": "DIV", "rect": {"w": 216, "h": 98, "x": 532, "y": 371}, "scrollable": false, "overflowY": "visible"},
+    {"component": "el-button", "tag": "BUTTON", "rect": {"w": 64, "h": 24, "x": 1102, "y": 8}, "scrollable": false, "overflowY": "visible"}
+  ]
+}

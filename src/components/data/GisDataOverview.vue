@@ -6,12 +6,15 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-06-24
  */
-import { Location, DataLine, Histogram, Coordinate } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 
+import GeomUtils from '~/common/GeomUtils'
 import GisDataInfo from '~/components/data/GisDataInfo'
 import CrsInfoRender from '~/components/renders/CrsInfoRender.vue'
+import GeoTypeIconRender from '~/components/renders/GeoTypeIconRender.vue'
 import GeoTypeRender from '~/components/renders/GeoTypeRender.vue'
+import ModeIconRender from '~/components/renders/ModeIconRender.vue'
+import TabIconRender from '~/components/renders/TabIconRender.vue'
 import VertexCountRender from '~/components/renders/VertexCountRender.vue'
 
 const props = defineProps({
@@ -42,6 +45,7 @@ const crsInfo = computed(() => props.data?.crs?.crsInfo ?? null)
 
 const totalVertexCount = computed(() => props.data?.getTotalVertexCount?.() ?? 0)
 const geometryTypes = computed(() => props.data?.getTypes?.() ?? [])
+const geometryTypeNames = computed(() => geometryTypes.value.map(t => GeomUtils.getTypeName(t)))
 
 const isCompact = computed(() => props.mode === 'compact')
 </script>
@@ -50,13 +54,13 @@ const isCompact = computed(() => props.mode === 'compact')
   <div class="gis-data-status-bar" :class="{ 'is-compact': isCompact }">
     <!-- 数据名称 -->
     <div class="status-item status-name">
-      <el-icon :size="14"><Location /></el-icon>
+      <ModeIconRender mode="dataset" :size="14" />
       <span class="status-text">{{ props.data?.name || '未命名' }}</span>
     </div>
 
     <!-- 要素数量 -->
     <div class="status-item">
-      <el-icon :size="14"><DataLine /></el-icon>
+      <TabIconRender tab="feature" :size="14" />
       <span v-if="!isCompact" class="status-label">要素</span>
       <span class="status-value">{{ props.data?.features?.length ?? 0 }}</span>
     </div>
@@ -64,9 +68,9 @@ const isCompact = computed(() => props.mode === 'compact')
     <!-- 几何类型 -->
     <div v-if="geometryTypes.length" class="status-item">
       <template v-if="isCompact">
-        <el-tooltip :content="geometryTypes.join(', ')" placement="top">
+        <el-tooltip :content="geometryTypeNames.join(', ')" placement="top">
           <div class="status-types-compact">
-            <GeoTypeRender v-for="t in geometryTypes" :key="t" :type="t" />
+            <GeoTypeIconRender v-for="t in geometryTypes" :key="t" :type="t" :size="14" />
           </div>
         </el-tooltip>
       </template>
@@ -79,14 +83,14 @@ const isCompact = computed(() => props.mode === 'compact')
 
     <!-- 总顶点数 -->
     <div class="status-item">
-      <el-icon :size="14"><Histogram /></el-icon>
+      <TabIconRender tab="vertex" :size="14" />
       <span v-if="!isCompact" class="status-label">顶点</span>
       <VertexCountRender :count="totalVertexCount" />
     </div>
 
     <!-- 坐标系 -->
     <div v-if="hasValidCrs" class="status-item">
-      <el-icon :size="14"><Coordinate /></el-icon>
+      <TabIconRender tab="crs" :size="14" />
       <template v-if="isCompact">
         <el-tooltip :content="crsInfo?.name || `EPSG:${props.data?.crs?.epsgCode}`" placement="top">
           <el-tag size="small" type="info" effect="plain">EPSG:{{ props.data?.crs?.epsgCode }}</el-tag>
@@ -145,7 +149,7 @@ const isCompact = computed(() => props.mode === 'compact')
 .gis-data-status-bar.is-compact {
   gap: 10px;
   padding: 0 8px;
-  height: 24px;
+  height: 28px;
 }
 
 .status-item {
@@ -169,7 +173,7 @@ const isCompact = computed(() => props.mode === 'compact')
 }
 
 .is-compact .status-name {
-  max-width: 120px;
+  max-width: 140px;
 }
 
 .status-text {
@@ -245,7 +249,7 @@ const isCompact = computed(() => props.mode === 'compact')
   gap: 4px;
 }
 
-/* 移动端（xs/sm <768px）：状态栏进一步精简，避免内容溢出 */
+/* 移动端（xs/sm <768px）：状态栏紧凑显示，保留所有信息项 */
 @media (max-width: 767px) {
   .gis-data-status-bar.is-compact {
     gap: 6px;
@@ -254,13 +258,7 @@ const isCompact = computed(() => props.mode === 'compact')
 
   /* 数据名最大宽度收窄 */
   .is-compact .status-name {
-    max-width: 80px;
-  }
-
-  /* 隐藏几何类型和顶点数（移动端空间不足，保留数据名/要素数/坐标系） */
-  .gis-data-status-bar.is-compact .status-item:nth-child(3),
-  .gis-data-status-bar.is-compact .status-item:nth-child(4) {
-    display: none;
+    max-width: 100px;
   }
 }
 </style>

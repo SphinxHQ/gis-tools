@@ -163,7 +163,59 @@ export default {
 }
 export const defaultStyle = getDefaultStyleFunction();
 export const drawStyle = getDrawStyleFunction();
+
+/**
+ * 拓扑错误图层颜色映射（柔和色调）
+ * key 为检查项 code，对应 layer_topo_err_{code} 图层
+ */
+export const TOPO_ERROR_COLORS: Record<string, { fill: string; stroke: string }> = {
+    self_intersection: { fill: 'rgba(224,124,124,0.35)', stroke: '#e07c7c' },
+    hole_outside_shell: { fill: 'rgba(217,164,65,0.35)', stroke: '#d9a441' },
+    holes_overlap: { fill: 'rgba(144,128,208,0.35)', stroke: '#9080d0' },
+    multipart_overlap: { fill: 'rgba(95,184,196,0.35)', stroke: '#5fb8c4' },
+}
+
+/** 拓扑错误图层前缀 */
+export const TOPO_ERR_LAYER_PREFIX = 'layer_topo_err_'
+
+/**
+ * 拓扑错误图层样式函数
+ * 按图层名中的 code 查找颜色，生成对应样式的要素
+ */
+function getTopoErrorStyleFunction(layerName: string): (feature: FeatureLike) => Style[] {
+    const code = layerName.startsWith(TOPO_ERR_LAYER_PREFIX) ? layerName.slice(TOPO_ERR_LAYER_PREFIX.length) : ''
+    const colors = TOPO_ERROR_COLORS[code] || { fill: 'rgba(224,124,124,0.35)', stroke: '#e07c7c' }
+    const white = [255, 255, 255, 1]
+    return function (feature: FeatureLike): Style[] {
+        const geometryType = feature.getGeometry()?.getType()
+        if (geometryType === 'Point' || geometryType === 'MultiPoint') {
+            return [new Style({
+                image: new Circle({
+                    radius: 5,
+                    fill: new Fill({ color: colors.stroke }),
+                    stroke: new Stroke({ color: white as [number, number, number, number], width: 1.5 }),
+                }),
+                zIndex: Infinity,
+            })]
+        }
+        const styles: Style[] = []
+        if (geometryType === 'Polygon' || geometryType === 'MultiPolygon' || geometryType === 'Circle') {
+            styles.push(new Style({ fill: new Fill({ color: colors.fill }) }))
+            styles.push(new Style({ stroke: new Stroke({ color: white as [number, number, number, number], width: 3 }) }))
+            styles.push(new Style({ stroke: new Stroke({ color: colors.stroke, width: 2 }) }))
+        } else if (geometryType === 'LineString' || geometryType === 'MultiLineString') {
+            styles.push(new Style({ stroke: new Stroke({ color: white as [number, number, number, number], width: 4 }) }))
+            styles.push(new Style({ stroke: new Stroke({ color: colors.stroke, width: 2.5 }) }))
+        }
+        return styles.length > 0 ? styles : [new Style({})]
+    }
+}
+
 export const getLayerStyles = (layerName: string) => {
+    // 拓扑错误图层：按错误类型着色
+    if (layerName.startsWith(TOPO_ERR_LAYER_PREFIX)) {
+        return getTopoErrorStyleFunction(layerName)
+    }
     switch (layerName) {
         case DefaultLayerNames.SYS_DRAW_TOOL_ACTION:
         case DefaultLayerNames.SYS_DRAW_TOOL_DISPLAY:

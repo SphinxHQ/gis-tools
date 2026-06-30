@@ -553,9 +553,9 @@ export class GisMap extends EventBase {
                         }
                     }
                     void eventBus.emit(this.mapName, new GisMapNotifyEvent({}, 'GisMap::drawTool::drawend', displayLayer, drawFeature));
-                    // 将绘制结果转为 EPSG:4326 的 GeoJSON（GeoJSON 标准要求 WGS84 坐标）
+                    // 不设 featureProjection，保持数据原始投影坐标（与 modifyend 行为一致）
+                    // view 投影 = 数据集 CRS（R2 规则），输出坐标直接匹配数据集存储约定
                     const json = new GeoJSON().writeFeature(drawFeature as Feature, {
-                        featureProjection: this.olView?.getProjection().getCode(),
                         rightHanded: true,
                     });
                     void eventBus.emit(this.mapName, new GisMapDrawEndEvent(json))

@@ -34,19 +34,23 @@ import {
 } from '~/components/gismap/events/GisMapEvents'
 import GeoTypeIconRender from '~/components/renders/GeoTypeIconRender.vue'
 import { eventBus } from '~/composables/eventBus'
+import { useGisDataStore } from '~/composables/gisDataStore'
 
 const props = defineProps<{
   data: GisDataInfo
   instanceId: number
+  /** 节点显示字段（与结构树共享，空字符串表示默认"要素 #下标"） */
+  displayField?: string
 }>()
 
 const emit = defineEmits<{
   (e: 'exit'): void
   (e: 'data-changed'): void
-  (e: 'create-archive', payload: { name: string; features: GeoJSON.Feature[]; sourceIdx: number }): void
   (e: 'show-shadow'): void
   (e: 'clear-shadow'): void
 }>()
+
+const { updateDataset, addDataset, activeId, activeSourceId } = useGisDataStore()
 
 // ==================== 导航状态 ====================
 type Page = 'feature-list' | 'feature-edit'
@@ -128,11 +132,26 @@ function applyPropertiesToFeature() { if (editingFeature.value) editingFeature.v
 
 // ==================== 要素列表（基于副本） ====================
 const featureList = computed(() =>
-  workingFeatures.value.map((f, idx) => ({
-    idx, type: f.geometry?.type ?? '未知',
-    label: f.properties?.name ?? f.properties?.NAME ?? `要素 #${idx}`,
-    selected: selectedFeatureIdxs.value.has(idx),
-  }))
+  workingFeatures.value.map((f, idx) => {
+    // 显示字段优先级：指定字段 > name > NAME > 默认"要素 #下标"
+    let baseName = `要素 #${idx}`
+    const field = props.displayField
+    if (field && f.properties) {
+      const val = (f.properties as Record<string, unknown>)[field]
+      if (val !== undefined && val !== null && val !== '') {
+        baseName = `${String(val)} #${idx}`
+      }
+    } else if (f.properties?.name) {
+      baseName = `${String(f.properties.name)} #${idx}`
+    } else if (f.properties?.NAME) {
+      baseName = `${String(f.properties.NAME)} #${idx}`
+    }
+    return {
+      idx, type: f.geometry?.type ?? '未知',
+      label: baseName,
+      selected: selectedFeatureIdxs.value.has(idx),
+    }
+  })
 )
 
 const selectedFeatureIdxs = ref<Set<number>>(new Set())
@@ -475,21 +494,53 @@ function handleCancel() {
 }
 
 // ==================== 要素列表底部按钮 ====================
-/** 更新：将副本写回原始数据，然后重新复制双份 */
+// 变更确认弹窗（统一入口：更新当前 / 另存为新数据集 / 取消）
+const confirmDialogVisible = ref(false)
+
+/** 更新：打开变更确认弹窗（无变更时提示） */
 function handleUpdate() {
+  if (!hasEdits.value) {
+    ElMessage.info('无变更可保存')
+    return
+  }
+  confirmDialogVisible.value = true
+}
+
+/** 变更确认：更新当前数据集 */
+function confirmUpdateCurrent() {
+  // 将工作副本写回主数据
   // eslint-disable-next-line vue/no-mutating-props
   props.data.features.splice(0, props.data.features.length, ...JSON.parse(JSON.stringify(workingFeatures.value)))
-  // 更新后重新复制双份（此时workingFeatures === referenceFeatures）
+  if (activeId.value) {
+    updateDataset(activeId.value, props.data)
+  }
   initBothCopies()
   emit('data-changed')
+  confirmDialogVisible.value = false
   ElMessage.success('数据已更新')
 }
 
-/** 另存：以新档案保存副本 */
-function handleSaveAs() {
+/** 变更确认：另存为新数据集（同一数据源下） */
+function confirmSaveAsNew() {
+  if (!activeSourceId.value) {
+    ElMessage.warning('无可用数据源')
+    return
+  }
   const newName = (props.data.name || '未命名') + '（变更）'
-  emit('create-archive', { name: newName, features: JSON.parse(JSON.stringify(workingFeatures.value)), sourceIdx: -1 })
-  ElMessage.success('已另存为新档案')
+  const clone = new GisDataInfo(newName, props.data.crs)
+  clone.features = JSON.parse(JSON.stringify(workingFeatures.value))
+  addDataset(clone, activeSourceId.value)
+  initBothCopies()
+  confirmDialogVisible.value = false
+  ElMessage.success('已另存为新数据集')
+}
+
+/** 变更确认：取消，放弃修改并重置副本 */
+function confirmCancelChange() {
+  initBothCopies()
+  selectedFeatureIdxs.value = new Set()
+  confirmDialogVisible.value = false
+  ElMessage.info('已放弃修改')
 }
 
 /** 取消/重置：丢弃编辑，重新复制双份 */
@@ -584,7 +635,6 @@ defineExpose({ hasEdits, workingFeatures, activate, deactivate })
       </div>
       <div class="editor-footer">
         <el-button size="small" @click="handleReset">取消/重置</el-button>
-        <el-button size="small" @click="handleSaveAs">另存</el-button>
         <el-button type="primary" size="small" @click="handleUpdate">更新</el-button>
       </div>
     </template>
@@ -639,6 +689,16 @@ defineExpose({ hasEdits, workingFeatures, activate, deactivate })
         <el-button size="small" @click="handleCancel">取消</el-button>
       </div>
     </template>
+
+    <!-- 变更确认弹窗（要素列表底部"更新"按钮触发） -->
+    <el-dialog v-model="confirmDialogVisible" title="变更确认" width="320px" :close-on-click-modal="false" append-to-body>
+      <div style="line-height: 1.6; font-size: 13px;">要素编辑已完成，请选择保存方式：</div>
+      <template #footer>
+        <el-button size="small" @click="confirmCancelChange">取消</el-button>
+        <el-button size="small" @click="confirmSaveAsNew">另存为新数据集</el-button>
+        <el-button size="small" type="primary" @click="confirmUpdateCurrent">更新当前数据集</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 

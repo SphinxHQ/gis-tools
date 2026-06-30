@@ -7,13 +7,12 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-06-24
  */
-import { Compass, MapLocation, CircleCheck, Download } from '@element-plus/icons-vue'
-
 import GisDataExport from '~/components/data/GisDataExport.vue'
 import GisDataInfo from '~/components/data/GisDataInfo'
 import GisDataTransformer from '~/components/data/GisDataTransformer.vue'
 import GisDataValidator from '~/components/data/GisDataValidator.vue'
 import GisFeatureTree from '~/components/data/GisFeatureTree.vue'
+import TabIconRender from '~/components/renders/TabIconRender.vue'
 import { useDataPanelTabs, DATA_PANEL_TAB_OPTIONS } from '~/composables/useDataPanelTabs'
 
 const props = defineProps({
@@ -71,7 +70,7 @@ const tabOptions = DATA_PANEL_TAB_OPTIONS
           @active-data-change="handleActiveDataChange"
         />
         <div v-else class="tab-empty">
-          <el-icon :size="32" color="var(--el-text-color-placeholder)"><Compass /></el-icon>
+          <TabIconRender tab="crs" :size="32" style="color: var(--el-text-color-placeholder)" />
           <p>请先导入数据</p>
         </div>
       </div>
@@ -87,7 +86,7 @@ const tabOptions = DATA_PANEL_TAB_OPTIONS
           @exit-edit-mode="handleExitEditMode"
         />
         <div v-else class="tab-empty">
-          <el-icon :size="32" color="var(--el-text-color-placeholder)"><MapLocation /></el-icon>
+          <TabIconRender tab="feature" :size="32" style="color: var(--el-text-color-placeholder)" />
           <p>请先导入数据</p>
         </div>
       </div>
@@ -101,7 +100,7 @@ const tabOptions = DATA_PANEL_TAB_OPTIONS
           :tree-height="400"
         />
         <div v-else class="tab-empty">
-          <el-icon :size="32" color="var(--el-text-color-placeholder)"><CircleCheck /></el-icon>
+          <TabIconRender tab="validate" :size="32" style="color: var(--el-text-color-placeholder)" />
           <p>请先导入数据</p>
         </div>
       </div>
@@ -113,7 +112,7 @@ const tabOptions = DATA_PANEL_TAB_OPTIONS
           :data="activeData"
         />
         <div v-else class="tab-empty">
-          <el-icon :size="32" color="var(--el-text-color-placeholder)"><Download /></el-icon>
+          <TabIconRender tab="export" :size="32" style="color: var(--el-text-color-placeholder)" />
           <p>请先导入数据</p>
         </div>
       </div>

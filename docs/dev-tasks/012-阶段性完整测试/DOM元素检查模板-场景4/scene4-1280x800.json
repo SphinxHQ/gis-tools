@@ -1,0 +1,27 @@
+{
+  "viewport": "1280x800",
+  "scene": "场景4-绘制图形Tab",
+  "timestamp": "2026-06-25",
+  "采集方法": "evaluate_script 组件白名单遍历",
+  "schema": "v1",
+  "count": 76,
+  "key_elements": [
+    {"c": "top-bar", "tag": "DIV", "rect": {"w": 1280, "h": 40, "x": 0, "y": 0}, "s": false, "oy": "visible"},
+    {"c": "el-dialog", "tag": "DIV", "rect": {"w": 880, "h": 760, "x": 193, "y": 16}, "s": false, "oy": "visible"},
+    {"c": "el-tabs", "tag": "DIV", "rect": {"w": 808, "h": 648, "x": 229, "y": 72}, "s": false, "oy": "visible"},
+    {"c": "el-tabs__header", "tag": "DIV", "rect": {"w": 808, "h": 39, "x": 229, "y": 72}, "s": true, "oy": "visible"},
+    {"c": "el-tabs__nav", "tag": "DIV", "rect": {"w": 388, "h": 39, "x": 229, "y": 72}, "s": false, "oy": "visible"},
+    {"c": "el-tabs__item", "tag": "DIV", "rect": {"w": 98, "h": 40, "x": 228, "y": 71}, "s": false, "oy": "visible"},
+    {"c": "el-tab-pane", "tag": "DIV", "rect": {"w": 778, "h": 579, "x": 244, "y": 126}, "s": false, "oy": "hidden"},
+    {"c": "map-drawer", "tag": "DIV", "rect": {"w": 778, "h": 579, "x": 244, "y": 126}, "s": false, "oy": "visible"},
+    {"c": "map-control-panel", "tag": "DIV", "rect": {"w": 473, "h": 44, "x": 245, "y": 127}, "s": false, "oy": "visible"},
+    {"c": "el-cascader", "tag": "DIV", "rect": {"w": 206, "h": 24, "x": 348, "y": 142}, "s": false, "oy": "visible"},
+    {"c": "el-dropdown", "tag": "DIV", "rect": {"w": 62, "h": 24, "x": 647, "y": 142}, "s": true, "oy": "visible"},
+    {"c": "main-map-container", "tag": "DIV", "rect": {"w": 776, "h": 577, "x": 245, "y": 127}, "s": false, "oy": "visible"},
+    {"c": "main-map", "tag": "DIV", "rect": {"w": 776, "h": 577, "x": 245, "y": 127}, "s": false, "oy": "visible"},
+    {"c": "crs-btn", "tag": "BUTTON", "rect": {"w": 81, "h": 24, "x": 560, "y": 142}, "s": false, "oy": "hidden"},
+    {"c": "crs-prefix", "tag": "SPAN", "rect": {"w": 37, "h": 14, "x": 569, "y": 147}, "s": false, "oy": "visible"},
+    {"c": "el-button", "tag": "BUTTON", "rect": {"w": 64, "h": 24, "x": 1102, "y": 8}, "s": false, "oy": "visible"}
+  ],
+  "all_elements_count": 76
+}

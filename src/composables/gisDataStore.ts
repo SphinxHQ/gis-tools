@@ -99,7 +99,9 @@ function addDataset(dataInfo: GisDataInfo, sourceId?: string): string {
 function updateDataset(id: string, data: GisDataInfo): void {
   const entry = datasets.value.find(d => d.id === id)
   if (!entry) return
-  entry.data = data
+  // 创建新引用，确保上层 watch(() => props.data) 能触发
+  // 否则同一引用赋值会导致 useDataPanelTabs 的 activeData 不更新，导出组件显示旧数据
+  entry.data = GisDataInfo.clone(data)
   entry.name = data.name || entry.name
 }
 

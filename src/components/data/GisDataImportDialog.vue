@@ -52,6 +52,7 @@ const showTextConfirm = computed(() => {
     :close-on-click-modal="false"
     :show-close="false"
     destroy-on-close
+    append-to-body
     class="import-dialog"
   >
     <gis-data-reader ref="readerRef" @read="handleRead" />

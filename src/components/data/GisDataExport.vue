@@ -13,8 +13,10 @@ import { computed, Ref, ref, watch } from "vue";
 
 import { ExchangeDataFormat } from "~/components/data/ExchangeDataFormat";
 import GisDataInfo from "~/components/data/GisDataInfo";
+import { TopoJsonDataFormat } from "~/components/data/TopoJsonDataFormat";
 import { WktDataFormat } from "~/components/data/WktDataFormat";
 import GeoTypeIconRender from "~/components/renders/GeoTypeIconRender.vue";
+import ModeIconRender from "~/components/renders/ModeIconRender.vue";
 
 const props = defineProps({
   data: {
@@ -23,7 +25,7 @@ const props = defineProps({
   }
 })
 
-const exportType = ref<'geojson' | 'wkt' | 'exchange'>('geojson')
+const exportType = ref<'geojson' | 'wkt' | 'exchange' | 'topojson'>('geojson')
 
 // ===== GeoJson 导出 =====
 const geoJsonType = ref("FeatureCollection")
@@ -232,6 +234,46 @@ const handleDownloadExchange = () => {
   a.click()
   URL.revokeObjectURL(url)
 }
+
+// ===== TopoJSON 导出 =====
+const dataStr_topojson = ref<string | undefined>(undefined)
+const topojsonFormat = ref<"pretty" | "compact">("pretty")
+
+watch(() => [props.data, topojsonFormat.value], () => {
+  if (!props.data || !props.data.features?.length) {
+    dataStr_topojson.value = undefined
+    return
+  }
+  const topoFormat = new TopoJsonDataFormat()
+  topoFormat.write(props.data).then(res => {
+    // res 是 JSON 字符串，按格式化选项重新序列化
+    try {
+      const parsed = JSON.parse(res)
+      const space = topojsonFormat.value === 'pretty' ? 2 : undefined
+      dataStr_topojson.value = JSON.stringify(parsed, null, space)
+    } catch {
+      dataStr_topojson.value = res
+    }
+  }).catch(e => {
+    ElMessage.error(e?.message || 'TopoJSON 转换失败')
+    dataStr_topojson.value = undefined
+  })
+}, { deep: true, immediate: true })
+
+const handleDownloadTopojson = () => {
+  if (!dataStr_topojson.value) {
+    ElMessage.warning("没有数据可导出")
+    return
+  }
+  const fileName = "topojson_" + new Date().getTime()
+  const blob = new Blob([dataStr_topojson.value], { type: "application/json" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = fileName + ".topojson"
+  a.click()
+  URL.revokeObjectURL(url)
+}
 </script>
 
 <template>
@@ -240,6 +282,7 @@ const handleDownloadExchange = () => {
     <div class="export-type-switcher">
       <el-segmented v-model="exportType" :options="[
         { value: 'geojson', label: 'GeoJson' },
+        { value: 'topojson', label: 'TopoJSON' },
         { value: 'wkt', label: 'WKT' },
         { value: 'exchange', label: '电子报盘' }
       ]" size="small"
@@ -293,9 +336,15 @@ const handleDownloadExchange = () => {
       <!-- 选项和操作区域（底部） -->
       <div class="export-bottom-bar">
         <el-radio-group v-model="geoJsonType" size="small">
-          <el-radio-button value="FeatureCollection">Collection</el-radio-button>
-          <el-radio-button value="FeatureListArray">Array</el-radio-button>
-          <el-radio-button value="FeatureSplit">Split</el-radio-button>
+          <el-radio-button value="FeatureCollection">
+            <ModeIconRender mode="collection" :size="14" />
+          </el-radio-button>
+          <el-radio-button value="FeatureListArray">
+            <ModeIconRender mode="array" :size="14" />
+          </el-radio-button>
+          <el-radio-button value="FeatureSplit">
+            <ModeIconRender mode="split" :size="14" />
+          </el-radio-button>
         </el-radio-group>
         <div class="export-bottom-right">
           <el-checkbox v-model="includeCrs" :disabled="!data?.crs?.isValid" size="small">CRS</el-checkbox>
@@ -320,14 +369,18 @@ const handleDownloadExchange = () => {
       </div>
       <div class="export-bottom-bar">
         <el-radio-group v-model="wktType" size="small">
-          <el-radio-button value="GeometryCollection">Collection</el-radio-button>
-          <el-radio-button value="GeometrySplit">Split</el-radio-button>
+          <el-radio-button value="GeometryCollection">
+            <ModeIconRender mode="collection" :size="14" />
+          </el-radio-button>
+          <el-radio-button value="GeometrySplit">
+            <ModeIconRender mode="split" :size="14" />
+          </el-radio-button>
         </el-radio-group>
       </div>
     </div>
 
     <!-- 电子报盘导出 -->
-    <div v-else class="export-panel">
+    <div v-else-if="exportType === 'exchange'" class="export-panel">
       <div class="export-editor">
         <geo-str-editor :value="display_exchange" language="exchange" :read-only="true" />
       </div>
@@ -337,6 +390,22 @@ const handleDownloadExchange = () => {
           <el-radio-button value="NoProperties">No Props</el-radio-button>
         </el-radio-group>
         <el-button type="success" size="small" :icon="Download" @click="handleDownloadExchange">下载 TXT</el-button>
+      </div>
+    </div>
+
+    <!-- TopoJSON 导出 -->
+    <div v-else-if="exportType === 'topojson'" class="export-panel">
+      <div class="export-editor">
+        <geo-str-editor :value="dataStr_topojson" language="geojson" :read-only="true" />
+      </div>
+      <div class="export-bottom-bar">
+        <div class="export-bottom-right">
+          <el-select v-model="topojsonFormat" size="small" style="width: 80px;">
+            <el-option label="格式化" value="pretty" />
+            <el-option label="压缩" value="compact" />
+          </el-select>
+          <el-button type="success" size="small" :icon="Download" @click="handleDownloadTopojson">下载 TopoJSON</el-button>
+        </div>
       </div>
     </div>
   </div>

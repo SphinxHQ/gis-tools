@@ -43,6 +43,8 @@ const emit = defineEmits<{
   'update:visible': [visible: boolean]
   'height-change': [heightPx: number]
   'state-change': [state: SheetState]
+  'drag-start': []
+  'drag-end': []
 }>()
 
 // 当前高度百分比（vh）
@@ -52,6 +54,8 @@ const isDragging = ref(false)
 // 拖拽起始信息
 const dragStartY = ref(0)
 const dragStartHeight = ref(0)
+// 拖拽过程中的原始高度（未被 clamp 限制，用于判断是否收起）
+const lastRawHeight = ref(0)
 // 是否启用动画（拖拽时禁用）
 const animated = ref(true)
 // Sheet 根元素引用
@@ -62,10 +66,17 @@ const viewportHeight = computed(() =>
   typeof window !== 'undefined' ? window.innerHeight : 800,
 )
 
-// 当前高度（px）
-const currentHeightPx = computed(() =>
-  Math.round((currentHeight.value / 100) * viewportHeight.value),
+// 最大允许高度（vh），考虑 offsetBottom 空间
+const maxHeightVh = computed(() =>
+  ((viewportHeight.value - props.offsetBottom) / viewportHeight.value) * 100,
 )
+
+// 当前高度（px），限制不超过最大允许高度
+const currentHeightPx = computed(() => {
+  const maxPx = (maxHeightVh.value / 100) * viewportHeight.value
+  const heightPx = (currentHeight.value / 100) * viewportHeight.value
+  return Math.round(Math.min(heightPx, maxPx))
+})
 
 // 当前状态
 const sheetState = computed<SheetState>(() => {
@@ -112,6 +123,7 @@ const startDrag = (clientY: number) => {
   animated.value = false
   dragStartY.value = clientY
   dragStartHeight.value = currentHeight.value
+  emit('drag-start')
 }
 
 /**
@@ -124,25 +136,28 @@ const onDragMove = (clientY: number) => {
   // 向下拖拽 delta > 0，高度减小
   const deltaPercent = (delta / viewportHeight.value) * 100
   const newHeight = dragStartHeight.value - deltaPercent
-  // 限制在 10vh ~ 95vh 之间
-  currentHeight.value = Math.min(95, Math.max(10, newHeight))
+  // 记录原始高度（未被 clamp），用于判断是否收起
+  lastRawHeight.value = newHeight
+  // 限制在 10vh ~ 最大允许高度之间
+  currentHeight.value = Math.min(maxHeightVh.value, Math.max(10, newHeight))
 }
 
 /**
- * 结束拖拽，吸附到最近点
+ * 结束拖拽，吸附到最近点或收起
  */
 const endDrag = () => {
   if (!isDragging.value) return
   isDragging.value = false
   animated.value = true
-  // 吸附到最近点
-  currentHeight.value = findNearestSnap(currentHeight.value)
-  // 如果吸附到最低点（<=25vh），则关闭 Sheet
-  if (currentHeight.value <= props.snapPoints[0]) {
-    // 仅当用户拖到最低点时关闭
-    if (currentHeight.value <= 15) {
+  emit('drag-end')
+
+  if (lastRawHeight.value <= 5) {
+    currentHeight.value = 0
+    setTimeout(() => {
       emit('update:visible', false)
-    }
+    }, 300)
+  } else {
+    currentHeight.value = findNearestSnap(currentHeight.value)
   }
 }
 
@@ -209,11 +224,11 @@ onBeforeUnmount(() => {
 /**
  * 外部设置抽屉高度（vh 百分比），用于编辑模式分屏等场景。
  * 会吸附到最近的 snap point。
- * @param heightVh - 目标高度百分比（10-95）
+ * @param heightVh - 目标高度百分比
  */
 const setSnap = (heightVh: number) => {
   animated.value = true
-  currentHeight.value = Math.min(95, Math.max(10, heightVh))
+  currentHeight.value = Math.min(maxHeightVh.value, Math.max(10, heightVh))
 }
 
 defineExpose({ setSnap, currentHeight })
@@ -265,7 +280,6 @@ defineExpose({ setSnap, currentHeight })
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 2000;
 }
 
 /* Bottom Sheet 主体 */
@@ -274,7 +288,6 @@ defineExpose({ setSnap, currentHeight })
   left: 0;
   right: 0;
   /* bottom 由 inline style 控制（offsetBottom prop），默认 0 */
-  z-index: 2001;
   background: var(--el-bg-color, #fff);
   border-radius: 12px 12px 0 0;
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.12);

@@ -1,0 +1,25 @@
+{
+  "viewport": "768x1024",
+  "scene": "场景1-页面初始加载",
+  "timestamp": "2026-06-25",
+  "采集方法": "evaluate_script 组件白名单遍历",
+  "count": 26,
+  "elements": [
+    {"component": "unknown", "tag": "DIV", "rect": {"w": 768, "h": 1024, "x": 0, "y": 0}, "scrollable": false, "overflowY": "visible"},
+    {"component": "gis-data-page", "tag": "DIV", "rect": {"w": 768, "h": 1024, "x": 0, "y": 0}, "scrollable": false, "overflowY": "hidden"},
+    {"component": "top-bar", "tag": "DIV", "rect": {"w": 768, "h": 44, "x": 0, "y": 0}, "scrollable": false, "overflowY": "visible"},
+    {"component": "top-bar-left", "tag": "DIV", "rect": {"w": 127, "h": 22, "x": 12, "y": 11}, "scrollable": false, "overflowY": "visible"},
+    {"component": "top-bar-right", "tag": "DIV", "rect": {"w": 166, "h": 26, "x": 590, "y": 9}, "scrollable": false, "overflowY": "visible"},
+    {"component": "el-radio-group", "tag": "DIV", "rect": {"w": 94, "h": 26, "x": 662, "y": 9}, "scrollable": false, "overflowY": "visible"},
+    {"component": "main-content", "tag": "DIV", "rect": {"w": 768, "h": 980, "x": 0, "y": 44}, "scrollable": false, "overflowY": "hidden"},
+    {"component": "empty-state", "tag": "DIV", "rect": {"w": 752, "h": 964, "x": 8, "y": 52}, "scrollable": false, "overflowY": "visible"},
+    {"component": "empty-content", "tag": "DIV", "rect": {"w": 216, "h": 98, "x": 276, "y": 485}, "scrollable": false, "overflowY": "visible"},
+    {"component": "el-button", "tag": "BUTTON", "rect": {"w": 64, "h": 24, "x": 590, "y": 10}, "scrollable": false, "overflowY": "visible"},
+    {"component": "top-bar-title", "tag": "SPAN", "rect": {"w": 63, "h": 16, "x": 44, "y": 14}, "scrollable": false, "overflowY": "visible"},
+    {"component": "el-radio-button__inner", "tag": "SPAN", "rect": {"w": 32, "h": 26, "x": 662, "y": 9}, "scrollable": false, "overflowY": "visible"},
+    {"component": "empty-action", "tag": "SPAN", "rect": {"w": 24, "h": 15, "x": 276, "y": 568}, "scrollable": false, "overflowY": "visible"},
+    {"component": "empty-title", "tag": "P", "rect": {"w": 60, "h": 19, "x": 354, "y": 543}, "scrollable": false, "overflowY": "visible"},
+    {"component": "empty-desc", "tag": "P", "rect": {"w": 216, "h": 15, "x": 276, "y": 568}, "scrollable": false, "overflowY": "visible"},
+    {"component": "top-bar-contact", "tag": "A", "rect": {"w": 22, "h": 22, "x": 117, "y": 11}, "scrollable": false, "overflowY": "visible"}
+  ]
+}

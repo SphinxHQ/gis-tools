@@ -1,0 +1,16 @@
+{
+  "viewport": "500x667",
+  "scene": "场景6-数据加载后",
+  "timestamp": "2026-06-25",
+  "采集方法": "evaluate_script 组件白名单遍历",
+  "schema": "v1",
+  "count": 15,
+  "key_elements": [
+    {"c": "top-bar", "tag": "DIV", "rect": {"w": 500, "h": 48, "x": 0, "y": 0}, "s": false, "oy": "visible"},
+    {"c": "main-content", "tag": "DIV", "rect": {"w": 500, "h": 619, "x": 0, "y": 48}, "s": false, "oy": "hidden"},
+    {"c": "empty-state", "tag": "DIV", "rect": {"w": 484, "h": 603, "x": 8, "y": 56}, "s": false, "oy": "visible"},
+    {"c": "empty-content", "tag": "DIV", "rect": {"w": 216, "h": 98, "x": 142, "y": 309}, "s": false, "oy": "visible"},
+    {"c": "el-button", "tag": "BUTTON", "rect": {"w": 36, "h": 24, "x": 456, "y": 12}, "s": false, "oy": "visible"}
+  ],
+  "all_elements_count": 15
+}

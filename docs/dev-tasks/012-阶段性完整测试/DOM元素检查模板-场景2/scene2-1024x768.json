@@ -1,0 +1,27 @@
+{
+  "viewport": "1024x768",
+  "scene": "场景2-打开导入对话框",
+  "timestamp": "2026-06-25",
+  "采集方法": "evaluate_script 组件白名单遍历",
+  "schema": "v1",
+  "count": 50,
+  "key_elements": [
+    {"c": "top-bar", "tag": "DIV", "rect": {"w": 1024, "h": 40, "x": 0, "y": 0}, "s": false, "oy": "visible"},
+    {"c": "el-dialog", "tag": "DIV", "rect": {"w": 880, "h": 729, "x": 65, "y": 15}, "s": false, "oy": "visible"},
+    {"c": "el-dialog__body", "tag": "DIV", "rect": {"w": 848, "h": 617, "x": 81, "y": 71}, "s": false, "oy": "hidden"},
+    {"c": "el-tabs", "tag": "DIV", "rect": {"w": 808, "h": 617, "x": 101, "y": 71}, "s": false, "oy": "visible"},
+    {"c": "el-tabs__header", "tag": "DIV", "rect": {"w": 808, "h": 39, "x": 101, "y": 71}, "s": true, "oy": "visible"},
+    {"c": "el-tabs__nav", "tag": "DIV", "rect": {"w": 388, "h": 39, "x": 101, "y": 71}, "s": false, "oy": "visible"},
+    {"c": "el-tabs__item", "tag": "DIV", "rect": {"w": 98, "h": 40, "x": 100, "y": 70}, "s": false, "oy": "visible"},
+    {"c": "el-tab-pane", "tag": "DIV", "rect": {"w": 778, "h": 548, "x": 116, "y": 125}, "s": false, "oy": "hidden"},
+    {"c": "el-upload", "tag": "DIV", "rect": {"w": 778, "h": 521, "x": 116, "y": 125}, "s": false, "oy": "visible"},
+    {"c": "el-upload-dragger", "tag": "DIV", "rect": {"w": 778, "h": 521, "x": 116, "y": 125}, "s": false, "oy": "hidden"},
+    {"c": "upload-info", "tag": "DIV", "rect": {"w": 756, "h": 439, "x": 127, "y": 166}, "s": false, "oy": "visible"},
+    {"c": "dialog-footer", "tag": "DIV", "rect": {"w": 848, "h": 24, "x": 81, "y": 705}, "s": false, "oy": "visible"},
+    {"c": "el-switch", "tag": "DIV", "rect": {"w": 88, "h": 24, "x": 81, "y": 705}, "s": false, "oy": "visible"},
+    {"c": "main-content", "tag": "DIV", "rect": {"w": 1024, "h": 728, "x": 0, "y": 40}, "s": false, "oy": "hidden"},
+    {"c": "empty-state", "tag": "DIV", "rect": {"w": 1008, "h": 712, "x": 8, "y": 48}, "s": false, "oy": "visible"},
+    {"c": "el-button", "tag": "BUTTON", "rect": {"w": 64, "h": 24, "x": 846, "y": 8}, "s": false, "oy": "visible"}
+  ],
+  "all_elements_count": 50
+}

@@ -30,6 +30,8 @@ export enum GisDataType {
     ShapeZip,
     EXF,
     DXF,
+    // TopoJSON 格式（仅作数据存储类型，使用时转成 GeoJSON）
+    TopoJson,
 }
 
 export interface DataInfo {

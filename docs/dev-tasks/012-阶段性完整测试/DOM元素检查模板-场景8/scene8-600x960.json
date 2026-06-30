@@ -1,0 +1,19 @@
+{
+  "viewport": "600x960",
+  "scene": "场景8-弹窗与提示",
+  "timestamp": "2026-06-25",
+  "采集方法": "evaluate_script 组件白名单遍历",
+  "schema": "v1",
+  "count": 47,
+  "key_elements": [
+    {"c": "top-bar", "tag": "DIV", "rect": {"w": 600, "h": 48, "x": 0, "y": 0}, "s": false, "oy": "visible"},
+    {"c": "main-content", "tag": "DIV", "rect": {"w": 600, "h": 912, "x": 0, "y": 48}, "s": false, "oy": "hidden"},
+    {"c": "map-container", "tag": "DIV", "rect": {"w": 600, "h": 832, "x": 0, "y": 48}, "s": false, "oy": "hidden"},
+    {"c": "main-map", "tag": "DIV", "rect": {"w": 600, "h": 832, "x": 0, "y": 48}, "s": false, "oy": "visible"},
+    {"c": "gis-data-status-bar", "tag": "DIV", "rect": {"w": 600, "h": 24, "x": 0, "y": 880}, "s": false, "oy": "hidden"},
+    {"c": "gis-mobile-nav", "tag": "DIV", "rect": {"w": 600, "h": 56, "x": 0, "y": 904}, "s": false, "oy": "hidden"},
+    {"c": "mobile-tab-bar", "tag": "DIV", "rect": {"w": 600, "h": 56, "x": 0, "y": 904}, "s": false, "oy": "visible"},
+    {"c": "el-button", "tag": "BUTTON", "rect": {"w": 36, "h": 24, "x": 500, "y": 12}, "s": false, "oy": "visible"}
+  ],
+  "all_elements_count": 47
+}

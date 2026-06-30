@@ -561,8 +561,8 @@ const handlePathNodeClick = (node: PathNode) => {
 
 <template>
   <div class="gis-data-transformer-panel">
-    <!-- 坐标转换弹窗 -->
-    <el-dialog v-model="transformDialogVisible" title="坐标转换" width="700">
+    <!-- 坐标转换弹窗（append-to-body 逃逸 GisBottomSheet 层叠上下文，避免被地图遮挡） -->
+    <el-dialog v-model="transformDialogVisible" title="坐标转换" width="700" append-to-body>
       <gis-crs-transform-selector
         v-if="transformDialogVisible"
         :source-crs="activeTabCrsInfo"
@@ -572,8 +572,8 @@ const handlePathNodeClick = (node: PathNode) => {
       />
     </el-dialog>
 
-    <!-- 重设坐标系弹窗 -->
-    <el-dialog v-model="resetCrsDialogVisible" title="重设坐标系" width="800">
+    <!-- 重设坐标系弹窗（append-to-body 逃逸 GisBottomSheet 层叠上下文，避免被地图遮挡） -->
+    <el-dialog v-model="resetCrsDialogVisible" title="重设坐标系" width="800" append-to-body>
       <gis-crs-selector
         v-if="resetCrsDialogVisible"
         @change="handleResetCrs"

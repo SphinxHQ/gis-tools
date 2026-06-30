@@ -15,7 +15,6 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-06-25
  */
-import { Compass, MapLocation, CircleCheck, Download } from '@element-plus/icons-vue'
 import { ref, nextTick } from 'vue'
 
 import GisBottomSheet from '~/components/data/GisBottomSheet.vue'
@@ -24,6 +23,7 @@ import GisDataInfo from '~/components/data/GisDataInfo'
 import GisDataTransformer from '~/components/data/GisDataTransformer.vue'
 import GisDataValidator from '~/components/data/GisDataValidator.vue'
 import GisFeatureTree from '~/components/data/GisFeatureTree.vue'
+import TabIconRender from '~/components/renders/TabIconRender.vue'
 import { useDataPanelTabs, type DataPanelTab } from '~/composables/useDataPanelTabs'
 
 // 对外 props 接口保持不变（与一期一致）
@@ -52,6 +52,9 @@ const emit = defineEmits<{
   'error': [err: Error]
   /** 抽屉高度变化（px），供父级调整地图区域 padding-bottom，确保地图不被遮挡 */
   'sheet-height-change': [heightPx: number]
+  /** 抽屉拖拽开始/结束，供父级同步禁用地图区域过渡效果 */
+  'sheet-drag-start': []
+  'sheet-drag-end': []
 }>()
 
 // 复用共享 Tab 状态逻辑（与 GisDataPanel 同一代码路径）
@@ -72,10 +75,10 @@ const bottomSheetRef = ref<InstanceType<typeof GisBottomSheet> | null>(null)
 
 // Tab 定义（图标 + 标签）
 const tabs = [
-  { name: 'crs' as DataPanelTab, label: '坐标系', icon: Compass },
-  { name: 'feature' as DataPanelTab, label: '要素', icon: MapLocation },
-  { name: 'validate' as DataPanelTab, label: '校验', icon: CircleCheck },
-  { name: 'export' as DataPanelTab, label: '导出', icon: Download },
+  { name: 'crs' as DataPanelTab, label: '坐标系' },
+  { name: 'feature' as DataPanelTab, label: '要素' },
+  { name: 'validate' as DataPanelTab, label: '校验' },
+  { name: 'export' as DataPanelTab, label: '导出' },
 ]
 
 /**
@@ -152,6 +155,8 @@ const handleExitEditModeMobile = () => {
       :offset-bottom="56"
       @update:visible="handleSheetClose"
       @height-change="handleSheetHeightChange"
+      @drag-start="emit('sheet-drag-start')"
+      @drag-end="emit('sheet-drag-end')"
     >
       <!-- Tab 内容区：使用 v-show 保留组件状态，避免重挂载 -->
       <div class="sheet-body">
@@ -163,7 +168,7 @@ const handleExitEditModeMobile = () => {
             @active-data-change="handleActiveDataChange"
           />
           <div v-else class="tab-empty">
-            <el-icon :size="32" color="var(--el-text-color-placeholder)"><Compass /></el-icon>
+            <TabIconRender tab="crs" :size="32" style="color: var(--el-text-color-placeholder)" />
             <p>请先导入数据</p>
           </div>
         </div>
@@ -179,7 +184,7 @@ const handleExitEditModeMobile = () => {
             @exit-edit-mode="handleExitEditModeMobile"
           />
           <div v-else class="tab-empty">
-            <el-icon :size="32" color="var(--el-text-color-placeholder)"><MapLocation /></el-icon>
+            <TabIconRender tab="feature" :size="32" style="color: var(--el-text-color-placeholder)" />
             <p>暂无要素数据</p>
           </div>
         </div>
@@ -193,7 +198,7 @@ const handleExitEditModeMobile = () => {
             :tree-height="400"
           />
           <div v-else class="tab-empty">
-            <el-icon :size="32" color="var(--el-text-color-placeholder)"><CircleCheck /></el-icon>
+            <TabIconRender tab="validate" :size="32" style="color: var(--el-text-color-placeholder)" />
             <p>暂无校验数据</p>
           </div>
         </div>
@@ -205,7 +210,7 @@ const handleExitEditModeMobile = () => {
             :data="activeData"
           />
           <div v-else class="tab-empty">
-            <el-icon :size="32" color="var(--el-text-color-placeholder)"><Download /></el-icon>
+            <TabIconRender tab="export" :size="32" style="color: var(--el-text-color-placeholder)" />
             <p>暂无导出数据</p>
           </div>
         </div>
@@ -221,7 +226,7 @@ const handleExitEditModeMobile = () => {
         :class="{ active: activeTab === tab.name && sheetVisible }"
         @click="handleTabClick(tab.name)"
       >
-        <el-icon :size="20"><component :is="tab.icon" /></el-icon>
+        <TabIconRender :tab="tab.name" :size="20" />
         <span class="tab-label">{{ tab.label }}</span>
       </div>
     </div>

@@ -1,7 +1,7 @@
 /**
  * @file Data format registry and parsing
  * @description Central data format module that aggregates all supported spatial data format parsers
- *              (GeoJSON, WKT, WKB, Shapefile, ShapeZip, DXF, EXF, Exchange, ResponseBase, Base64)
+ *              (GeoJSON, WKT, WKB, Shapefile, ShapeZip, DXF, EXF, Exchange, ResponseBase, Base64, TopoJSON)
  *              and provides a unified parsing interface via SimpleDataFormat.
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-04-13
@@ -15,6 +15,7 @@ import GisDataInfo, {GisDataType} from "~/components/data/GisDataInfo";
 import {ResponseBaseDataFormat} from "~/components/data/ResponseBaseDataFormat";
 import {ShapeFileDataFormat} from "~/components/data/ShapeFileDataFormat";
 import {ShapeZipDataFormat} from "~/components/data/ShapeZipDataFormat";
+import {TopoJsonDataFormat} from "~/components/data/TopoJsonDataFormat";
 import {WkbDataFormat} from "~/components/data/WkbDataFormat";
 import {WktDataFormat} from "~/components/data/WktDataFormat";
 
@@ -74,14 +75,19 @@ export const getDataType = (content: unknown): GisDataType => {
     if (val.startsWith("{") && val.endsWith("}")) {
         try {
             const jsonObj = JSON.parse(geoString);
-            const geoJsonTypes = GeoJsonDataFormat.TYPES;
-            if (geoJsonTypes.includes(jsonObj.type)) {
-                _type = GisDataType.GeoJson;
+            // 优先检查 TopoJSON（type="Topology" 且含 objects/arcs 字段）
+            if (TopoJsonDataFormat.isTopoJson(jsonObj)) {
+                _type = GisDataType.TopoJson;
             } else {
-                if (jsonObj.status !== undefined &&
-                    jsonObj.message !== undefined &&
-                    jsonObj.result !== undefined) {
-                    _type = GisDataType.ResponseBase;
+                const geoJsonTypes = GeoJsonDataFormat.TYPES;
+                if (geoJsonTypes.includes(jsonObj.type)) {
+                    _type = GisDataType.GeoJson;
+                } else {
+                    if (jsonObj.status !== undefined &&
+                        jsonObj.message !== undefined &&
+                        jsonObj.result !== undefined) {
+                        _type = GisDataType.ResponseBase;
+                    }
                 }
             }
         } catch {
@@ -151,6 +157,9 @@ export class SimpleDataFormat implements DataFormat {
                 break;
             case GisDataType.DXF:
                 formatter = new DxfDataFormat();
+                break;
+            case GisDataType.TopoJson:
+                formatter = new TopoJsonDataFormat();
                 break;
             default:
                 throw new GisError(GisErrorCode.DATA_FORMAT_UNSUPPORTED, "Unsupported data type:" + type);

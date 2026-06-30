@@ -1,0 +1,154 @@
+# 场景1 - 页面初始加载 全视口数据汇总
+
+> 场景：页面初始加载（无数据状态）
+> 日期：2026-06-25
+> 采集方法：evaluate_script 遍历所有有效DOM元素
+
+---
+
+## 一、组件白名单（自动识别）
+
+| 组件 | 说明 |
+|---|---|
+| gis-data-page | 页面根容器 |
+| top-bar | 顶部栏 |
+| top-bar-left | 顶栏左侧 |
+| top-bar-right | 顶栏右侧 |
+| top-bar-title | 标题文字 |
+| top-bar-contact | 联系作者链接 |
+| el-radio-group | 底图切换器 |
+| el-radio-button__inner | 底图按钮 |
+| el-button | 导入按钮 |
+| main-content | 主内容区 |
+| empty-state | 空状态容器 |
+| empty-content | 空状态内容 |
+| empty-title | 空状态标题 |
+| empty-desc | 空状态描述 |
+| empty-action | 空状态操作 |
+
+---
+
+## 二、各视口组件数据
+
+### 2.1 xs (500x667)
+
+| 组件 | 尺寸 | 位置(x,y) | scrollable | overflow |
+|---|---|---|---|---|
+| gis-data-page | 500x667 | 0,0 | 否 | hidden |
+| top-bar | 500x48 | 0,0 | 否 | visible |
+| top-bar-left | 120x22 | 8,13 | 否 | visible |
+| top-bar-right | 36x24 | 456,12 | 否 | visible |
+| main-content | 500x619 | 0,48 | 否 | hidden |
+| empty-state | 484x603 | 8,56 | 否 | visible |
+| empty-content | 216x98 | 142,309 | 否 | visible |
+| el-button | 36x24 | 456,12 | 否 | visible |
+
+### 2.2 sm (600x960)
+
+| 组件 | 尺寸 | 位置(x,y) | scrollable | overflow |
+|---|---|---|---|---|
+| gis-data-page | 600x960 | 0,0 | 否 | hidden |
+| top-bar | 600x48 | 0,0 | 否 | visible |
+| top-bar-left | 120x22 | 8,13 | 否 | visible |
+| top-bar-right | 36x24 | 556,12 | 否 | visible |
+| main-content | 600x912 | 0,48 | 否 | hidden |
+| empty-state | 584x896 | 8,56 | 否 | visible |
+| empty-content | 216x98 | 192,455 | 否 | visible |
+| el-button | 36x24 | 556,12 | 否 | visible |
+
+### 2.3 md (768x1024)
+
+| 组件 | 尺寸 | 位置(x,y) | scrollable | overflow |
+|---|---|---|---|---|
+| gis-data-page | 768x1024 | 0,0 | 否 | hidden |
+| top-bar | 768x44 | 0,0 | 否 | visible |
+| top-bar-left | 127x22 | 12,11 | 否 | visible |
+| top-bar-right | 166x26 | 590,9 | 否 | visible |
+| el-radio-group | 94x26 | 662,9 | 否 | visible |
+| main-content | 768x980 | 0,44 | 否 | hidden |
+| empty-state | 752x964 | 8,52 | 否 | visible |
+| empty-content | 216x98 | 276,485 | 否 | visible |
+| el-button | 64x24 | 590,10 | 否 | visible |
+
+### 2.4 lg (1024x768)
+
+| 组件 | 尺寸 | 位置(x,y) | scrollable | overflow |
+|---|---|---|---|---|
+| gis-data-page | 1024x768 | 0,0 | 否 | hidden |
+| top-bar | 1024x40 | 0,0 | 否 | visible |
+| top-bar-left | 127x22 | 12,9 | 否 | visible |
+| top-bar-right | 166x26 | 846,7 | 否 | visible |
+| el-radio-group | 94x26 | 918,7 | 否 | visible |
+| main-content | 1024x728 | 0,40 | 否 | hidden |
+| empty-state | 1008x712 | 8,48 | 否 | visible |
+| empty-content | 216x98 | 404,355 | 否 | visible |
+| el-button | 64x24 | 846,8 | 否 | visible |
+
+### 2.5 xl (1280x800)
+
+| 组件 | 尺寸 | 位置(x,y) | scrollable | overflow |
+|---|---|---|---|---|
+| gis-data-page | 1280x800 | 0,0 | 否 | hidden |
+| top-bar | 1280x40 | 0,0 | 否 | visible |
+| top-bar-left | 127x22 | 12,9 | 否 | visible |
+| top-bar-right | 166x26 | 1102,7 | 否 | visible |
+| el-radio-group | 94x26 | 1174,7 | 否 | visible |
+| main-content | 1280x760 | 0,40 | 否 | hidden |
+| empty-state | 1264x744 | 8,48 | 否 | visible |
+| empty-content | 216x98 | 532,371 | 否 | visible |
+| el-button | 64x24 | 1102,8 | 否 | visible |
+
+### 2.6 xx (1920x1080)
+
+| 组件 | 尺寸 | 位置(x,y) | scrollable | overflow |
+|---|---|---|---|---|
+| gis-data-page | 1920x1080 | 0,0 | 否 | hidden |
+| top-bar | 1920x40 | 0,0 | 否 | visible |
+| top-bar-left | 127x22 | 12,9 | 否 | visible |
+| top-bar-right | 166x26 | 1742,7 | 否 | visible |
+| el-radio-group | 94x26 | 1814,7 | 否 | visible |
+| main-content | 1920x1040 | 0,40 | 否 | hidden |
+| empty-state | 1904x1024 | 8,48 | 否 | visible |
+| empty-content | 216x98 | 852,511 | 否 | visible |
+| el-button | 64x24 | 1742,8 | 否 | visible |
+
+---
+
+## 三、关键发现
+
+### 3.1 响应式高度变化
+
+| 视口 | top-bar 高度 | main-content 高度 |
+|---|---|---|
+| xs/sm | 48px | 自适应 |
+| md/lg/xl/xx | 40-44px | 自适应 |
+
+### 3.2 空状态居中
+
+empty-content 在各视口均水平居中：
+- xs: x=142 (居中差: 142px)
+- sm: x=192 (居中差: 192px)
+- md: x=276 (居中差: 276px)
+- lg: x=404 (居中差: 404px)
+- xl: x=532 (居中差: 532px)
+- xx: x=852 (居中差: 852px)
+
+### 3.3 无滚动条
+
+所有组件在所有视口下均无滚动条 (scrollable=false)
+
+---
+
+## 四、JSON数据文件
+
+- [scene1-xs-500x667.json](./scene1-xs-500x667.json) - xs视口完整数据
+- [scene1-sm-600x960.json](./scene1-sm-600x960.json) - sm视口完整数据
+- [scene1-md-768x1024.json](./scene1-md-768x1024.json) - md视口完整数据
+- [scene1-lg-1024x768.json](./scene1-lg-1024x768.json) - lg视口完整数据
+- [scene1-xl-1280x800.json](./scene1-xl-1280x800.json) - xl视口完整数据
+- [scene1-xx-1920x1080.json](./scene1-xx-1920x1080.json) - xx视口完整数据
+
+---
+
+*生成时间：2026-06-25*
+*采集方法：evaluate_script 组件白名单遍历*

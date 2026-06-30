@@ -1,0 +1,17 @@
+{
+  "viewport": "1920x1080",
+  "scene": "场景6-数据加载后",
+  "timestamp": "2026-06-25",
+  "采集方法": "evaluate_script 组件白名单遍历",
+  "schema": "v1",
+  "count": 20,
+  "key_elements": [
+    {"c": "top-bar", "tag": "DIV", "rect": {"w": 1920, "h": 40, "x": 0, "y": 0}, "s": false, "oy": "visible"},
+    {"c": "el-radio-group", "tag": "DIV", "rect": {"w": 94, "h": 26, "x": 1814, "y": 7}, "s": false, "oy": "visible"},
+    {"c": "main-content", "tag": "DIV", "rect": {"w": 1920, "h": 1040, "x": 0, "y": 40}, "s": false, "oy": "hidden"},
+    {"c": "empty-state", "tag": "DIV", "rect": {"w": 1904, "h": 1024, "x": 8, "y": 48}, "s": false, "oy": "visible"},
+    {"c": "empty-content", "tag": "DIV", "rect": {"w": 216, "h": 98, "x": 852, "y": 511}, "s": false, "oy": "visible"},
+    {"c": "el-button", "tag": "BUTTON", "rect": {"w": 64, "h": 24, "x": 1742, "y": 8}, "s": false, "oy": "visible"}
+  ],
+  "all_elements_count": 20
+}

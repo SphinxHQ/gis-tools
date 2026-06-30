@@ -1,0 +1,23 @@
+{
+  "viewport": "768x1024",
+  "scene": "场景3-文本输入Tab",
+  "timestamp": "2026-06-25",
+  "采集方法": "evaluate_script 组件白名单遍历",
+  "schema": "v1",
+  "count": 48,
+  "key_elements": [
+    {"c": "top-bar", "tag": "DIV", "rect": {"w": 768, "h": 44, "x": 0, "y": 0}, "s": false, "oy": "visible"},
+    {"c": "el-dialog", "tag": "DIV", "rect": {"w": 723, "h": 975, "x": 15, "y": 20}, "s": false, "oy": "visible"},
+    {"c": "el-tabs", "tag": "DIV", "rect": {"w": 651, "h": 863, "x": 51, "y": 76}, "s": false, "oy": "visible"},
+    {"c": "el-tabs__header", "tag": "DIV", "rect": {"w": 651, "h": 39, "x": 51, "y": 76}, "s": true, "oy": "visible"},
+    {"c": "el-tabs__nav", "tag": "DIV", "rect": {"w": 388, "h": 39, "x": 51, "y": 76}, "s": false, "oy": "visible"},
+    {"c": "el-tabs__item", "tag": "DIV", "rect": {"w": 98, "h": 40, "x": 50, "y": 75}, "s": false, "oy": "visible"},
+    {"c": "el-tab-pane", "tag": "DIV", "rect": {"w": 621, "h": 794, "x": 66, "y": 130}, "s": false, "oy": "hidden"},
+    {"c": "el-textarea", "tag": "DIV", "rect": {"w": 621, "h": 794, "x": 66, "y": 130}, "s": false, "oy": "visible"},
+    {"c": "el-textarea__inner", "tag": "TEXTAREA", "rect": {"w": 621, "h": 794, "x": 66, "y": 130}, "s": false, "oy": "auto"},
+    {"c": "dialog-footer", "tag": "DIV", "rect": {"w": 691, "h": 24, "x": 31, "y": 956}, "s": false, "oy": "visible"},
+    {"c": "el-switch", "tag": "DIV", "rect": {"w": 88, "h": 24, "x": 31, "y": 956}, "s": false, "oy": "visible"},
+    {"c": "el-button", "tag": "BUTTON", "rect": {"w": 48, "h": 24, "x": 674, "y": 956}, "s": false, "oy": "visible"}
+  ],
+  "all_elements_count": 48
+}

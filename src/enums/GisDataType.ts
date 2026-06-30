@@ -21,6 +21,7 @@ export class GisDataType {
   static readonly ShapeZip = new GisDataType('ShapeZip', 'ShapeZip');
   static readonly EXF = new GisDataType('EXF', 'EXF');
   static readonly DXF = new GisDataType('DXF', 'DXF');
+  static readonly TopoJson = new GisDataType('TopoJson', 'TopoJSON');
 
   private constructor(
     public readonly value: string,
@@ -32,6 +33,7 @@ export class GisDataType {
       GisDataType.Base64, GisDataType.GeoJson, GisDataType.Wkt, GisDataType.Wkb,
       GisDataType.Exchange, GisDataType.Csv, GisDataType.ResponseBase,
       GisDataType.ShapeFile, GisDataType.ShapeZip, GisDataType.EXF, GisDataType.DXF,
+      GisDataType.TopoJson,
     ];
   }
 

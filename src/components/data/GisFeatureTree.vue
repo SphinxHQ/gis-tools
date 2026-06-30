@@ -6,9 +6,10 @@
  * @author yuanyu <yuanyu@supermap.com>
  * @date 2026-06-24
  */
-import { Edit } from '@element-plus/icons-vue'
+import { Edit, EditPen, Delete, Plus } from '@element-plus/icons-vue'
 import {ElMessage, ElMessageBox} from "element-plus";
 import {
+  computed,
   getCurrentInstance,
   onBeforeUnmount,
   onMounted,
@@ -21,7 +22,12 @@ import GeomUtils from "~/common/GeomUtils";
 import {logger} from "~/common/logger";
 import GisDataInfo from "~/components/data/GisDataInfo";
 import GisFeatureEditor from "~/components/data/GisFeatureEditor.vue";
-import {GisMapflashFeaturesEvent, GisMapStopModifyEvent} from "~/components/gismap/events/GisMapEvents";
+import {
+  GisMapflashFeaturesEvent,
+  GisMapStopModifyEvent,
+  GisMapDrawEvent,
+  GisMapCleanDrawEvent
+} from "~/components/gismap/events/GisMapEvents";
 import GeoTypeIconRender from "~/components/renders/GeoTypeIconRender.vue";
 import {eventBus} from "~/composables/eventBus";
 import {useGisDataStore} from "~/composables/gisDataStore";
@@ -46,52 +52,33 @@ const emit = defineEmits<{
   'exit-edit-mode': []
 }>()
 
-const { updateDataset, addDataset, activeId, activeSourceId } = useGisDataStore()
-
-// 编辑变更跟踪
-const hasUnsavedChanges = ref(false)
-
-// 规则 R5：要素编辑只改 features，不改 crs，更不影响地图坐标系
-// 变更操作后提示：更新当前数据集 or 另存为新数据集（同源）
-const promptUpdateOrSaveAs = async () => {
-  if (!hasUnsavedChanges.value) return
-  try {
-    await ElMessageBox.confirm(
-      '要素编辑完成。请选择：更新当前数据集，或另存为新数据集（同一数据源下）。',
-      '变更确认',
-      {
-        confirmButtonText: '另存为新数据集',
-        cancelButtonText: '更新当前数据',
-        distinguishCancelAndClose: true,
-        type: 'info',
-      }
-    )
-    // 另存为新数据集
-    if (activeId.value && props.data) {
-      const clone = GisDataInfo.clone(props.data)
-      addDataset(clone, activeSourceId.value ?? undefined)
-    }
-    hasUnsavedChanges.value = false
-  } catch (action: unknown) {
-    if (action === 'cancel') {
-      // 更新当前数据
-      if (activeId.value && props.data) {
-        updateDataset(activeId.value, props.data)
-      }
-      hasUnsavedChanges.value = false
-    }
-    // action === 'close' 时保持 hasUnsavedChanges = true，下次退出时再次提示
-  }
-}
+const { updateDataset, activeId } = useGisDataStore()
 
 const treeHeight = ref(0)
 const conpomentVisiblity = ref(false)
 const featureEditorRef = ref<InstanceType<typeof GisFeatureEditor> | null>(null)
-const activeView = ref<'tree' | 'editor'>('tree')
+const activeView = ref<'tree' | 'editor' | 'add'>('tree')
 
+// === 节点显示字段选择 ===
+const displayField = ref<string>('')  // 空字符串表示使用默认名称
+const availableFields = computed<string[]>(() => {
+  const fieldSet = new Set<string>()
+  const features = props.data?.features || []
+  for (const f of features) {
+    if (f?.properties) {
+      for (const key of Object.keys(f.properties)) {
+        fieldSet.add(key)
+      }
+    }
+  }
+  return Array.from(fieldSet)
+})
+
+// 减去 view-switcher(40) + tree-options 区域(~48)
+const TREE_OFFSET = 88
 const sizeObserver = new ResizeObserver((entries) => {
   for (const entry of entries) {
-    const newHeight = entry.contentRect.height - 40
+    const newHeight = entry.contentRect.height - TREE_OFFSET
     treeHeight.value = Math.max(0, newHeight)
     conpomentVisiblity.value = newHeight > 0
   }
@@ -100,13 +87,14 @@ const sizeObserver = new ResizeObserver((entries) => {
 onMounted(() => {
   const currentInstance = getCurrentInstance()
   if (currentInstance?.vnode.el) {
-    treeHeight.value = currentInstance.vnode.el.clientHeight - 40
+    treeHeight.value = currentInstance.vnode.el.clientHeight - TREE_OFFSET
     sizeObserver.observe(currentInstance.vnode.el as Element)
   }
 })
 
 onBeforeUnmount(() => {
   sizeObserver.disconnect()
+  cleanupAddDrawHandler()
 })
 
 // === 类型工具 ===
@@ -254,10 +242,20 @@ const inspector: Record<string, (coordinates: unknown[], idx?: number) => GeoInf
   }
 }
 
-const inspectFeature = (feature: GeoJSON.Feature, _idx: number = 0): GeoInfoNode => {
+const inspectFeature = (feature: GeoJSON.Feature, _idx: number = 0, field: string = ''): GeoInfoNode => {
+  // 根据显示字段生成节点名称：字段值优先，无字段或值为空时使用"要素"
+  let baseName = `要素`
+  if (field && feature.properties) {
+    const val = (feature.properties as Record<string, unknown>)[field]
+    if (val !== undefined && val !== null && val !== '') {
+      baseName = String(val)
+    }
+  }
+  const featureLabel = `${baseName} #${_idx}`
+
   if (!feature.geometry) {
     const nullNode = new GeoInfoNode("空几何")
-    const node = new GeoInfoNode(`要素 #${_idx}`, [nullNode])
+    const node = new GeoInfoNode(featureLabel, [nullNode])
     node.label2 = "无几何"
     return node
   }
@@ -289,7 +287,7 @@ const inspectFeature = (feature: GeoJSON.Feature, _idx: number = 0): GeoInfoNode
   }
 
   const geoTypeName = GeomUtils.getTypeName(geoType)
-  const node = new GeoInfoNode(`要素 #${_idx}`, [geoInfoNode, propertyInfoNode])
+  const node = new GeoInfoNode(featureLabel, [geoInfoNode, propertyInfoNode])
   node.label2 = geoTypeName
   node.geometry = feature.geometry as unknown as Record<string, unknown>
   node.sourceFeature = feature
@@ -300,8 +298,9 @@ const geoJsonTreeData2: Ref<GeoInfoNode[] | undefined> = ref(undefined)
 
 const buildGeoJsonTree = () => {
   if (props.data?.features?.length) {
+    const field = displayField.value
     const children = props.data.features
-      .map((f, _idx) => inspectFeature(f, _idx))
+      .map((f, _idx) => inspectFeature(f, _idx, field))
       .filter((node): node is GeoInfoNode => node !== undefined)
     const geoInfoNode = new GeoInfoNode("几何要素", children)
     geoInfoNode.id = 'root'
@@ -319,6 +318,11 @@ const buildGeoJsonTree = () => {
 watch(() => props.data, () => {
   buildGeoJsonTree()
 }, { deep: true, immediate: true })
+
+// 显示字段变化时重新构建树
+watch(displayField, () => {
+  buildGeoJsonTree()
+})
 
 // === 节点交互 ===
 const selectedNodeId = ref<string | null>(null)
@@ -436,51 +440,164 @@ const handleTreeNodeClick = (data: GeoInfoNode) => {
 // === 要素编辑器 ===
 const isInEditMode = ref(false)
 
-const handleViewChange = (view: 'tree' | 'editor') => {
+const handleViewChange = (view: 'tree' | 'editor' | 'add') => {
+  // 离开旧视图的清理
+  if (activeView.value === 'editor' && view !== 'editor') {
+    isInEditMode.value = false
+    emit('exit-edit-mode')
+    if (props.instanceId) {
+      eventBus.emit(`${props.instanceId}`, new GisMapStopModifyEvent())
+      eventBus.emit(`${props.instanceId}`, { event_type: 'map-event:clear-edit-shadow', options: {}, params: [] })
+    }
+  }
+  if (activeView.value === 'add' && view !== 'add') {
+    // 离开新增要素视图：取消绘制 + 清理
+    cleanupAddDrawHandler()
+    if (props.instanceId) {
+      eventBus.emit(`${props.instanceId}`, new GisMapCleanDrawEvent())
+    }
+    resetAddFeatureState()
+  }
+
   activeView.value = view
   if (view === 'editor') {
     isInEditMode.value = true
     emit('enter-edit-mode')
     featureEditorRef.value?.activate()
-  } else {
-    if (isInEditMode.value) {
-      isInEditMode.value = false
-      emit('exit-edit-mode')
-      if (props.instanceId) {
-        eventBus.emit(`${props.instanceId}`, new GisMapStopModifyEvent())
-        eventBus.emit(`${props.instanceId}`, { event_type: 'map-event:clear-edit-shadow', options: {}, params: [] })
-      }
-      // 编辑退出时提示更新/另存
-      promptUpdateOrSaveAs()
-    }
+  } else if (view === 'add') {
+    // 进入新增要素视图：初始化属性结构
+    initAddFeatureProperties()
   }
 }
+
+// === 新增要素 ===
+type DrawType = 'Point' | 'LineString' | 'Polygon' | 'None'
+const addDrawType = ref<DrawType>('None')
+const addFeatureProperties = ref<Record<string, unknown>>({})
+const addFeatureGeometry = ref<GeoJSON.Geometry | null>(null)
+let addDrawHandler: ((_opt: unknown, _data: unknown) => void) | null = null
+
+/** 基于原数据集属性结构初始化空属性（取所有 features 属性 key 的并集，值为空字符串） */
+function initAddFeatureProperties() {
+  const propsMap: Record<string, unknown> = {}
+  const features = props.data?.features || []
+  for (const f of features) {
+    if (f?.properties) {
+      for (const [key, val] of Object.entries(f.properties)) {
+        if (!(key in propsMap)) {
+          // 根据原值类型推断默认空值
+          const t = typeof val
+          if (t === 'number') propsMap[key] = 0
+          else if (t === 'boolean') propsMap[key] = false
+          else propsMap[key] = ''
+        }
+      }
+    }
+  }
+  addFeatureProperties.value = propsMap
+  addFeatureGeometry.value = null
+  addDrawType.value = 'None'
+}
+
+function resetAddFeatureState() {
+  addDrawType.value = 'None'
+  addFeatureGeometry.value = null
+  addFeatureProperties.value = {}
+  cleanupAddDrawHandler()
+}
+
+/** 清理绘制完成事件 handler */
+function cleanupAddDrawHandler() {
+  if (addDrawHandler && props.instanceId) {
+    eventBus.off(`${props.instanceId}`, 'map-event:draw-end', addDrawHandler)
+    addDrawHandler = null
+  }
+}
+
+/** 触发绘制：点/线/面 */
+function handleDrawForAdd(type: DrawType) {
+  if (!props.instanceId) return
+  cleanupAddDrawHandler()
+  // 清除上一次绘制残留，避免 display 图层累积
+  eventBus.emit(`${props.instanceId}`, new GisMapCleanDrawEvent())
+  addDrawType.value = type
+  addFeatureGeometry.value = null
+  // keep=true 让绘制图形保留在 display 图层，用户可见
+  eventBus.emit(`${props.instanceId}`, new GisMapDrawEvent({
+    type,
+    cleanBefore: true,
+    once: true,
+    keep: true
+  }))
+  const handler = (_opt: unknown, data: unknown) => {
+    try {
+      const feature = JSON.parse(data as string) as GeoJSON.Feature
+      if (feature.geometry) {
+        addFeatureGeometry.value = feature.geometry
+      }
+    } catch (e) {
+      logger.error('[FeatureTree] parse draw-end feature failed:', e)
+    }
+    cleanupAddDrawHandler()
+  }
+  addDrawHandler = handler
+  eventBus.on(`${props.instanceId}`, 'map-event:draw-end', handler)
+}
+
+/** 清除已绘制图形 */
+function handleCleanDraw() {
+  if (!props.instanceId) return
+  cleanupAddDrawHandler()
+  addFeatureGeometry.value = null
+  addDrawType.value = 'None'
+  eventBus.emit(`${props.instanceId}`, new GisMapCleanDrawEvent())
+}
+
+/** 提交新要素到数据集 */
+function handleAddFeature() {
+  if (!addFeatureGeometry.value) {
+    ElMessage.warning('请先绘制几何图形')
+    return
+  }
+  const newFeature: GeoJSON.Feature = {
+    type: 'Feature',
+    geometry: addFeatureGeometry.value,
+    properties: { ...addFeatureProperties.value }
+  }
+  // eslint-disable-next-line vue/no-mutating-props
+  props.data.features.push(newFeature)
+  if (activeId.value) {
+    updateDataset(activeId.value, props.data)
+  }
+  buildGeoJsonTree()
+  ElMessage.success('已新增要素')
+  // 重置状态，保留属性结构供连续新增
+  addFeatureGeometry.value = null
+  addDrawType.value = 'None'
+  cleanupAddDrawHandler()
+  if (props.instanceId) {
+    eventBus.emit(`${props.instanceId}`, new GisMapCleanDrawEvent())
+  }
+}
+
+/** 取消新增要素，返回结构树 */
+function handleCancelAdd() {
+  handleViewChange('tree')
+}
+
+const addPropEntries = computed(() => Object.entries(addFeatureProperties.value))
 
 const handleEditorExit = () => {
   isInEditMode.value = false
   activeView.value = 'tree'
   emit('exit-edit-mode')
-  // 编辑退出时提示更新/另存
-  promptUpdateOrSaveAs()
 }
 
 const handleEditorModifyChange = (_feature: GeoJSON.Feature) => {
   logger.info('[FeatureTree] Feature modified in editor')
-  hasUnsavedChanges.value = true
 }
 
 const handleEditorDataChanged = () => {
-  buildGeoJsonTree()
-  hasUnsavedChanges.value = true
-}
-
-const handleCreateArchive = (payload: { name: string; features: GeoJSON.Feature[]; sourceIdx: number }) => {
-  payload.features.forEach((f, i) => {
-    if (!f.properties) f.properties = {}
-    f.properties.name = payload.name + (payload.features.length > 1 ? ` #${i + 1}` : '')
-    // eslint-disable-next-line vue/no-mutating-props
-    props.data.features.push(f)
-  })
   buildGeoJsonTree()
 }
 
@@ -509,13 +626,33 @@ const handleClearShadow = () => {
     <div class="view-switcher">
       <el-segmented v-model="activeView" :options="[
         { value: 'tree', label: '结构树' },
-        { value: 'editor', label: '要素编辑' }
-      ]" size="small" @change="(val: string | number) => handleViewChange(val as 'tree' | 'editor')"
+        { value: 'editor', label: '要素编辑' },
+        { value: 'add', label: '新增要素' }
+      ]" size="small" @change="(val: string | number) => handleViewChange(val as 'tree' | 'editor' | 'add')"
 />
     </div>
 
     <!-- 结构树视图 -->
     <div v-show="activeView === 'tree'" class="tree-view">
+      <!-- 节点显示字段选择区域 -->
+      <div class="tree-options">
+        <span class="option-label">显示字段</span>
+        <el-select
+          v-model="displayField"
+          size="small"
+          placeholder="默认（要素 #下标）"
+          clearable
+          class="field-select"
+        >
+          <el-option label="默认（要素 #下标）" value="" />
+          <el-option
+            v-for="field in availableFields"
+            :key="field"
+            :label="field"
+            :value="field"
+          />
+        </el-select>
+      </div>
       <el-tree-v2
         ref="theTree"
         :height="treeHeight"
@@ -532,6 +669,7 @@ const handleClearShadow = () => {
           <span v-if="nodeData" :class="`custom-tree-node ${nodeData.disabled?'disabled':''}`">
             <GeoTypeIconRender v-if="nodeData.geoType" :type="nodeData.geoType" :size="13" />
             <span class="key">{{ splitLabel(nodeData.label).name }}</span>
+            <span v-if="splitLabel(nodeData.label).index" class="node-index">{{ splitLabel(nodeData.label).index }}</span>
             <el-tag v-if="nodeData.label2" size="small" :type="label2TagType(nodeData)" effect="plain" round class="label2">
               {{ nodeData.label2 }}
             </el-tag>
@@ -542,16 +680,54 @@ const handleClearShadow = () => {
       </el-tree-v2>
     </div>
 
+    <!-- 新增要素视图 -->
+    <div v-show="activeView === 'add'" class="add-view">
+      <div class="add-header">
+        <span class="header-title">新增要素</span>
+        <el-tag v-if="addFeatureGeometry" size="small" type="success" effect="plain">已绘制</el-tag>
+        <el-tag v-else size="small" type="info" effect="plain">未绘制</el-tag>
+      </div>
+      <div class="add-toolbar">
+        <span class="toolbar-label">绘制：</span>
+        <el-button text size="small" :type="addDrawType === 'Point' ? 'primary' : ''" title="绘制点" @click="handleDrawForAdd('Point')">
+          <el-icon><EditPen /></el-icon> 点
+        </el-button>
+        <el-button text size="small" :type="addDrawType === 'LineString' ? 'primary' : ''" title="绘制线" @click="handleDrawForAdd('LineString')">
+          <el-icon><EditPen /></el-icon> 线
+        </el-button>
+        <el-button text size="small" :type="addDrawType === 'Polygon' ? 'primary' : ''" title="绘制面" @click="handleDrawForAdd('Polygon')">
+          <el-icon><EditPen /></el-icon> 面
+        </el-button>
+        <el-button text size="small" type="danger" title="清除" @click="handleCleanDraw">
+          <el-icon><Delete /></el-icon> 清除
+        </el-button>
+      </div>
+      <div class="add-section-label">属性填写</div>
+      <div class="add-props">
+        <div v-for="([key], pi) in addPropEntries" :key="pi" class="prop-row">
+          <span class="prop-key">{{ key }}</span>
+          <el-input v-model="addFeatureProperties[key as string]" size="small" />
+        </div>
+        <div v-if="addPropEntries.length === 0" class="empty-props">无属性（数据集为空）</div>
+      </div>
+      <div class="add-footer">
+        <el-button size="small" @click="handleCancelAdd">取消</el-button>
+        <el-button type="primary" size="small" :disabled="!addFeatureGeometry" @click="handleAddFeature">
+          <el-icon><Plus /></el-icon> 新增
+        </el-button>
+      </div>
+    </div>
+
     <!-- 要素编辑器视图 -->
     <div v-show="activeView === 'editor'" class="editor-view">
       <gis-feature-editor
         ref="featureEditorRef"
         :data="data"
         :instance-id="instanceId"
+        :display-field="displayField"
         @exit="handleEditorExit"
         @modify-change="handleEditorModifyChange"
         @data-changed="handleEditorDataChanged"
-        @create-archive="handleCreateArchive"
         @show-shadow="handleShowShadow"
         @clear-shadow="handleClearShadow"
       />
@@ -608,8 +784,10 @@ const handleClearShadow = () => {
 .tree-view {
   flex: 1;
   overflow: hidden;
-  padding: 4px;
+  padding: 4px 12px 4px 4px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .editor-view {
@@ -619,17 +797,48 @@ const handleClearShadow = () => {
   box-sizing: border-box;
 }
 
+/* 节点显示字段选择区域 */
+.tree-options {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 8px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--el-border-color-extra-light);
+  margin-bottom: 4px;
+}
+
+.tree-options .option-label {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.tree-options .field-select {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 节点 #下标 样式 */
+.node-index {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--el-text-color-placeholder);
+  font-family: monospace;
+}
+
 .custom-tree-node {
   width: 100%;
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-size: 12px;
+  padding-right: 4px;
 }
 
 .custom-tree-node .key {
   color: var(--el-text-color-primary);
-  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -651,10 +860,107 @@ const handleClearShadow = () => {
   transition: opacity 0.2s;
   flex-shrink: 0;
   margin-left: auto;
+  margin-right: 4px;
 }
 
 .node-btn:hover {
   opacity: 1;
+}
+
+/* === 新增要素面板 === */
+.add-view {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.add-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  flex-shrink: 0;
+}
+
+.add-header .header-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--el-text-color-primary);
+}
+
+.add-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.add-toolbar .toolbar-label {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  margin-right: 4px;
+}
+
+.add-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--el-text-color-secondary);
+  padding: 6px 10px 4px;
+  background: var(--el-fill-color-lighter);
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--el-border-color-extra-light);
+}
+
+.add-props {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.add-props .prop-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-bottom: 1px solid var(--el-border-color-extra-light);
+}
+
+.add-props .prop-key {
+  width: 80px;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--el-text-color-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.add-props .prop-row .el-input {
+  flex: 1;
+}
+
+.add-props .empty-props {
+  text-align: center;
+  padding: 16px 0;
+  color: var(--el-text-color-placeholder);
+  font-size: 12px;
+}
+
+.add-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--el-border-color-lighter);
+  flex-shrink: 0;
 }
 
 .json-editor-container {

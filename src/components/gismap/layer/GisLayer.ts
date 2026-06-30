@@ -54,7 +54,8 @@ export class SysGisMapLayer implements GisMapLayer {
         this.name = options.name || '系统图层';
         this.visible = options.visible ?? true;
         this.opacity = options.opacity ?? 1;
-        this.zIndex = options.zIndex || 0;
+        // 拓扑错误图层默认 zIndex=500，显示在 vector-edit(400) 之上
+        this.zIndex = options.zIndex ?? (options.name?.startsWith('layer_topo_err_') ? 500 : 0);
         if(options.style){
             if (typeof options.style === 'string') {
                 this.style =  getLayerStyles(options.style);
